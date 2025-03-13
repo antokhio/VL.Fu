@@ -1,4 +1,5 @@
-﻿using Stride.Core.Mathematics;
+﻿using Fu.Input.Core;
+using Stride.Core.Mathematics;
 using VL.Core.Import;
 using VL.Lib.Collections;
 using VL.Lib.IO.Notifications;
@@ -6,24 +7,12 @@ using VL.Lib.IO.Notifications;
 
 namespace Fu.Input;
 
-
-
 [ProcessNode()]
-public class NotificationsProcessor
+public class NotificationsProcessor : InputProcessorBase
 {
-    public Spread<Cursor> Output { get; private set; } = Spread<Cursor>.Empty;
+    public Spread<Cursor> Output { get; protected set; } = Spread<Cursor>.Empty;
 
     private IObservable<INotification>? _source;
-
-    private MouseState _mouseState;
-    private Cursor? _mouseCursor;
-
-    private bool _invalidate;
-
-
-    private Dictionary<int, Cursor> _touchMessages = new Dictionary<int, Cursor>();
-
-    private Dictionary<int, Cursor> _touchCursors = new Dictionary<int, Cursor>();
 
     public void Update(IObservable<INotification>? source)
     {
@@ -51,70 +40,6 @@ public class NotificationsProcessor
             Output = builder.ToSpread();
 
             _invalidate = false;
-        }
-    }
-
-    private void HandleMouse()
-    {
-        if (_mouseState.IsLeft)
-        {
-            if (_mouseCursor == null)
-            {
-                _mouseCursor = Cursor.DownCursor(_mouseState);
-            }
-            else
-            {
-                _mouseCursor = Cursor.MoveCursor(_mouseState, Cursor.CalculateDelta(_mouseState.Position, _mouseCursor.Value.Position));
-
-            }
-            _invalidate = true;
-
-        }
-        else if (_mouseCursor != null)
-        {
-            if (_mouseCursor.Value.State == Enums.CursorState.Move)
-            {
-                _mouseCursor = Cursor.UpCursor(_mouseState, _mouseState.Position - _mouseCursor.Value.Position);
-            }
-            else
-            {
-                _mouseCursor = null;
-            }
-            _invalidate = true;
-
-        }
-    }
-
-    private void HandleTouch()
-    {
-        foreach (var touch in _touchCursors)
-        {
-            if (touch.Value.State == Enums.CursorState.Up)
-            {
-                _touchCursors.Remove(touch.Key);
-                _invalidate = true;
-            }
-        }
-
-        if (_touchMessages.Count > 0)
-        {
-            foreach (var touch in _touchMessages)
-            {
-                if (touch.Value.State == Enums.CursorState.Down)
-                {
-                    _touchCursors.Add(touch.Key, touch.Value with { Delta = Vector2.Zero });
-                }
-                else if (touch.Value.State == Enums.CursorState.Move || touch.Value.State == Enums.CursorState.Up)
-                {
-                    var hasPreviousCursor = _touchCursors.TryGetValue(touch.Key, out var previousCursor);
-                    _touchCursors[touch.Key] = hasPreviousCursor
-                        ? touch.Value with { Delta = Cursor.CalculateDelta(touch.Value.Position, previousCursor.Position) }
-                        : touch.Value with { Delta = Vector2.Zero, State = Enums.CursorState.Down };
-                }
-            }
-
-            _touchMessages.Clear();
-            _invalidate = true;
         }
     }
 
@@ -175,21 +100,21 @@ public class NotificationsProcessor
     {
         if (touchNotification.Kind == TouchNotificationKind.TouchDown)
         {
-            var cursor = new Cursor(touchNotification.Id, touchNotification.PositionInWorldSpace, Vector2.Zero, Enums.CursorState.Down, Enums.CursorSource.Touch);
+            var cursor = new Cursor(touchNotification.Id, touchNotification.PositionInWorldSpace, Vector2.Zero, CursorState.Down, CursorSource.Touch);
             _touchMessages.Add(touchNotification.Id, cursor);
 
             return;
         }
         else if (touchNotification.Kind == TouchNotificationKind.TouchMove)
         {
-            var cursor = new Cursor(touchNotification.Id, touchNotification.PositionInWorldSpace, Vector2.Zero, Enums.CursorState.Move, Enums.CursorSource.Touch);
+            var cursor = new Cursor(touchNotification.Id, touchNotification.PositionInWorldSpace, Vector2.Zero, CursorState.Move, CursorSource.Touch);
             _touchMessages[touchNotification.Id] = cursor;
 
             return;
         }
         else
         {
-            var cursor = new Cursor(touchNotification.Id, touchNotification.PositionInWorldSpace, Vector2.Zero, Enums.CursorState.Up, Enums.CursorSource.Touch);
+            var cursor = new Cursor(touchNotification.Id, touchNotification.PositionInWorldSpace, Vector2.Zero, CursorState.Up, CursorSource.Touch);
             _touchMessages[touchNotification.Id] = cursor;
 
             return;

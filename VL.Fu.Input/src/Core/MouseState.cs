@@ -1,7 +1,7 @@
 ﻿using Stride.Core.Mathematics;
 using Stride.Input;
 
-namespace Fu.Input;
+namespace Fu.Input.Core;
 
 public record struct MouseState
 {

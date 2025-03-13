@@ -1,24 +1,14 @@
-﻿using Stride.Core.Mathematics;
-using Stride.Input;
+﻿using Stride.Input;
 using VL.Core.Import;
 using VL.Lib.Collections;
 
 
-namespace Fu.Input.Core;
+namespace Fu.Input;
 
 [ProcessNode()]
-public class PointerEventsProcessor
+public class PointerEventsProcessor : InputProcessorBase
 {
-    public Spread<Cursor> Output { get; private set; } = Spread<Cursor>.Empty;
-
-    private MouseState _mouseState;
-    private Cursor? _mouseCursor;
-
-    private Dictionary<int, Cursor> _touchMessages = new Dictionary<int, Cursor>();
-    private Dictionary<int, Cursor> _touchCursors = new Dictionary<int, Cursor>();
-
-    private bool _invalidate;
-
+    public Spread<Cursor> Output { get; protected set; } = Spread<Cursor>.Empty;
     public void Update(IReadOnlyList<InputEvent> input)
     {
         foreach (var inputEvent in input)
@@ -54,69 +44,6 @@ public class PointerEventsProcessor
             Output = builder.ToSpread();
 
             _invalidate = false;
-        }
-    }
-
-    private void HandleTouch()
-    {
-        foreach (var touch in _touchCursors)
-        {
-            if (touch.Value.State == Enums.CursorState.Up)
-            {
-                _touchCursors.Remove(touch.Key);
-                _invalidate = true;
-            }
-        }
-
-        if (_touchMessages.Count > 0)
-        {
-            foreach (var touch in _touchMessages)
-            {
-                if (touch.Value.State == Enums.CursorState.Down)
-                {
-                    _touchCursors.Add(touch.Key, touch.Value with { Delta = Vector2.Zero });
-                }
-                else if (touch.Value.State == Enums.CursorState.Move || touch.Value.State == Enums.CursorState.Up)
-                {
-                    var hasPreviousCursor = _touchCursors.TryGetValue(touch.Key, out var previousCursor);
-                    _touchCursors[touch.Key] = hasPreviousCursor
-                        ? touch.Value with { Delta = Cursor.CalculateDelta(touch.Value.Position, previousCursor.Position) }
-                        : touch.Value with { Delta = Vector2.Zero, State = Enums.CursorState.Down };
-                }
-            }
-
-            _touchMessages.Clear();
-            _invalidate = true;
-        }
-    }
-
-    private void HandleMouse()
-    {
-        if (_mouseState.IsLeft)
-        {
-            if (_mouseCursor == null)
-            {
-                _mouseCursor = Cursor.DownCursor(_mouseState);
-            }
-            else
-            {
-                _mouseCursor = Cursor.MoveCursor(_mouseState, Cursor.CalculateDelta(_mouseState.Position, _mouseCursor.Value.Position));
-
-            }
-            _invalidate = true;
-
-        }
-        else if (_mouseCursor != null)
-        {
-            if (_mouseCursor.Value.State == Enums.CursorState.Move)
-            {
-                _mouseCursor = Cursor.UpCursor(_mouseState, _mouseState.Position - _mouseCursor.Value.Position);
-            }
-            else
-            {
-                _mouseCursor = null;
-            }
-            _invalidate = true;
         }
     }
 }
