@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Document xmlns:p="property" xmlns:r="reflection" Id="MHLTJxNgFLaMLUwH8mmOuP" LanguageVersion="2025.7.0-0208-g71e2a5aa71" Version="0.128">
-  <NugetDependency Id="K05yt1w6dc7Lwf53LFsDeJ" Location="VL.CoreLib" Version="2025.7.0-0208-g71e2a5aa71" />
+<Document xmlns:p="property" xmlns:r="reflection" Id="MHLTJxNgFLaMLUwH8mmOuP" LanguageVersion="2025.7.0-0233-g62969fb108" Version="0.128">
+  <NugetDependency Id="K05yt1w6dc7Lwf53LFsDeJ" Location="VL.CoreLib" Version="2025.7.0-0233-g62969fb108" />
   <Patch Id="L9fZGTQO2NhMsWccH4MlyQ">
     <Canvas Id="OiV8GkEz340Pb0LMQIUMWn" DefaultCategory="Main" BordersChecked="false" CanvasType="FullCategory" />
     <!--
@@ -32,7 +32,7 @@
               <CategoryReference Kind="Category" Name="Skia" NeedsToBeDirectParent="true" />
               <Choice Kind="ProcessAppFlag" Name="Renderer" />
             </p:NodeReference>
-            <Pin Id="VMoDr2JUw2KLzaqToKO9yw" Name="Bounds" Kind="InputPin" DefaultValue="980, 500, 616, 439" IsHidden="true" />
+            <Pin Id="VMoDr2JUw2KLzaqToKO9yw" Name="Bounds" Kind="InputPin" DefaultValue="-8, -8, 2576, 1416" IsHidden="true" />
             <Pin Id="L4M4WUWUd6CQOhSMr8hIfr" Name="Save Bounds" Kind="InputPin" IsHidden="true" />
             <Pin Id="LFLpW3M28lqNunQHX2fBrl" Name="Bound to Document" Kind="InputPin" IsHidden="true" />
             <Pin Id="AwVpAy7uZzNQFOpOeQ4sSF" Name="Node Context" Kind="InputPin" IsHidden="true" />
@@ -55,11 +55,6 @@
         </Canvas>
         <Patch Id="MwrXJO6rwZuOYwiu2YS2zQ" Name="Create" />
         <Patch Id="MCYakUVyVoDNloaT1qK4Cp" Name="Update" />
-        <!--
-
-    ************************  ************************
-
--->
         <ProcessDefinition Id="HWV5OdVNlOAOnRha9QKH0S">
           <Fragment Id="LuLL9z4lWVkMbxY5lvkmhi" Patch="MwrXJO6rwZuOYwiu2YS2zQ" Enabled="true" />
           <Fragment Id="OCMZEJQFkOXNKuLkouJu6x" Patch="MCYakUVyVoDNloaT1qK4Cp" Enabled="true" />
@@ -69,5 +64,5 @@
     </Node>
   </Patch>
   <DocumentDependency Id="FwxSfoY4NKgOl17idTwwbE" Location="../VL.Fu.Input.vl" />
-  <NugetDependency Id="LcgpGc4xnA3MWLj3FjRy3y" Location="VL.Skia" Version="2025.7.0-0208-g71e2a5aa71" />
+  <NugetDependency Id="LcgpGc4xnA3MWLj3FjRy3y" Location="VL.Skia" Version="2025.7.0-0233-g62969fb108" />
 </Document>

@@ -1,4 +1,4 @@
-﻿namespace Fu.Input.Core.Enums;
+﻿namespace Fu.Input.Enums;
 
 public enum CursorSource
 {
