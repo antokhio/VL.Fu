@@ -100,10 +100,14 @@ namespace VL.Fu.Extensions
             TouchNotificationKind state
         )
         {
+            var delta = previous.Position - mouse.Position;
+            var distance = previous.Distance + delta;
+
             return previous with
             {
                 Position = mouse.Position,
                 Delta = previous.Position - mouse.Position,
+                Distance = distance,
             };
         }
     }

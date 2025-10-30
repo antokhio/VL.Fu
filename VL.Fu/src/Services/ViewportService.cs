@@ -17,8 +17,6 @@ namespace VL.Fu.Services
 
         private SKRect? _bounds = null;
 
-        public Vector2 ToSpace()
-
         public void OnRender(CallerInfo caller)
         {
             if (caller.ViewportBounds != _bounds)
@@ -33,9 +31,7 @@ namespace VL.Fu.Services
                 switch (Space)
                 {
                     case CommonSpace.Normalized:
-                        Bounds = boundsF.ToNormalizedSpace(
-                            Resoultion
-                        );
+                        Bounds = boundsF.ToNormalizedSpace(Resoultion);
                         break;
                     case CommonSpace.DIP:
                         boundsF = DIPHelpers.DIP(boundsF);

@@ -18,12 +18,14 @@ namespace VL.Fu.Extensions
         )
         {
             var position = notification.PositionInProjectionSpace.ToSkiaSpace();
+            var delta = previous.Position - position;
 
             return previous with
             {
                 Position = position,
-                Delta = previous.Position - position,
+                Delta = delta,
                 State = notification.Kind,
+                Distance = previous.Distance + delta,
             };
         }
     }
