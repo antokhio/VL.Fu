@@ -96,9 +96,13 @@ namespace VL.Fu.Services
                     .OfType<KeyUpNotification>()
                     .Subscribe(n =>
                     {
-                        var isModifier = _keys[n.KeyCode].IsModifier();
+                        bool isModifier = false;
 
-                        _keys.Remove(n.KeyCode);
+                        if (_keys.TryGetValue(n.KeyCode, out var fuKey))
+                        {
+                            isModifier = fuKey.IsModifier();
+                            _keys.Remove(n.KeyCode);
+                        }
 
                         if (isModifier)
                         {
