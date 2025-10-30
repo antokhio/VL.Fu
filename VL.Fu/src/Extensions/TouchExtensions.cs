@@ -24,7 +24,6 @@ namespace VL.Fu.Extensions
                 Position = position,
                 Delta = previous.Position - position,
                 State = notification.Kind,
-                LifeSpan = DateTimeOffset.UtcNow - previous.CreatedAt,
             };
         }
     }

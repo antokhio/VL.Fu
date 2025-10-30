@@ -161,6 +161,7 @@ namespace VL.Fu.Services
 
                         _previousMouse = next;
                     }
+                    // else if (mouse lost)
 
                     _cursorsChannel.OnNext(_cursors.Values.ToSpread());
                 })

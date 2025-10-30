@@ -104,7 +104,6 @@ namespace VL.Fu.Extensions
             {
                 Position = mouse.Position,
                 Delta = previous.Position - mouse.Position,
-                LifeSpan = DateTimeOffset.UtcNow - previous.CreatedAt,
             };
         }
     }
