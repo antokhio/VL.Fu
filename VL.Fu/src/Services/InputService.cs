@@ -5,6 +5,7 @@ using VL.Fu.Core;
 using VL.Fu.Extensions;
 using VL.Fu.Helpers;
 using VL.Lib.Collections;
+using VL.Lib.IO;
 using VL.Lib.IO.Notifications;
 using VL.Lib.Reactive;
 using VL.Skia;
@@ -13,28 +14,41 @@ namespace VL.Fu.Services
 {
     public class InputService : IDisposable
     {
-        public Spread<FuCursor> Cursors => _cursorsChannel.Value;
         public FuMouse Mouse => _mouse.Value;
-        public bool HasTouch { get; private set; }
+        public Spread<FuCursor> Cursors => _cursorsChannel.Value!;
+        public Spread<FuKey> Keys => _keysChannel.Value!;
+        public Spread<FuKey> Modifiers => _modifiersChannel.Value!;
+
+        public bool IsFocused { get; private set; }
+        public bool IsTouch { get; private set; }
         public bool IsEnabled { get; set; } = true;
 
         protected readonly Subject<INotification> _notifications = new Subject<INotification>();
         protected readonly IChannel<FuMouse> _mouse = ChannelHelpers.CreateChannelOfType<FuMouse>();
+
         protected FuMouse? _previousMouse = null;
 
         protected readonly CompositeDisposable _subscriptions = new();
 
         protected readonly Dictionary<int, FuCursor> _cursors = new();
+        protected readonly Dictionary<Keys, FuKey> _keys = new();
 
         protected readonly List<int> _cursorsToRemove = new();
 
-        protected IChannel<Spread<FuCursor>> _cursorsChannel = ChannelHelpers.CreateChannelOfType<
-            Spread<FuCursor>
-        >();
+        protected readonly IChannel<Spread<FuCursor>> _cursorsChannel =
+            ChannelHelpers.CreateChannelOfType<Spread<FuCursor>>();
+
+        protected readonly IChannel<Spread<FuKey>> _keysChannel =
+            ChannelHelpers.CreateChannelOfType<Spread<FuKey>>();
+
+        protected readonly IChannel<Spread<FuKey>> _modifiersChannel =
+            ChannelHelpers.CreateChannelOfType<Spread<FuKey>>();
 
         public InputService()
         {
             _cursorsChannel.Value = Spread<FuCursor>.Empty;
+            _keysChannel.Value = Spread<FuKey>.Empty;
+            _modifiersChannel.Value = Spread<FuKey>.Empty;
 
             // Pre-process mouse
             _subscriptions.Add(
@@ -55,12 +69,84 @@ namespace VL.Fu.Services
                     )
             );
 
+            // Process keyboard
+            _subscriptions.Add(
+                _notifications
+                    .OfType<KeyDownNotification>()
+                    .Subscribe(n =>
+                    {
+                        _keys[n.KeyCode] = new FuKey(n.KeyCode, KeyNotificationKind.KeyDown);
+
+                        if (_keys[n.KeyCode].IsModifier())
+                        {
+                            _modifiersChannel.OnNext(
+                                _keys.Values.Where(k => k.IsModifier()).ToSpread()
+                            );
+                        }
+                        else
+                        {
+                            _keysChannel.OnNext(
+                                _keys.Values.Where(k => !k.IsModifier()).ToSpread()
+                            );
+                        }
+                    })
+            );
+            _subscriptions.Add(
+                _notifications
+                    .OfType<KeyUpNotification>()
+                    .Subscribe(n =>
+                    {
+                        var isModifier = _keys[n.KeyCode].IsModifier();
+
+                        _keys.Remove(n.KeyCode);
+
+                        if (isModifier)
+                        {
+                            _modifiersChannel.OnNext(
+                                _keys.Values.Where(k => k.IsModifier()).ToSpread()
+                            );
+                        }
+                        else
+                        {
+                            _keysChannel.OnNext(
+                                _keys.Values.Where(k => !k.IsModifier()).ToSpread()
+                            );
+                        }
+                    })
+            );
+
+            // Focus lost
+            _subscriptions.Add(
+                _notifications
+                    .OfType<LostFocusNotification>()
+                    .Subscribe(x =>
+                    {
+                        IsFocused = false;
+
+                        _keys.Clear();
+                        _keysChannel.OnNext(Spread<FuKey>.Empty);
+                        _modifiersChannel.OnNext(Spread<FuKey>.Empty);
+                    })
+            );
+
+            // Focus Found
+            _subscriptions.Add(
+                _notifications
+                    .OfType<GotFocusNotification>()
+                    .Subscribe(x =>
+                    {
+                        IsFocused = true;
+                    })
+            );
+
             // Process touch
             _subscriptions.Add(
                 _notifications
                     .OfType<TouchNotification>()
                     .Subscribe(x =>
                     {
+                        IsTouch = true;
+
                         if (x.Kind == TouchNotificationKind.TouchDown)
                         {
                             var cursor = x.ToNewFuCursor();

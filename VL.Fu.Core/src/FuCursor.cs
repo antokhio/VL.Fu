@@ -9,7 +9,7 @@ namespace VL.Fu.Core
         public Vector2 Position { get; set; }
         public Vector2 Delta { get; set; }
         public TouchNotificationKind State { get; set; }
-        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; }
         public TimeSpan LifeSpan => DateTimeOffset.UtcNow - CreatedAt;
 
         public FuCursor() { }

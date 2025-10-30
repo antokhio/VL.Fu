@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="VL.Core" Version="2025.7.0" />
+    <PackageReference Include="VL.CoreLib" Version="2025.7.0" />
   </ItemGroup>
 </Project>
