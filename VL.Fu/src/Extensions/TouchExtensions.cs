@@ -3,13 +3,29 @@ using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Extensions
 {
-    public static class TouchExtensions
+    public static class TouchNotificationExtensions
     {
-        public static Cursor ToCursor(this TouchNotification notification) =>
-            new Cursor(
+        public static FuCursor ToNewFuCursor(this TouchNotification notification) =>
+            new FuCursor(
                 notification.Id,
                 notification.PositionInProjectionSpace.ToSkiaSpace(),
                 notification.Kind
             );
+
+        public static FuCursor ToFuCursorWithDelta(
+            this TouchNotification notification,
+            FuCursor previous
+        )
+        {
+            var position = notification.PositionInProjectionSpace.ToSkiaSpace();
+
+            return previous with
+            {
+                Position = position,
+                Delta = previous.Position - position,
+                State = notification.Kind,
+                LifeSpan = DateTimeOffset.UtcNow - previous.CreatedAt,
+            };
+        }
     }
 }

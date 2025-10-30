@@ -1,9 +1,9 @@
-﻿using System.Numerics;
+﻿using Stride.Core.Mathematics;
 using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Core
 {
-    public record struct Mouse
+    public record struct FuMouse
     {
         public Vector2 Position { get; set; } = Vector2.Zero;
         public int Wheel { get; set; } = 0;
@@ -16,6 +16,6 @@ namespace VL.Fu.Core
 
         public TouchNotificationKind CursorState { get; set; } = TouchNotificationKind.TouchUp;
 
-        public Mouse() { }
+        public FuMouse() { }
     }
 }

@@ -1,13 +1,14 @@
 ﻿using VL.Fu.Core;
+using VL.Fu.Helpers;
 using VL.Lib.IO;
 using VL.Lib.IO.Notifications;
-using Mouse = VL.Fu.Core.Mouse;
+using FuMouse = VL.Fu.Core.FuMouse;
 
 namespace VL.Fu.Extensions
 {
     public static class MouseExtensions
     {
-        public static Mouse With(this Mouse mouse, MouseDownNotification notification) =>
+        public static FuMouse With(this FuMouse mouse, MouseDownNotification notification) =>
             notification.Buttons switch
             {
                 MouseButtons.Left => mouse with
@@ -38,7 +39,7 @@ namespace VL.Fu.Extensions
                 _ => mouse,
             };
 
-        public static Mouse With(this Mouse mouse, MouseUpNotification notification) =>
+        public static FuMouse With(this FuMouse mouse, MouseUpNotification notification) =>
             notification.Buttons switch
             {
                 MouseButtons.Left => mouse with
@@ -69,14 +70,14 @@ namespace VL.Fu.Extensions
                 _ => mouse,
             };
 
-        public static Mouse With(this Mouse mouse, MouseMoveNotification notification) =>
+        public static FuMouse With(this FuMouse mouse, MouseMoveNotification notification) =>
             mouse with
             {
                 Position = notification.PositionInProjectionSpace.ToSkiaSpace(),
                 IsLost = notification.IsMouseLost(),
             };
 
-        public static Mouse With(this Mouse mouse, MouseWheelNotification notification) =>
+        public static FuMouse With(this FuMouse mouse, MouseWheelNotification notification) =>
             mouse with
             {
                 Position = notification.PositionInProjectionSpace.ToSkiaSpace(),
@@ -84,18 +85,27 @@ namespace VL.Fu.Extensions
                 IsLost = notification.IsMouseLost(),
             };
 
-        public static Mouse With(this Mouse mouse, MouseLostNotification notification) =>
+        public static FuMouse With(this FuMouse mouse, MouseLostNotification notification) =>
             mouse with
             {
                 IsLost = notification.IsMouseLost(),
             };
 
-        public static Cursor ToCursor(this Mouse mouse, TouchNotificationKind state) =>
-            new Cursor
+        public static FuCursor ToNewFuCursor(this FuMouse mouse, TouchNotificationKind state) =>
+            new FuCursor(MouseHelper.MouseCursorId, mouse.Position, state);
+
+        public static FuCursor ToFuCursorWithDelta(
+            this FuMouse mouse,
+            FuCursor previous,
+            TouchNotificationKind state
+        )
+        {
+            return previous with
             {
-                Id = -1,
                 Position = mouse.Position,
-                State = state,
+                Delta = previous.Position - mouse.Position,
+                LifeSpan = DateTimeOffset.UtcNow - previous.CreatedAt,
             };
+        }
     }
 }

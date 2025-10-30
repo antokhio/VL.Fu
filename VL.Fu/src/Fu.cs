@@ -32,14 +32,12 @@ namespace VL.Fu
         public bool Notify(INotification notification, CallerInfo caller) =>
             InputService.Notify(notification, caller);
 
-        private bool invalidate = true;
-
-        public void Render(CallerInfo caller) { }
-
         [Fragment]
         public void Update()
         {
             InputService.Update();
         }
+
+        public void Render(CallerInfo caller) { }
     }
 }

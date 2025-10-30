@@ -13,28 +13,28 @@ namespace VL.Fu.Services
 {
     public class InputService : IDisposable
     {
-        public Spread<Cursor> Cursors => _cursorsChannel.Value;
-        public Mouse Mouse => _mouse.Value;
+        public Spread<FuCursor> Cursors => _cursorsChannel.Value;
+        public FuMouse Mouse => _mouse.Value;
         public bool HasTouch { get; private set; }
         public bool IsEnabled { get; set; } = true;
 
         protected readonly Subject<INotification> _notifications = new Subject<INotification>();
-        protected readonly IChannel<Mouse> _mouse = ChannelHelpers.CreateChannelOfType<Mouse>();
-        protected Mouse? _previousMouse = null;
+        protected readonly IChannel<FuMouse> _mouse = ChannelHelpers.CreateChannelOfType<FuMouse>();
+        protected FuMouse? _previousMouse = null;
 
         protected readonly CompositeDisposable _subscriptions = new();
 
-        protected readonly Dictionary<int, Cursor> _cursors = new();
+        protected readonly Dictionary<int, FuCursor> _cursors = new();
 
         protected readonly List<int> _cursorsToRemove = new();
 
-        protected IChannel<Spread<Cursor>> _cursorsChannel = ChannelHelpers.CreateChannelOfType<
-            Spread<Cursor>
+        protected IChannel<Spread<FuCursor>> _cursorsChannel = ChannelHelpers.CreateChannelOfType<
+            Spread<FuCursor>
         >();
 
         public InputService()
         {
-            _cursorsChannel.Value = Spread<Cursor>.Empty;
+            _cursorsChannel.Value = Spread<FuCursor>.Empty;
 
             // Pre-process mouse
             _subscriptions.Add(
@@ -61,13 +61,40 @@ namespace VL.Fu.Services
                     .OfType<TouchNotification>()
                     .Subscribe(x =>
                     {
-                        var cursor = x.ToCursor();
-
-                        _cursors[cursor.Id] = cursor;
-
-                        if (x.Kind == TouchNotificationKind.TouchUp)
+                        if (x.Kind == TouchNotificationKind.TouchDown)
                         {
-                            _cursorsToRemove.Add(cursor.Id);
+                            var cursor = x.ToNewFuCursor();
+                            _cursors[cursor.Id] = cursor;
+                        }
+                        else if (x.Kind == TouchNotificationKind.TouchMove)
+                        {
+                            if (_cursors.TryGetValue(x.Id, out var prev))
+                            {
+                                var cursor = x.ToFuCursorWithDelta(prev);
+                                _cursors[cursor.Id] = cursor;
+                            }
+                            else
+                            {
+                                var cursor = x.ToNewFuCursor();
+                                _cursors[cursor.Id] = cursor;
+                            }
+                        }
+                        else if (x.Kind == TouchNotificationKind.TouchUp)
+                        {
+                            if (_cursors.TryGetValue(x.Id, out var prev))
+                            {
+                                var cursor = x.ToFuCursorWithDelta(prev);
+                                _cursors[cursor.Id] = cursor;
+
+                                _cursorsToRemove.Add(cursor.Id);
+                            }
+                            else
+                            {
+                                var cursor = x.ToNewFuCursor();
+                                _cursors[cursor.Id] = cursor;
+
+                                _cursorsToRemove.Add(cursor.Id);
+                            }
                         }
 
                         _cursorsChannel.OnNext(_cursors.Values.ToSpread());
@@ -85,44 +112,54 @@ namespace VL.Fu.Services
 
                         if (prev.IsLeftButton is false && next.IsLeftButton is true)
                         {
-                            _cursors[MouseHelpers.MouseCursorId] = next.ToCursor(
+                            _cursors[MouseHelper.MouseCursorId] = next.ToNewFuCursor(
                                 TouchNotificationKind.TouchDown
                             );
                         }
                         else if (prev.IsLeftButton is true && next.IsLeftButton is true)
                         {
-                            _cursors[MouseHelpers.MouseCursorId] = next.ToCursor(
-                                TouchNotificationKind.TouchMove
-                            );
+                            if (_cursors.TryGetValue(MouseHelper.MouseCursorId, out var prevCursor))
+                            {
+                                _cursors[MouseHelper.MouseCursorId] = next.ToFuCursorWithDelta(
+                                    prevCursor,
+                                    TouchNotificationKind.TouchMove
+                                );
+                            }
+                            else
+                            {
+                                _cursors[MouseHelper.MouseCursorId] = next.ToNewFuCursor(
+                                    TouchNotificationKind.TouchMove
+                                );
+                            }
                         }
                         else if (prev.IsLeftButton is true && next.IsLeftButton is false)
                         {
-                            _cursors[MouseHelpers.MouseCursorId] = next.ToCursor(
-                                TouchNotificationKind.TouchUp
-                            );
+                            if (_cursors.TryGetValue(MouseHelper.MouseCursorId, out var prevCursor))
+                            {
+                                _cursors[MouseHelper.MouseCursorId] = next.ToFuCursorWithDelta(
+                                    prevCursor,
+                                    TouchNotificationKind.TouchUp
+                                );
+                            }
+                            else
+                            {
+                                _cursors[MouseHelper.MouseCursorId] = next.ToNewFuCursor(
+                                    TouchNotificationKind.TouchUp
+                                );
+                            }
 
-                            _cursorsToRemove.Add(MouseHelpers.MouseCursorId);
+                            _cursorsToRemove.Add(MouseHelper.MouseCursorId);
                         }
 
                         _previousMouse = next;
                     }
                     else if (next.IsLeftButton is true)
                     {
-                        _cursors[MouseHelpers.MouseCursorId] = next.ToCursor(
+                        _cursors[MouseHelper.MouseCursorId] = next.ToNewFuCursor(
                             TouchNotificationKind.TouchDown
                         );
 
                         _previousMouse = next;
-                    }
-                    else if (next.IsLost)
-                    {
-                        _cursors[MouseHelpers.MouseCursorId] = next.ToCursor(
-                            TouchNotificationKind.TouchUp
-                        );
-
-                        _previousMouse = null;
-
-                        _cursorsToRemove.Add(MouseHelpers.MouseCursorId);
                     }
 
                     _cursorsChannel.OnNext(_cursors.Values.ToSpread());
@@ -155,7 +192,7 @@ namespace VL.Fu.Services
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _subscriptions.Dispose();
         }
     }
 }
