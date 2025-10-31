@@ -58,5 +58,24 @@ namespace VL.Fu.Extensions
                 current = current.Parent;
             }
         }
+
+        /// <summary>
+        /// Performs a pre-order, depth-first traversal of the tree starting from the specified root node.
+        /// </summary>
+        /// <param name="root">The root node to start the traversal from.</param>
+        /// <returns>An enumerable collection of tree nodes in pre-order, depth-first order.</returns>
+        public static IEnumerable<ITreeNode> TraverseDepthFirstPreOrder<T>(this ITreeNode root)
+            where T : ITreeNode
+        {
+            // Equivalent to the enumerator implemented in TreeNode<T>
+            yield return (T)root;
+            foreach (var child in root.Children)
+            {
+                foreach (var descendant in child.TraverseDepthFirstPreOrder<T>()) // Recursive call
+                {
+                    yield return (T)descendant;
+                }
+            }
+        }
     }
 }

@@ -28,6 +28,11 @@ namespace VL.Fu
 
         public RectangleF? Bounds => RectangleF.Empty;
 
+        protected readonly CachedProperty<CommonSpace> _space = new(CommonSpace.Normalized);
+        public CommonSpace Space => _space.Value;
+
+        public Action<CommonSpace>? OnUpdateSpace { get; set; }
+
         void RegisterServices(FuServiceRepository repository, int hash)
         {
             repository.RegisterService(InputService, hash);
@@ -50,8 +55,16 @@ namespace VL.Fu
         public void SetCommonSpace(CommonSpace space = CommonSpace.Normalized) =>
             _space.TrySetValue(space, (_, next) => OnUpdateSpace?.Invoke(next));
 
-        public bool Notify(INotification notification, CallerInfo caller) =>
+        public bool Notify(INotification notification, CallerInfo caller)
+        {
             InputService.Notify(notification, caller);
+            _input.Notify(notification, caller);
+            return false;
+        }
+
+        private bool _invalidate = true;
+        private int _callerHash = Common.DefaultCallerHash;
+        private IFuNode _input;
 
         [Fragment]
         public void Update()
@@ -59,8 +72,13 @@ namespace VL.Fu
             InputService.Update();
         }
 
-        private bool _invalidate = true;
-        private int _callerHash = CallerHashDefault;
+        public void Render(CallerInfo caller)
+        {
+            Invalidate(caller);
+            ViewportService.OnRender(caller);
+
+            _input?.Render(caller);
+        }
 
         void Invalidate(CallerInfo caller)
         {
@@ -74,7 +92,7 @@ namespace VL.Fu
 
                 RegisterServices(repository, caller.GetHashCode());
             }
-            else if (_callerHash != CallerHashDefault && _callerHash != caller.GetHashCode())
+            else if (_callerHash != Common.DefaultCallerHash && _callerHash != caller.GetHashCode())
             {
                 var appHost = AppHost.Current;
                 var repository =
@@ -83,12 +101,6 @@ namespace VL.Fu
                 _callerHash = caller.GetHashCode();
                 RegisterServices(repository, caller.GetHashCode());
             }
-        }
-
-        public void Render(CallerInfo caller)
-        {
-            Invalidate(caller);
-            ViewportService.OnRender(caller);
         }
 
         public void Dispose()
