@@ -2,6 +2,7 @@
 using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
+using VL.Fu.Core.Helpers;
 using VL.Fu.Repository;
 using VL.Fu.Services;
 using VL.Lib.IO.Notifications;
@@ -18,8 +19,12 @@ namespace VL.Fu
     {
         private static int CallerHashDefault = -1;
 
-        public InputService InputService { get; } = new();
-        public ViewportService ViewportService { get; } = new();
+        public InputService InputService { get; }
+        public ViewportService ViewportService { get; }
+
+        public int DIPFactor = 100;
+
+        public int PixelFactor = 100;
 
         public RectangleF? Bounds => RectangleF.Empty;
 
@@ -30,14 +35,20 @@ namespace VL.Fu
         }
 
         [Fragment]
-        public Fu() { }
+        public Fu()
+        {
+            InputService = new InputService(this);
+            ViewportService = new ViewportService(this);
+        }
+
+        protected readonly CachedProperty<CommonSpace> _space = new(CommonSpace.Normalized);
+        public CommonSpace Space => _space.Value;
+
+        public Action<CommonSpace>? OnUpdateSpace { get; set; }
 
         [Fragment]
-        public void SetCommonSpace(CommonSpace space = CommonSpace.Normalized)
-        {
-            if (space != ViewportService.Space)
-                ViewportService.Space = space;
-        }
+        public void SetCommonSpace(CommonSpace space = CommonSpace.Normalized) =>
+            _space.TrySetValue(space, (_, next) => OnUpdateSpace?.Invoke(next));
 
         public bool Notify(INotification notification, CallerInfo caller) =>
             InputService.Notify(notification, caller);

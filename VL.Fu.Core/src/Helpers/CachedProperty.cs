@@ -11,7 +11,9 @@
 
         public bool TrySetValue(T newValue, Action<T, T>? onValueChange = null)
         {
-            if (ReferenceEquals(_value, newValue))
+            // Use EqualityComparer<T>.Default to handle both structs (value types)
+            // and classes (reference types) correctly.
+            if (EqualityComparer<T>.Default.Equals(_value, newValue))
             {
                 return false;
             }

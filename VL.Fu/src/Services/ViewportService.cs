@@ -1,5 +1,6 @@
 ﻿using SkiaSharp;
 using Stride.Core.Mathematics;
+using VL.Fu.Core.Helpers;
 using VL.Fu.Extensions;
 using VL.Skia;
 using VL.UI.Core;
@@ -8,21 +9,32 @@ namespace VL.Fu.Services
 {
     public class ViewportService
     {
-        public CommonSpace Space { get; set; } = CommonSpace.Normalized;
-
-        private static float ScaleFactor = 0.01f;
+        public int DIPFactor => _instance.DIPFactor;
+        public int PixelFactor => _instance.PixelFactor;
+        public CommonSpace Space => _instance.Space;
         public RectangleF Bounds { get; private set; } = RectangleF.Empty;
         public Int2 Resoultion { get; private set; } = Int2.One;
         public float DIP => DIPHelpers.DIPFactor();
 
-        private SKRect? _bounds = null;
+        private readonly Fu _instance;
+        private readonly CachedProperty<SKRect?> _bounds = new(null);
+
+        public ViewportService(Fu instance)
+        {
+            _instance = instance;
+            _instance.OnUpdateSpace += (space) => UpdateBounds(_bounds.Value);
+        }
 
         public void OnRender(CallerInfo caller)
         {
-            if (caller.ViewportBounds != _bounds)
+            _bounds.TrySetValue(caller.ViewportBounds, (prev, next) => UpdateBounds(next));
+        }
+
+        public void UpdateBounds(SKRect? rect)
+        {
+            if (rect is not null)
             {
-                var bounds = caller.ViewportBounds;
-                _bounds = bounds;
+                SKRect bounds = rect.Value;
 
                 Resoultion = new Int2((int)bounds.Width, (int)bounds.Height);
 
@@ -34,16 +46,14 @@ namespace VL.Fu.Services
                         Bounds = boundsF.ToNormalizedSpace(Resoultion);
                         break;
                     case CommonSpace.DIP:
-                        boundsF = DIPHelpers.DIP(boundsF);
-
-                        boundsF = new RectangleF(
-                            boundsF.X * ScaleFactor,
-                            boundsF.Y * ScaleFactor,
-                            boundsF.Width * ScaleFactor,
-                            boundsF.Height * ScaleFactor
-                        );
-
-                        Bounds = boundsF;
+                        Bounds = boundsF.ToCenteredDIPSpace(Resoultion, DIPFactor);
+                        break;
+                    case CommonSpace.DIPTopLeft:
+                        Bounds = boundsF.ToDIPTopLeftSpace(DIPFactor);
+                        break;
+                    case CommonSpace.PixelTopLeft:
+                        // Seems to be a bug in gamma
+                        Bounds = boundsF.ToDIPTopLeftSpace(PixelFactor);
                         break;
                 }
             }

@@ -1,11 +1,17 @@
 ﻿using VL.Fu.Core;
 using VL.Lib.IO.Notifications;
+using VL.Skia;
 
 namespace VL.Fu.Extensions
 {
     public static class TouchNotificationExtensions
     {
-        public static FuCursor ToNewFuCursor(this TouchNotification notification) =>
+        public static FuCursor ToNewFuCursor(
+            this TouchNotification notification,
+            CommonSpace space,
+            float dipFactor,
+            float pixelFactor
+        ) =>
             new FuCursor(
                 notification.Id,
                 notification.PositionInProjectionSpace.ToSkiaSpace(),
@@ -14,10 +20,14 @@ namespace VL.Fu.Extensions
 
         public static FuCursor ToFuCursorWithDelta(
             this TouchNotification notification,
-            FuCursor previous
+            FuCursor previous,
+            CommonSpace space,
+            float dipFactor,
+            float pixelFactor
         )
         {
-            var position = notification.PositionInProjectionSpace.ToSkiaSpace();
+            var position = notification.ToCommonSpace(space, dipFactor, pixelFactor);
+
             var delta = previous.Position - position;
 
             return previous with

@@ -5,7 +5,7 @@ using VL.Lib.Collections;
 
 namespace VL.Fu
 {
-    [ProcessNode(Name = "FuNode")]
+    [ProcessNode(Name = "FuNode", HasStateOutput = true)]
     public class FuNode : TreeNode<FuNode>, ITreeNode
     {
         public new Spread<FuNode> Children => _children.Value;

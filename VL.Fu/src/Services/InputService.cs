@@ -14,6 +14,9 @@ namespace VL.Fu.Services
 {
     public class InputService : IDisposable
     {
+        public int DIPFactor => _instance.DIPFactor;
+        public int PixelFactor => _instance.PixelFactor;
+        public CommonSpace Space => _instance.Space;
         public FuMouse Mouse => _mouse.Value;
         public Spread<FuCursor> Cursors => _cursorsChannel.Value!;
         public Spread<FuKey> Keys => _keysChannel.Value!;
@@ -44,8 +47,12 @@ namespace VL.Fu.Services
         protected readonly IChannel<Spread<FuKey>> _modifiersChannel =
             ChannelHelpers.CreateChannelOfType<Spread<FuKey>>();
 
-        public InputService()
+        private readonly Fu _instance;
+
+        public InputService(Fu instance)
         {
+            _instance = instance;
+
             _cursorsChannel.Value = Spread<FuCursor>.Empty;
             _keysChannel.Value = Spread<FuKey>.Empty;
             _modifiersChannel.Value = Spread<FuKey>.Empty;
@@ -58,10 +65,30 @@ namespace VL.Fu.Services
                         _mouse.OnNext(
                             n switch
                             {
-                                MouseDownNotification mdn => Mouse.With(mdn),
-                                MouseUpNotification mun => Mouse.With(mun),
-                                MouseMoveNotification mmn => Mouse.With(mmn),
-                                MouseWheelNotification mwn => Mouse.With(mwn),
+                                MouseDownNotification mdn => Mouse.With(
+                                    mdn,
+                                    Space,
+                                    DIPFactor,
+                                    PixelFactor
+                                ),
+                                MouseUpNotification mun => Mouse.With(
+                                    mun,
+                                    Space,
+                                    DIPFactor,
+                                    PixelFactor
+                                ),
+                                MouseMoveNotification mmn => Mouse.With(
+                                    mmn,
+                                    Space,
+                                    DIPFactor,
+                                    PixelFactor
+                                ),
+                                MouseWheelNotification mwn => Mouse.With(
+                                    mwn,
+                                    Space,
+                                    DIPFactor,
+                                    PixelFactor
+                                ),
                                 MouseLostNotification mwl => Mouse.With(mwl),
                                 _ => Mouse,
                             }
@@ -153,19 +180,24 @@ namespace VL.Fu.Services
 
                         if (x.Kind == TouchNotificationKind.TouchDown)
                         {
-                            var cursor = x.ToNewFuCursor();
+                            var cursor = x.ToNewFuCursor(Space, DIPFactor, PixelFactor);
                             _cursors[cursor.Id] = cursor;
                         }
                         else if (x.Kind == TouchNotificationKind.TouchMove)
                         {
                             if (_cursors.TryGetValue(x.Id, out var prev))
                             {
-                                var cursor = x.ToFuCursorWithDelta(prev);
+                                var cursor = x.ToFuCursorWithDelta(
+                                    prev,
+                                    Space,
+                                    DIPFactor,
+                                    PixelFactor
+                                );
                                 _cursors[cursor.Id] = cursor;
                             }
                             else
                             {
-                                var cursor = x.ToNewFuCursor();
+                                var cursor = x.ToNewFuCursor(Space, DIPFactor, PixelFactor);
                                 _cursors[cursor.Id] = cursor;
                             }
                         }
@@ -173,14 +205,19 @@ namespace VL.Fu.Services
                         {
                             if (_cursors.TryGetValue(x.Id, out var prev))
                             {
-                                var cursor = x.ToFuCursorWithDelta(prev);
+                                var cursor = x.ToFuCursorWithDelta(
+                                    prev,
+                                    Space,
+                                    DIPFactor,
+                                    PixelFactor
+                                );
                                 _cursors[cursor.Id] = cursor;
 
                                 _cursorsToRemove.Add(cursor.Id);
                             }
                             else
                             {
-                                var cursor = x.ToNewFuCursor();
+                                var cursor = x.ToNewFuCursor(Space, DIPFactor, PixelFactor);
                                 _cursors[cursor.Id] = cursor;
 
                                 _cursorsToRemove.Add(cursor.Id);
