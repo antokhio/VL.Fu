@@ -2,6 +2,7 @@
 using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
+using VL.Fu.Core;
 using VL.Fu.Core.Helpers;
 using VL.Fu.Repository;
 using VL.Fu.Services;
@@ -17,15 +18,13 @@ namespace VL.Fu
     )]
     public class Fu : ILayer, IDisposable
     {
-        private static int CallerHashDefault = -1;
-
         public InputService InputService { get; }
         public ViewportService ViewportService { get; }
+        public InteractionService InteractionService { get; }
 
         public int DIPFactor = 100;
 
         public int PixelFactor = 100;
-
         public RectangleF? Bounds => RectangleF.Empty;
 
         protected readonly CachedProperty<CommonSpace> _space = new(CommonSpace.Normalized);
@@ -37,19 +36,17 @@ namespace VL.Fu
         {
             repository.RegisterService(InputService, hash);
             repository.RegisterService(ViewportService, hash);
+            repository.RegisterService(InteractionService, hash);
         }
 
         [Fragment]
         public Fu()
         {
+            // TODO: better registration handling
             InputService = new InputService(this);
             ViewportService = new ViewportService(this);
+            InteractionService = new InteractionService();
         }
-
-        protected readonly CachedProperty<CommonSpace> _space = new(CommonSpace.Normalized);
-        public CommonSpace Space => _space.Value;
-
-        public Action<CommonSpace>? OnUpdateSpace { get; set; }
 
         [Fragment]
         public void SetCommonSpace(CommonSpace space = CommonSpace.Normalized) =>
@@ -66,9 +63,21 @@ namespace VL.Fu
         private int _callerHash = Common.DefaultCallerHash;
         private IFuNode _input;
 
-        [Fragment]
-        public void Update()
+        [Fragment(Order = Common.PinOrder.Main)]
+        public void Update(IFuNode input)
         {
+            _input = input;
+
+            if (_input != null)
+            {
+                InteractionService.Update(
+                    root: _input,
+                    cursors: InputService.Cursors,
+                    keys: InputService.Keys,
+                    modifiers: InputService.Modifiers
+                );
+            }
+
             InputService.Update();
         }
 
