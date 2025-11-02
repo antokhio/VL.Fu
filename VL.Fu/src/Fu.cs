@@ -18,13 +18,12 @@ namespace VL.Fu
     )]
     public class Fu : ILayer, IDisposable
     {
+        public int DIPFactor = 100;
+        public int PixelFactor = 100;
         public InputService InputService { get; }
         public ViewportService ViewportService { get; }
         public InteractionService InteractionService { get; }
 
-        public int DIPFactor = 100;
-
-        public int PixelFactor = 100;
         public RectangleF? Bounds => RectangleF.Empty;
 
         protected readonly CachedProperty<CommonSpace> _space = new(CommonSpace.Normalized);
@@ -68,6 +67,9 @@ namespace VL.Fu
         {
             _input = input;
 
+            // Update input state
+            InputService.Update();
+
             if (_input != null)
             {
                 InteractionService.Update(
@@ -77,8 +79,6 @@ namespace VL.Fu
                     modifiers: InputService.Modifiers
                 );
             }
-
-            InputService.Update();
         }
 
         public void Render(CallerInfo caller)
