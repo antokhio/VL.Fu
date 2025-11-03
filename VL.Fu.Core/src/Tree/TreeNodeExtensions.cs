@@ -49,6 +49,27 @@ namespace VL.Fu.Extensions
         }
 
         /// <summary>
+        /// Performs a pre-order traversal of the tree starting from the specified root node.
+        /// </summary>
+        /// <param name="root">The root node to start the traversal from.</param>
+        /// <returns>An enumerable collection of tree nodes in pre-order (parent before children).</returns>
+        public static IEnumerable<ITreeNode> TraversePreOrder(this ITreeNode root)
+        {
+            if (root is null)
+                yield break;
+
+            yield return root;
+
+            foreach (var child in root.Children)
+            {
+                foreach (var descendant in child.TraversePreOrder()) // Recursive call
+                {
+                    yield return descendant;
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns an enumerable collection of all ancestor nodes (parent, grandparent, etc.) of the current node,
         /// starting from the immediate parent and moving toward the root.
         /// </summary>
@@ -61,25 +82,6 @@ namespace VL.Fu.Extensions
             {
                 yield return current;
                 current = current.Parent;
-            }
-        }
-
-        /// <summary>
-        /// Performs a pre-order, depth-first traversal of the tree starting from the specified root node.
-        /// </summary>
-        /// <param name="root">The root node to start the traversal from.</param>
-        /// <returns>An enumerable collection of tree nodes in pre-order, depth-first order.</returns>
-        public static IEnumerable<ITreeNode> TraverseDepthFirstPreOrder<T>(this ITreeNode root)
-            where T : ITreeNode
-        {
-            // Equivalent to the enumerator implemented in TreeNode<T>
-            yield return (T)root;
-            foreach (var child in root.Children)
-            {
-                foreach (var descendant in child.TraverseDepthFirstPreOrder<T>()) // Recursive call
-                {
-                    yield return (T)descendant;
-                }
             }
         }
     }

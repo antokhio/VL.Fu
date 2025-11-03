@@ -89,6 +89,16 @@ namespace VL.Fu
             );
 
         public bool HitTest(FuCursor cursor) => _hitTestFunction.Value(this, cursor);
+
+        protected readonly CachedProperty<Func<IFuNode, RectangleF, bool>> _areaTestFunction = new(
+            AreaTestHelper.IsContainedIn // Use our new helper as the default
+        );
+
+        [Fragment]
+        public void SetAreaTestFunction(Func<IFuNode, RectangleF, bool> areaTestFunction) =>
+            _areaTestFunction.TrySetValue(areaTestFunction);
+
+        public bool IsContainedIn(RectangleF area) => _areaTestFunction.Value(this, area);
     }
 
     [ProcessNode(

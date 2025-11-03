@@ -20,8 +20,14 @@ namespace VL.Fu.Behaviours
         private Vector2 _dragStartCursorPos;
         protected Vector2 _committedOffset = Vector2.Zero;
 
-        // This property is ONLY for clamping the drag offset. It has no effect on hit-testing.
         protected readonly CachedProperty<RectangleF?> _clampingBounds = new(null);
+
+        /// <summary>
+        /// Sets the rectangle that will constrain the drag offset.
+        /// </summary>
+        /// <param name="bounds">Sets the rectangle that will limit the drag offset.</param>
+        [Fragment]
+        public void SetClampingBounds(RectangleF? bounds) => _clampingBounds.TrySetValue(bounds);
 
         [Fragment]
         public DraggableBehaviour()
@@ -30,12 +36,6 @@ namespace VL.Fu.Behaviours
             IsDraggingChannel.Value = false;
             OffsetChannel.Value = Vector2.Zero;
         }
-
-        /// <summary>
-        /// Sets the rectangle that will constrain the drag offset. This does NOT affect hit-testing.
-        /// </summary>
-        [Fragment]
-        public void SetClampingBounds(RectangleF? bounds) => _clampingBounds.TrySetValue(bounds);
 
         [Fragment]
         public Vector2 Offset => OffsetChannel.Value;
