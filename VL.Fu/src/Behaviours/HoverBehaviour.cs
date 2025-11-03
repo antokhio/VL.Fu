@@ -1,58 +1,42 @@
 ﻿using VL.Core.Import;
-using VL.Fu.Behaviours;
-using VL.Fu.Core.HitTest;
+using VL.Fu.Core;
+using VL.Lib.Reactive;
 
-namespace VL.Fu.Core.Behaviour
+namespace VL.Fu.Behaviours
 {
-    [ProcessNode(Name = "Hover (Behaviour)", FragmentSelection = FragmentSelection.Explicit)]
+    [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public class HoverBehaviour : FuBehaviourBase, IFuBehaviour
     {
-        private bool _wasHoveredLastFrame = false;
+        protected readonly IChannel<bool> _isHoveredChannel =
+            ChannelHelpers.CreateChannelOfType<bool>();
 
         [Fragment]
-        public HoverBehaviour() { }
+        public HoverBehaviour()
+        {
+            _isHoveredChannel.Value = false;
+        }
+
+        [Fragment]
+        public bool IsHovered => _isHoveredChannel.Value;
 
         public override bool TryActivate(
             IFuNode node,
-            IEnumerable<FuCursor> cursors,
-            IEnumerable<FuKey> keys,
-            IEnumerable<FuKey> modifiers
-        ) => true;
+            IReadOnlyList<FuCursor> cursors,
+            IReadOnlyList<FuKey> keys,
+            IReadOnlyList<FuKey> modifiers
+        ) => _enabled.Value && cursors.Any(c => node.HitTest(c));
 
-        public override FuNodeState Evaluate(
+        public override bool TryAdvance(
             IFuNode node,
-            IEnumerable<FuCursor> cursors,
-            IEnumerable<FuKey> keys,
-            IEnumerable<FuKey> modifiers
+            IReadOnlyList<FuCursor> cursors,
+            IReadOnlyList<FuKey> keys,
+            IReadOnlyList<FuKey> modifiers
         )
         {
-            bool isCurrentlyHovered = false;
+            var isHovered = cursors.Any(c => node.HitTest(c));
+            _isHoveredChannel.EnsureValue(isHovered);
 
-            if (node is IHitTestProvider hitProvider)
-            {
-                isCurrentlyHovered = cursors.Any(cursor => hitProvider.HitTest(cursor));
-            }
-
-            bool onHoverStart = false;
-            bool onHoverEnd = false;
-
-            if (isCurrentlyHovered && !_wasHoveredLastFrame)
-            {
-                onHoverStart = true;
-            }
-            else if (!isCurrentlyHovered && _wasHoveredLastFrame)
-            {
-                onHoverEnd = true;
-            }
-
-            _wasHoveredLastFrame = isCurrentlyHovered;
-
-            return node.State with
-            {
-                IsHover = isCurrentlyHovered,
-                OnHoverStart = onHoverStart,
-                OnHoverEnd = onHoverEnd,
-            };
+            return isHovered;
         }
     }
 }

@@ -58,6 +58,8 @@ namespace VL.Fu
 
         public void Render(CallerInfo caller)
         {
+            _callerHash.TrySetValue(caller.GetHashCode());
+
             _layer?.Render(caller);
             for (int i = 0; i < Children.Count; i++)
                 Children[i]?.Render(caller);

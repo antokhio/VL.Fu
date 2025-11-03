@@ -33,13 +33,18 @@ namespace VL.Fu.Extensions
         /// <returns>An enumerable collection of tree nodes in post-order (children before parent).</returns>
         public static IEnumerable<ITreeNode> TraversePostOrder(this ITreeNode root)
         {
+            if (root is null)
+                yield break;
+
             foreach (var child in root.Children)
             {
+                // Recursive call for each child
                 foreach (var descendant in child.TraversePostOrder())
                 {
                     yield return descendant;
                 }
             }
+            // Return the root node after all its descendants
             yield return root;
         }
 

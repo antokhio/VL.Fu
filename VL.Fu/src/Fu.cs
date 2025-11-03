@@ -72,11 +72,12 @@ namespace VL.Fu
 
             if (_input != null)
             {
+                // Update interactions
                 InteractionService.Update(
-                    root: _input,
-                    cursors: InputService.Cursors,
-                    keys: InputService.Keys,
-                    modifiers: InputService.Modifiers
+                    _input,
+                    InputService.Cursors,
+                    InputService.Keys,
+                    InputService.Modifiers
                 );
             }
         }

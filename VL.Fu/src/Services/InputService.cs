@@ -305,7 +305,6 @@ namespace VL.Fu.Services
                 }
 
                 _cursorsToRemove.Clear();
-
                 _cursorsChannel.OnNext(_cursors.Values.ToSpread());
             }
         }

@@ -4,19 +4,17 @@
     {
         int Priority { get; }
         bool IsEnabled { get; }
-
         bool TryActivate(
             IFuNode node,
-            IEnumerable<FuCursor> cursors,
-            IEnumerable<FuKey> keys,
-            IEnumerable<FuKey> modifiers
+            IReadOnlyList<FuCursor> cursors,
+            IReadOnlyList<FuKey> keys,
+            IReadOnlyList<FuKey> modifiers
         );
-
-        FuNodeState Evaluate(
+        bool TryAdvance(
             IFuNode node,
-            IEnumerable<FuCursor> cursors,
-            IEnumerable<FuKey> keys,
-            IEnumerable<FuKey> modifiers
+            IReadOnlyList<FuCursor> cursors,
+            IReadOnlyList<FuKey> keys,
+            IReadOnlyList<FuKey> modifiers
         );
     }
 }
