@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <BaseOutputPath>..\lib\</BaseOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="VL.Core" Version="2025.7.0" />
+    <PackageReference Include="VL.Core.Skia" Version="2025.7.0" />
+    <PackageReference Include="VL.CoreLib" Version="2025.7.0" />
+  </ItemGroup>
+</Project>
