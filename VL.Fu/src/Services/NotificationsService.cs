@@ -2,8 +2,10 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using VL.Fu.Core.Configuration;
+using VL.Fu.Core;
 using VL.Fu.Core.Input;
+using VL.Fu.Core.Notifications;
+using VL.Fu.Core.Repository;
 using VL.Fu.Extensions;
 using VL.Lib.IO.Notifications;
 
@@ -13,11 +15,7 @@ namespace VL.Fu.Services
     /// A reactive service that transforms a raw stream of INotifications into structured,
     /// cached collections of input state for frame-by-frame consumption.
     /// </summary>
-    /// <remarks>
-    /// Created by: antokhio
-    /// Date: 2025-11-04
-    /// </remarks>
-    public class NotificationService : IDisposable
+    public class NotificationService : IRepositoryService, INotifiable
     {
         private readonly CompositeDisposable _subscriptions = new();
         private readonly Subject<INotification> _notifications = new();
@@ -31,6 +29,15 @@ namespace VL.Fu.Services
         public NotificationService(ConfigurationBase configuration)
         {
             var pixelFactor = configuration.PixelFactor;
+
+            // Only process notifications when the context is enabled
+            var enabledNotifications = _notifications
+                .WithLatestFrom(
+                    configuration.Enabled,
+                    (n, enabled) => (notification: n, enabled: enabled)
+                )
+                .Where(t => t.enabled)
+                .Select(t => t.notification);
 
             // Stream of valid FuPointer events
             var pointerEvents = _notifications

@@ -1,12 +1,13 @@
-﻿using VL.Fu.Core.Common;
-using VL.Fu.Core.InstanceId;
+﻿using VL.Core.Import;
+using VL.Fu.Core.Common;
 using VL.Fu.Core.Property;
 using VL.Lib.Reactive;
 using VL.Skia;
 
-namespace VL.Fu.Core.Configuration
+namespace VL.Fu.Core
 {
-    public abstract class ConfigurationBase : InstanceIdBase
+    [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
+    public abstract class ConfigurationBase : RepositoryProvider
     {
         /// <summary>
         /// A constant factor for scaling pixel values, typically used for non-DPI-aware calculations.
@@ -24,7 +25,9 @@ namespace VL.Fu.Core.Configuration
         /// <summary>
         /// Sets a new DIP factor, which will be broadcast to all subscribers if it has changed.
         /// </summary>
-        public void SetDIPFactor(int dipFactor) => _dipFactor.TrySetValue(dipFactor);
+        [Fragment]
+        public void SetDIPFactor(int dipFactor = Constants.DefaultDIPFactor) =>
+            _dipFactor.TrySetValue(dipFactor);
 
         // --- Reactive CommonSpace ---
         protected readonly ChannelProperty<CommonSpace> _space = new(Constants.DefaultCommonSpace);
@@ -37,7 +40,21 @@ namespace VL.Fu.Core.Configuration
         /// <summary>
         /// Sets a new coordinate space, which will be broadcast to all subscribers if it has changed.
         /// </summary>
+        [Fragment]
         public void SetSpace(CommonSpace space = Constants.DefaultCommonSpace) =>
             _space.TrySetValue(space);
+
+        protected readonly ChannelProperty<bool> _enabled = new(true);
+
+        /// <summary>
+        /// A reactive channel indicating whether the Fu context is active and should handle input.
+        /// </summary>
+        public IChannel<bool> Enabled => _enabled.Channel;
+
+        /// <summary>
+        /// Sets whether the Fu context is enabled. When disabled, input handling will cease.
+        /// </summary>
+        [Fragment(Order = PinOrder.Enabled)]
+        public void SetEnabled(bool enabled = true) => _enabled.TrySetValue(enabled);
     }
 }

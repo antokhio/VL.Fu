@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document xmlns:p="property" xmlns:r="reflection" Id="AnsHh4y8VQZN4n6KLC3HSJ" LanguageVersion="2025.7.0" Version="0.128">
+  <NugetDependency Id="E5ZItsD6sGLQCJIQMhN42o" Location="VL.CoreLib" Version="2025.7.0" />
+  <Patch Id="G6cTbcoLur8OtAury4eLWf">
+    <Canvas Id="E7Rs33eOwJCLzG4CewQQhv" DefaultCategory="Main" BordersChecked="false" CanvasType="FullCategory" />
+    <!--
+
+    ************************ Application ************************
+
+-->
+    <Node Name="Application" Bounds="100,100" Id="RRHewp3MNM9PORWiX4SFRx">
+      <p:NodeReference>
+        <Choice Kind="ContainerDefinition" Name="Process" />
+        <CategoryReference Kind="Category" Name="Primitive" />
+      </p:NodeReference>
+      <Patch Id="M3WW2hgdndmMb0574Ro5ym">
+        <Canvas Id="M7LpfM0c4BOOnOaaDdltHX" CanvasType="Group">
+          <Node Bounds="457,351,48,19" Id="HM4v4EhHFzDLgUrXsyIUiD">
+            <p:NodeReference LastCategoryFullName="Fu" LastDependency="VL.Fu.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <CategoryReference Kind="Category" Name="Fu" />
+              <Choice Kind="ProcessAppFlag" Name="FuRoot" />
+            </p:NodeReference>
+            <Pin Id="H0lTw3zoAPQQS2TDlsF6lU" Name="Input" Kind="InputPin" />
+            <Pin Id="KtM9bA7eBRtNhHcGnvT3om" Name="Dip Factor" Kind="InputPin" />
+            <Pin Id="LpFTegbGAHSLMb5Ntg0J8t" Name="Space" Kind="InputPin" />
+            <Pin Id="MbupDGPPnn9Lt7r9fJf7RM" Name="Enabled" Kind="InputPin" />
+            <Pin Id="VPOq05pmEQTM59JUEwmgwR" Name="Output" Kind="OutputPin" />
+          </Node>
+        </Canvas>
+        <Patch Id="DPGxkfr8kFRMqcSGzrsgxi" Name="Create" />
+        <Patch Id="HiHoNe98C9NPKUdWw1qLAF" Name="Update" />
+        <ProcessDefinition Id="BGmrFsdAOIINJjDAPJ71Sl">
+          <Fragment Id="GXx3RHMLzyaQMwONujpRTN" Patch="DPGxkfr8kFRMqcSGzrsgxi" Enabled="true" />
+          <Fragment Id="VHRMn1h7CDtMBn1nwS2pwe" Patch="HiHoNe98C9NPKUdWw1qLAF" Enabled="true" />
+        </ProcessDefinition>
+      </Patch>
+    </Node>
+  </Patch>
+  <NugetDependency Id="M8m1bpoy6qiMevVN396HoO" Location="VL.Fu" Version="0.0.0" />
+  <NugetDependency Id="HS4m6AlpjuXOS6soaAgfHR" Location="VL.Skia" Version="2025.7.0" />
+</Document>

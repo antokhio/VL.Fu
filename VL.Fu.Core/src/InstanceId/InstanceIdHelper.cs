@@ -1,6 +1,6 @@
-﻿namespace VL.Fu.Core.InstanceId.Helpers
+﻿namespace VL.Fu.Core.InstanceId
 {
-    internal static class InstanceIdHelper
+    public static class InstanceIdHelper
     {
         private static int _lastId = 0;
 
