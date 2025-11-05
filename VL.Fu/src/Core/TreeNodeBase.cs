@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using VL.Core.Import;
 using VL.Fu.Core.Common;
+using VL.Fu.Core.Repository;
 using VL.Lib.Collections;
 
 namespace VL.Fu.Core
@@ -31,6 +32,13 @@ namespace VL.Fu.Core
             foreach (var newChild in Children)
             {
                 newChild.Parent = this;
+
+                // If the new child is a repository consumer, propagate our own context ID to it.
+                // This ensures the context flows down the entire tree.
+                if (newChild is IRepositoryConsumer childConsumer)
+                {
+                    childConsumer.SetContextId(this.ContextId);
+                }
             }
         }
 
@@ -59,5 +67,25 @@ namespace VL.Fu.Core
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public override void SetContextId(int contextId)
+        {
+            // If the context ID hasn't changed, do nothing.
+            if (contextId == this.ContextId)
+                return;
+
+            // First, set our own context ID.
+            base.SetContextId(contextId);
+
+            // Now, push the new context ID down to all our existing children.
+            // This handles cases where the tree is moved or the root context is established after the tree is built.
+            foreach (var child in Children)
+            {
+                if (child is IRepositoryConsumer childConsumer)
+                {
+                    childConsumer.SetContextId(contextId);
+                }
+            }
+        }
     }
 }

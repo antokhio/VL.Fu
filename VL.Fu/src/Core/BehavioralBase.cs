@@ -39,6 +39,25 @@ namespace VL.Fu.Core
         }
 
         /// <summary>
+        /// Overrides SetContextId to propagate the ID not only to children but also to attached behaviors.
+        /// </summary>
+        public override void SetContextId(int contextId)
+        {
+            // If the context ID hasn't changed, do nothing to avoid redundant work.
+            if (contextId == this.ContextId)
+                return;
+
+            // Call the base method, which will set our own ID and propagate to children.
+            base.SetContextId(contextId);
+
+            // Now, push the new context ID to all our existing behaviors.
+            foreach (var behaviour in _behaviours.Value)
+            {
+                behaviour.SetContextId(contextId);
+            }
+        }
+
+        /// <summary>
         /// Handles notifications by forwarding them to children first (in reverse rendering order),
         /// and then to the primary layer if no child handled the event. This ensures the top-most
         /// visual element gets the first chance to react.

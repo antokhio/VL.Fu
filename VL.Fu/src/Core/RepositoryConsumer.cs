@@ -21,7 +21,7 @@ namespace VL.Fu.Core
         /// This is intended to be called by a traversal mechanism (e.g., InteractionService).
         /// </summary>
         /// <param name="contextId">The instance ID of the parent RepositoryBase (e.g., Fu).</param>
-        public void SetContextId(int contextId)
+        public virtual void SetContextId(int contextId)
         {
             _contextId = contextId;
         }
