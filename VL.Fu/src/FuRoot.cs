@@ -17,7 +17,7 @@ namespace VL.Fu
         [Fragment]
         public FuRoot() { }
 
-        [Fragment(Order = PinOrder.Main)]
+        [Fragment(Order = PinOrder.Input)]
         public void Update(IFuNode input)
         {
             _inputNode = input;

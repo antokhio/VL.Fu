@@ -1,10 +1,8 @@
-﻿using VL.Lib.Collections;
-
-namespace VL.Fu.Core
+﻿namespace VL.Fu.Core
 {
-    public interface ITreeNode
+    public interface ITreeNode : IEnumerable<ITreeNode>
     {
-        Spread<ITreeNode> Children { get; }
+        IEnumerable<ITreeNode> Children { get; }
         ITreeNode? Parent { get; set; }
         IEnumerator<ITreeNode> GetEnumerator();
         void SetChildren(IEnumerable<ITreeNode> newChildren);

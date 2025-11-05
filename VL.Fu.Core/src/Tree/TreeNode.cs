@@ -7,7 +7,7 @@ namespace VL.Fu.Core
         where T : ITreeNode
     {
         public ITreeNode? Parent { get; set; }
-        public Spread<ITreeNode> Children { get; private set; } = Spread<ITreeNode>.Empty;
+        public IEnumerable<ITreeNode> Children { get; private set; } = Spread<ITreeNode>.Empty;
 
         public TreeNode() { }
 

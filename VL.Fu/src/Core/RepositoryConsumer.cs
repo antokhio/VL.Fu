@@ -14,6 +14,8 @@ namespace VL.Fu.Core
 
         private int _contextId;
 
+        public int ContextId => _contextId;
+
         /// <summary>
         /// Sets the context ID for this consumer, linking it to its parent repository's service container.
         /// This is intended to be called by a traversal mechanism (e.g., InteractionService).

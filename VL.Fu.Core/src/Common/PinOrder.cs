@@ -4,11 +4,17 @@
     {
         public const int None = 0;
 
-        public const int Highest = -100;
+        public const int Output = -100;
 
-        public const int Main = -50;
+        public const int Input = -50;
 
-        public const int Secondary = -40;
+        public const int HitTest = -45;
+
+        public const int AreaTest = -44;
+
+        public const int Behaviour = -40;
+
+        public const int Layer = -35;
 
         public const int Style = -30;
 

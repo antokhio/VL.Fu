@@ -1,12 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using VL.Core.Import;
+using VL.Fu.Core;
+using VL.Fu.Core.Common;
+using VL.Lib.Collections;
 
 namespace VL.Fu
 {
-    internal class FuNode
+    [ProcessNode(Name = "FuNode", FragmentSelection = FragmentSelection.Explicit)]
+    public class FuNode : BehavioralBase, IFuNode
     {
+        [Fragment]
+        public FuNode() { }
+
+        [Fragment(Order = PinOrder.Output)]
+        public IFuNode Ouput => this;
+    }
+
+    [ProcessNode(Name = "FuNode (Spectral)", FragmentSelection = FragmentSelection.Explicit)]
+    public class FuNodeSpectral : FuNode
+    {
+        [Fragment]
+        public FuNodeSpectral() { }
+
+        public override void SetInput(Spread<IFuNode> input)
+        {
+            base.SetInput(input);
+        }
     }
 }
