@@ -20,7 +20,7 @@ namespace VL.Fu.Core
             _repository.RegisterService(InstanceId, service);
         }
 
-        protected T? GetService<T>()
+        public T? GetService<T>()
             where T : class, IRepositoryService
         {
             return _repository.GetService<T>(InstanceId);

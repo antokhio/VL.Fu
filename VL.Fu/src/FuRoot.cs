@@ -3,6 +3,7 @@ using VL.Core.Import;
 using VL.Fu.Core;
 using VL.Fu.Core.Common;
 using VL.Fu.Core.Repository;
+using VL.Fu.Services;
 using VL.Lib.IO.Notifications;
 using VL.Skia;
 
@@ -15,7 +16,14 @@ namespace VL.Fu
         public RectangleF? Bounds => (_inputNode as ILayer)?.Bounds;
 
         [Fragment]
-        public FuRoot() { }
+        public FuRoot()
+        {
+            var notificationService = new NotificationService(this);
+            var viewportService = new ViewportService(this);
+
+            Register(notificationService);
+            Register(viewportService);
+        }
 
         [Fragment(Order = PinOrder.Input)]
         public void Update(IFuNode input)
