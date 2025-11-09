@@ -21,7 +21,7 @@
               <Choice Kind="ProcessAppFlag" Name="Renderer" />
             </p:NodeReference>
             <Pin Id="KxBvsKNYffBLBcTIFmYp7Q" Name="Node Context" Kind="InputPin" IsHidden="true" />
-            <Pin Id="TQ8lZO3HPHeLBIpSLu9KMH" Name="Bounds" Kind="InputPin" DefaultValue="-8, -8, 2576, 1416" IsHidden="true" />
+            <Pin Id="TQ8lZO3HPHeLBIpSLu9KMH" Name="Bounds" Kind="InputPin" DefaultValue="-2466, 74, 1935, 985" IsHidden="true" />
             <Pin Id="QJ4BwP73lleMOoKLRfBI9J" Name="Save Bounds" Kind="InputPin" IsHidden="true" />
             <Pin Id="MryH42dSE2dOQklpWd98lh" Name="Bound to Document" Kind="InputPin" IsHidden="true" />
             <Pin Id="UsxK7DtodkoMVeVgPGDdpP" Name="Dialog If Document Changed" Kind="InputPin" IsHidden="true" />
@@ -108,6 +108,11 @@
             <Pin Id="LIGpVR6WwD2LbSxR0sekBF" Name="Enabled" Kind="InputPin" />
             <Pin Id="SSOD9csbRP1Mj1LHG1e8U3" Name="Output" Kind="OutputPin" />
           </Node>
+          <Pad Id="FnjpcvXdyaTMzTYwbTnj2m" Comment="Space" Bounds="529,360,86,15" ShowValueBox="true" isIOBox="true" Value="DIPTopLeft">
+            <p:TypeAnnotation LastCategoryFullName="VL.Skia" LastDependency="VL.Fu.vl">
+              <Choice Kind="TypeFlag" Name="CommonSpace" />
+            </p:TypeAnnotation>
+          </Pad>
         </Canvas>
         <Patch Id="DPGxkfr8kFRMqcSGzrsgxi" Name="Create" />
         <Patch Id="HiHoNe98C9NPKUdWw1qLAF" Name="Update" />
@@ -120,6 +125,8 @@
         <Link Id="PdBlbENzuCdMSvkbsrNgt4" Ids="COo1xMSoF6HL634M97a3nZ,NquZepEsNWENMswK8vmMPI" />
         <Link Id="DoD0UpEVgy1LT0FMPFWVKD" Ids="Po1raVV5BFfNS9Wh8nEpKQ,QEFxxHfwdjLMT5Gv5GZ1b6" />
         <Link Id="F0Kb42nWObKOJv3Yz7k2mq" Ids="SSOD9csbRP1Mj1LHG1e8U3,DS26VHKCt4WPKpumECfYp8" />
+        <Link Id="Uof4yedsHYoO0JwI9CFYUw" Ids="FnjpcvXdyaTMzTYwbTnj2m,IloPxBci5piLkKSeISd3to" />
+        <Link Id="G2pw4bV84JtQPNionjz93N" Ids="FnjpcvXdyaTMzTYwbTnj2m,JBCV3e5WC5VQCGUQW5ObS4" />
       </Patch>
     </Node>
   </Patch>

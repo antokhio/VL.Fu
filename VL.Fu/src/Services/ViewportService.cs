@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Stride.Core.Mathematics;
 using VL.Fu.Core;
+using VL.Fu.Core.Common;
 using VL.Fu.Core.Notifications;
 using VL.Fu.Core.Repository;
 using VL.Fu.Extensions;
@@ -29,36 +30,41 @@ namespace VL.Fu.Services
         /// </summary>
         public Int2 Resolution { get; private set; } = Int2.Zero;
 
+        public CommonSpace Space { get; private set; } = Constants.DefaultCommonSpace;
+        public float DIPFactor { get; private set; } = Constants.DefaultDIPFactor;
+        public float PixelFactor { get; private set; } = Constants.DefaultPixelFactor;
+
         public ViewportService(ConfigurationBase configuration)
         {
-            // Stream of client area notifications
+            // Set the constant value
+            PixelFactor = configuration.PixelFactor;
+
+            // Subscribe to configuration changes to keep our local properties up-to-date.
+            _subscriptions.Add(configuration.Space.Subscribe(s => Space = s));
+            _subscriptions.Add(configuration.DIPFactor.Subscribe(f => DIPFactor = f));
+
+            // --- The Corrected Logic ---
+            // 1. Define our trigger: the stream of client area notifications.
             var clientAreaStream = _notifications
                 .OfType<NotificationWithClientArea>()
                 .Select(n => n.ClientArea)
                 .DistinctUntilChanged();
 
-            // We use CombineLatest because we need to recalculate the bounds if EITHER the
-            // client area changes OR any of the configuration settings change.
-            var combinedStream = clientAreaStream.CombineLatest(
-                configuration.Space,
-                configuration.DIPFactor,
-                (clientArea, space, dip) => (clientArea, space, dip, configuration.PixelFactor)
-            );
-
+            // 2. Subscribe directly to the trigger.
             _subscriptions.Add(
-                combinedStream.Subscribe(t =>
+                clientAreaStream.Subscribe(clientArea =>
                 {
-                    var (clientArea, space, dipFactor, pixelFactor) = t;
-
+                    // 3. When the trigger fires, use the *current values* of the properties.
                     Resolution = new Int2((int)clientArea.X, (int)clientArea.Y);
                     var boundsInPixels = new RectangleF(0, 0, clientArea.X, clientArea.Y);
 
-                    Bounds = space switch
+                    // Use the class properties which are kept up-to-date by their own subscriptions.
+                    Bounds = Space switch
                     {
                         CommonSpace.Normalized => boundsInPixels.ToNormalizedSpace(Resolution),
-                        CommonSpace.DIP => boundsInPixels.ToCenteredDIPSpace(Resolution, dipFactor),
-                        CommonSpace.DIPTopLeft => boundsInPixels.ToDIPTopLeftSpace(dipFactor),
-                        CommonSpace.PixelTopLeft => boundsInPixels.ToPixelTopLeftSpace(pixelFactor),
+                        CommonSpace.DIP => boundsInPixels.ToCenteredDIPSpace(Resolution, DIPFactor),
+                        CommonSpace.DIPTopLeft => boundsInPixels.ToDIPTopLeftSpace(DIPFactor),
+                        CommonSpace.PixelTopLeft => boundsInPixels.ToPixelTopLeftSpace(PixelFactor),
                         _ => RectangleF.Empty,
                     };
                 })

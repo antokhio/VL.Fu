@@ -1,4 +1,5 @@
 ﻿using Stride.Core.Mathematics;
+using VL.Skia;
 
 namespace VL.Fu.Extensions
 {
@@ -157,6 +158,60 @@ namespace VL.Fu.Extensions
             float scaledY = pixelPosition.Y / pixelFactor;
 
             return new Vector2(scaledX, scaledY);
+        }
+
+        /// <summary>
+        /// Helper function to convert any space into raw, top-left pixel coordinates.
+        /// </summary>
+        public static Vector2 ToRawPixels(
+            this Vector2 value,
+            CommonSpace fromSpace,
+            Vector2 resolution,
+            float dipFactor,
+            float pixelFactor
+        )
+        {
+            return fromSpace switch
+            {
+                // Value is already in our pixel-based unit, scale it up to raw pixels.
+                CommonSpace.PixelTopLeft => value * pixelFactor,
+
+                // Value is in DIPs, scale it up to raw pixels.
+                CommonSpace.DIPTopLeft => value * dipFactor,
+
+                // Value is in centered DIPs. First, un-center it, then scale up.
+                CommonSpace.DIP => UncenterAndScale(value, resolution, dipFactor),
+
+                // Value is in normalized space. First, un-normalize it, then un-apply aspect ratio.
+                CommonSpace.Normalized => FromNormalized(value, resolution),
+
+                _ => value, // Should not happen with a valid space
+            };
+        }
+
+        private static Vector2 UncenterAndScale(
+            Vector2 centeredValue,
+            Vector2 resolution,
+            float factor
+        )
+        {
+            var spaceResolution = resolution / factor;
+            var halfSpaceResolution = spaceResolution / 2f;
+
+            // Add back the half-resolution to move origin to top-left, then scale up to raw pixels.
+            var topLeftValue = centeredValue + halfSpaceResolution;
+            return topLeftValue * factor;
+        }
+
+        private static Vector2 FromNormalized(Vector2 normalizedValue, Vector2 resolution)
+        {
+            float aspect = resolution.X / resolution.Y;
+
+            // Reverse the formulas from the original SpaceExtensions
+            float pixelX = (normalizedValue.X + aspect) / (2f * aspect) * resolution.X;
+            float pixelY = (normalizedValue.Y + 1f) / 2f * resolution.Y;
+
+            return new Vector2(pixelX, pixelY);
         }
     }
 }

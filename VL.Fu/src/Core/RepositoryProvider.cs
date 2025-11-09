@@ -7,7 +7,10 @@ namespace VL.Fu.Core
     /// It manages the lifecycle and registration of services scoped to its own unique instance ID.
     /// </summary>
     /// <remarks>
-    public abstract class RepositoryProvider : InstanceIdBase, IRepositoryService
+    public abstract class RepositoryProvider
+        : InstanceIdBase,
+            IRepositoryService,
+            IRepositoryProvider
     {
         protected static readonly ServiceRepository _repository = new();
 
