@@ -7,7 +7,7 @@ namespace VL.Fu.Core
     /// It provides a mechanism to receive a context ID and retrieve services scoped to that context.
     /// </summary>
     /// <remarks>
-    public abstract class RepositoryConsumer : IRepositoryConsumer
+    public abstract class RepositoryConsumer : InstanceIdBase, IRepositoryConsumer
     {
         // A static reference to the one and only service repository.
         protected static readonly ServiceRepository _repository = new();

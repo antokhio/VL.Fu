@@ -6,7 +6,7 @@ using VL.Lib.Collections;
 namespace VL.Fu
 {
     [ProcessNode(Name = "FuNode", FragmentSelection = FragmentSelection.Explicit)]
-    public class FuNode : BehavioralBase, IFuNode
+    public class FuNode : InteractiveHost, IFuNode
     {
         [Fragment]
         public FuNode() { }
