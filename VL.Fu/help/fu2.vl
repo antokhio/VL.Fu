@@ -21,7 +21,7 @@
               <Choice Kind="ProcessAppFlag" Name="Renderer" />
             </p:NodeReference>
             <Pin Id="KxBvsKNYffBLBcTIFmYp7Q" Name="Node Context" Kind="InputPin" IsHidden="true" />
-            <Pin Id="TQ8lZO3HPHeLBIpSLu9KMH" Name="Bounds" Kind="InputPin" DefaultValue="769, 433, 616, 438" IsHidden="true" />
+            <Pin Id="TQ8lZO3HPHeLBIpSLu9KMH" Name="Bounds" Kind="InputPin" DefaultValue="-8, -8, 2576, 1416" IsHidden="true" />
             <Pin Id="QJ4BwP73lleMOoKLRfBI9J" Name="Save Bounds" Kind="InputPin" IsHidden="true" />
             <Pin Id="MryH42dSE2dOQklpWd98lh" Name="Bound to Document" Kind="InputPin" IsHidden="true" />
             <Pin Id="UsxK7DtodkoMVeVgPGDdpP" Name="Dialog If Document Changed" Kind="InputPin" IsHidden="true" />
@@ -104,7 +104,7 @@
             <Pin Id="GBY2gUyNozWLfrHwUx6J3v" Name="Node Context" Kind="InputPin" IsHidden="true" />
             <Pin Id="AgPYPGVMs0UMpf876Ie5A8" Name="Input" Kind="InputPin" />
             <Pin Id="B2yjrvOohPlL6RSP2suSe6" Name="Dip Factor" Kind="InputPin" />
-            <Pin Id="IloPxBci5piLkKSeISd3to" Name="Space" Kind="InputPin" />
+            <Pin Id="IloPxBci5piLkKSeISd3to" Name="Space" Kind="InputPin" DefaultValue="Normalized" />
             <Pin Id="LIGpVR6WwD2LbSxR0sekBF" Name="Enabled" Kind="InputPin" />
             <Pin Id="SSOD9csbRP1Mj1LHG1e8U3" Name="Output" Kind="OutputPin" />
           </Node>

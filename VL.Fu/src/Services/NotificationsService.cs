@@ -19,6 +19,8 @@ namespace VL.Fu.Services
         private readonly CompositeDisposable _subscriptions = new();
         private readonly Subject<INotification> _notifications = new();
 
+        private record CleanupPointer(int Id);
+
         // --- POINTERS API (Touch only) ---
         public IReadOnlyDictionary<int, FuPointer> Pointers { get; private set; } =
             ImmutableDictionary<int, FuPointer>.Empty;
@@ -43,76 +45,118 @@ namespace VL.Fu.Services
                 .Publish()
                 .RefCount();
 
-            var resetEvents = _notifications
-                .OfType<LostFocusNotification>()
-                .Select(_ => Unit.Default)
-                .Merge(configuration.Enabled.Where(enabled => !enabled).Select(_ => Unit.Default));
+            var touchNotifications = enabledNotifications.OfType<TouchNotification>();
+            var isTouchActiveStream = touchNotifications
+                .Select(_ => true)
+                .Merge(
+                    touchNotifications.Throttle(TimeSpan.FromMilliseconds(150)).Select(_ => false)
+                )
+                .StartWith(false)
+                .Replay(1)
+                .RefCount();
 
-            // --- Pointer Handling (Now Touch-Only) ---
-            var pointerEvents = enabledNotifications
-                .OfType<TouchNotification>() // Explicitly only use TouchNotification
-                .Select(notification =>
+            // --- Pointer Handling ---
+
+            var pointerEvents = touchNotifications
+                .SelectMany(n =>
                 {
                     var space = configuration.Space.Value;
                     var dipFactor = configuration.DIPFactor.Value;
-                    return (object)notification.ToFuPointer(space, dipFactor, pixelFactor);
-                })
-                .Where(p => (FuPointer)p != FuPointer.Default);
+                    var pointer = n.ToFuPointer(space, dipFactor, pixelFactor);
 
-            var combinedPointerStream = pointerEvents.Merge(resetEvents.Select(e => (object)e));
+                    if (n.Kind == TouchNotificationKind.TouchUp)
+                    {
+                        // For a TouchUp, create two events: the TouchUp itself, and a delayed cleanup event.
+                        return new[]
+                        {
+                            Observable.Return((object)pointer),
+                            Observable
+                                .Return((object)new CleanupPointer(pointer.Id))
+                                .Delay(TimeSpan.FromMilliseconds(16)),
+                        };
+                    }
+
+                    // For Down/Move, just create a single event.
+                    return new[] { Observable.Return((object)pointer) };
+                })
+                .Merge();
+
+            var resetEvents = enabledNotifications
+                .OfType<LostFocusNotification>()
+                .Select(_ => (object)Unit.Default)
+                .Merge(
+                    configuration
+                        .Enabled.Where(enabled => !enabled)
+                        .Select(_ => (object)Unit.Default)
+                );
+
+            var combinedPointerStream = pointerEvents.Merge(resetEvents);
 
             PointersStream = combinedPointerStream
                 .Scan(
                     ImmutableDictionary<int, FuPointer>.Empty,
                     (pointers, ev) =>
                     {
-                        if (ev is Unit)
+                        return ev switch
                         {
-                            return ImmutableDictionary<int, FuPointer>.Empty;
-                        }
-                        var cleanedPointers = pointers.RemoveRange(
-                            pointers
-                                .Where(kvp => kvp.Value.State == TouchNotificationKind.TouchUp)
-                                .Select(kvp => kvp.Key)
-                        );
-                        var pointer = (FuPointer)ev;
-                        return pointer.State switch
-                        {
-                            TouchNotificationKind.TouchDown => cleanedPointers.SetItem(
-                                pointer.Id,
-                                pointer
-                            ),
-                            TouchNotificationKind.TouchMove => cleanedPointers.TryGetValue(
-                                pointer.Id,
-                                out var existing
-                            )
-                                ? cleanedPointers.SetItem(
+                            CleanupPointer cleanup => pointers.Remove(cleanup.Id),
+                            Unit => ImmutableDictionary<int, FuPointer>.Empty,
+                            FuPointer pointer => pointer.State switch
+                            {
+                                TouchNotificationKind.TouchDown => pointers.SetItem(
                                     pointer.Id,
-                                    existing
-                                        .WithState(TouchNotificationKind.TouchMove)
-                                        .WithPosition(pointer.Position)
-                                )
-                                : cleanedPointers,
-                            TouchNotificationKind.TouchUp => cleanedPointers.TryGetValue(
-                                pointer.Id,
-                                out var upExisting
-                            )
-                                ? cleanedPointers.SetItem(
+                                    pointer
+                                ),
+
+                                // --- ROBUSTNESS FIX ---
+                                TouchNotificationKind.TouchMove => pointers.TryGetValue(
                                     pointer.Id,
-                                    upExisting.WithState(TouchNotificationKind.TouchUp)
+                                    out var existing
                                 )
-                                : cleanedPointers,
-                            _ => cleanedPointers,
+                                    // If pointer exists, update its state and position.
+                                    ? pointers.SetItem(
+                                        pointer.Id,
+                                        existing
+                                            .WithState(TouchNotificationKind.TouchMove)
+                                            .WithPosition(pointer.Position)
+                                    )
+                                    // If pointer does NOT exist (orphaned move), create it as if it were a TouchDown.
+                                    : pointers.SetItem(
+                                        pointer.Id,
+                                        pointer.WithState(TouchNotificationKind.TouchDown)
+                                    ),
+
+                                TouchNotificationKind.TouchUp => pointers.TryGetValue(
+                                    pointer.Id,
+                                    out var upExisting
+                                )
+                                    ? pointers.SetItem(
+                                        pointer.Id,
+                                        upExisting.WithState(TouchNotificationKind.TouchUp)
+                                    )
+                                    : pointers,
+                                _ => pointers,
+                            },
+                            _ => pointers,
                         };
                     }
                 )
+                .DistinctUntilChanged()
                 .StartWith(ImmutableDictionary<int, FuPointer>.Empty)
                 .Publish()
                 .RefCount();
+
             _subscriptions.Add(PointersStream.Subscribe(p => Pointers = p));
 
             // --- Mouse Handling ---
-            var mouseNotifications = enabledNotifications.OfType<MouseNotification>();
+            var mouseNotifications = enabledNotifications
+                .OfType<MouseNotification>()
+                .WithLatestFrom(
+                    isTouchActiveStream,
+                    (n, isTouchActive) => (Notification: n, IsTouchActive: isTouchActive)
+                )
+                .Where(t => !t.IsTouchActive)
+                .Select(t => t.Notification);
 
             MouseStream = mouseNotifications
                 .Scan(
@@ -134,6 +178,7 @@ namespace VL.Fu.Services
                         var isBack = mouse.IsXButton1;
                         var isForward = mouse.IsXButton2;
                         var lastButton = MouseButtons.None;
+                        var wheel = mouse.Wheel;
 
                         if (n is MouseButtonNotification bn)
                         {
@@ -169,12 +214,14 @@ namespace VL.Fu.Services
                         var wheelDelta = Int2.Zero;
                         if (n is MouseWheelNotification wn)
                             wheelDelta.Y = wn.WheelDelta;
+
                         if (n is MouseHorizontalWheelNotification hwn)
                             wheelDelta.X = hwn.WheelDelta;
 
                         return new FuMouse
                         {
                             Position = newPosition,
+                            Wheel = wheel + wheelDelta,
                             WheelDelta = wheelDelta,
                             IsLeft = isLeft,
                             IsRight = isRight,
@@ -189,13 +236,20 @@ namespace VL.Fu.Services
                 .StartWith(new FuMouse())
                 .Publish()
                 .RefCount();
-
             _subscriptions.Add(MouseStream.Subscribe(m => Mouse = m));
 
-            // --- Key Handling (Unchanged) ---
-            KeysDownStream = enabledNotifications
-                .OfType<KeyNotification>()
-                .Merge(resetEvents.Select(e => (object)e))
+            // --- Key Handling ---
+            var keyResetEvents = enabledNotifications
+                .OfType<LostFocusNotification>()
+                .Select(_ => (object)Unit.Default)
+                .Merge(
+                    configuration
+                        .Enabled.Where(enabled => !enabled)
+                        .Select(_ => (object)Unit.Default)
+                );
+            var keyEvents = enabledNotifications.OfType<KeyNotification>().Select(n => (object)n);
+            KeysDownStream = keyEvents
+                .Merge(keyResetEvents)
                 .Scan(
                     ImmutableHashSet<FuKey>.Empty,
                     (keys, ev) =>

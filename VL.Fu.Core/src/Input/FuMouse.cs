@@ -4,15 +4,18 @@ using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Core.Input
 {
-    /// <summary>
-    /// Represents the complete state of the mouse at a point in time.
-    /// </summary>
     public record struct FuMouse
     {
         /// <summary>
         /// The position of the mouse in the common space.
         /// </summary>
         public Vector2 Position { get; init; }
+
+        /// <summary>
+        /// The accumulated mouse wheel value.
+        /// X corresponds to the horizontal wheel, Y to the vertical wheel.
+        /// </summary>
+        public Int2 Wheel { get; init; }
 
         /// <summary>
         /// The change in the mouse wheel since the last event.
@@ -37,12 +40,12 @@ namespace VL.Fu.Core.Input
         public bool IsMiddle { get; init; }
 
         /// <summary>
-        /// The current state of the 'Back' navigation button (typically XButton1).
+        /// The current state of the first extra mouse button.
         /// </summary>
         public bool IsXButton1 { get; init; }
 
         /// <summary>
-        /// The current state of the 'Forward' navigation button (typically XButton2).
+        /// The current state of the second extra mouse button.
         /// </summary>
         public bool IsXButton2 { get; init; }
 
@@ -59,6 +62,7 @@ namespace VL.Fu.Core.Input
         public FuMouse()
         {
             Position = Vector2.Zero;
+            Wheel = Int2.Zero;
             WheelDelta = Int2.Zero;
             IsLeft = false;
             IsRight = false;
