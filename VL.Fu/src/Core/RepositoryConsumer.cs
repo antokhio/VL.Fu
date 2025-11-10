@@ -9,11 +9,7 @@ namespace VL.Fu.Core
     /// <remarks>
     public abstract class RepositoryConsumer : InstanceIdBase, IRepositoryConsumer
     {
-        // A static reference to the one and only service repository.
-        protected static readonly ServiceRepository _repository = new();
-
         private int _contextId;
-
         public int ContextId => _contextId;
 
         /// <summary>
@@ -36,7 +32,8 @@ namespace VL.Fu.Core
         {
             if (_contextId > 0)
             {
-                return _repository.GetService<T>(_contextId);
+                // Use the public singleton instance.
+                return ServiceRepository.Instance.GetService<T>(_contextId);
             }
             return null;
         }

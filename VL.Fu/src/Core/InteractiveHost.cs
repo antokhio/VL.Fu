@@ -1,6 +1,8 @@
 ﻿using VL.Core.Import;
+using VL.Fu.Core.Behaviour;
 using VL.Fu.Core.Common;
 using VL.Fu.Core.Property;
+using VL.Fu.Services;
 using VL.Lib.Collections;
 using VL.Lib.IO.Notifications;
 using VL.Skia;
@@ -14,8 +16,8 @@ namespace VL.Fu.Core
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public abstract class InteractiveHost : HitTestableBase, IBehavior, IInteractiveHost
     {
-        private readonly CachedProperty<Spread<IFuBehaviour>> _behaviours = new(
-            Spread<IFuBehaviour>.Empty
+        private readonly CachedProperty<Spread<IInteractiveBehavior>> _behaviours = new(
+            Spread<IInteractiveBehavior>.Empty
         );
 
         private InteractionService? _interactionService;
@@ -24,34 +26,28 @@ namespace VL.Fu.Core
         /// Sets the spread of composable behaviors to be hosted by this node.
         /// </summary>
         [Fragment(Order = PinOrder.Behaviour)]
-        public void SetBehaviours(Spread<IFuBehaviour> behaviours)
+        public void SetBehaviours(Spread<IInteractiveBehavior> behaviours)
         {
             _behaviours.TrySetValue(behaviours, OnBehavioursChanged);
         }
 
         private void OnBehavioursChanged(
-            Spread<IFuBehaviour> oldBehaviours,
-            Spread<IFuBehaviour> newBehaviours
+            Spread<IInteractiveBehavior> oldBehaviours,
+            Spread<IInteractiveBehavior> newBehaviours
         )
         {
             _interactionService ??= GetService<InteractionService>();
             if (_interactionService is null)
                 return;
 
-            // Propagate context ID to new behaviors, handling potential nulls.
             foreach (var b in newBehaviours)
             {
                 b?.SetContextId(this.ContextId);
             }
 
-            // Tell the service to update its state for this host.
-            // We filter out nulls before passing them to the service.
             _interactionService.UpdateBehaviors(this, newBehaviours.Where(b => b is not null));
         }
 
-        /// <summary>
-        /// Overrides SetContextId to propagate the ID to children and attached behaviors.
-        /// </summary>
         public override void SetContextId(int contextId)
         {
             if (contextId == this.ContextId)
@@ -59,16 +55,12 @@ namespace VL.Fu.Core
 
             base.SetContextId(contextId);
 
-            // Push the new context ID to all existing behaviors, handling potential nulls.
             foreach (var behaviour in _behaviours.Value)
             {
                 behaviour?.SetContextId(contextId);
             }
         }
 
-        /// <summary>
-        /// Handles the Skia ILayer notification chain.
-        /// </summary>
         public virtual bool Notify(INotification notification, CallerInfo caller)
         {
             foreach (var child in Children.Reverse())
@@ -86,14 +78,5 @@ namespace VL.Fu.Core
 
             return false;
         }
-
-        // Note: A robust Dispose implementation would be needed here to unregister behaviors
-        // when the node is removed. For example:
-        // public override void Dispose()
-        // {
-        //      _interactionService ??= GetService<InteractionService>();
-        //      _interactionService?.UpdateBehaviors(this, Enumerable.Empty<IFuBehaviour>());
-        //      base.Dispose();
-        // }
     }
 }

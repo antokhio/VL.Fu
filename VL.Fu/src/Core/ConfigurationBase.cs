@@ -20,14 +20,14 @@ namespace VL.Fu.Core
         /// <summary>
         /// A reactive channel providing the current Device Independent Pixel factor.
         /// </summary>
-        public IChannel<int> DIPFactor => _dipFactor.Channel;
+        public IChannel<int> DIPFactor => _dipFactor;
 
         /// <summary>
         /// Sets a new DIP factor, which will be broadcast to all subscribers if it has changed.
         /// </summary>
         [Fragment]
         public void SetDIPFactor(int dipFactor = Constants.DefaultDIPFactor) =>
-            _dipFactor.TrySetValue(dipFactor);
+            _dipFactor.EnsureValue(dipFactor);
 
         // --- Reactive CommonSpace ---
         protected readonly ChannelProperty<CommonSpace> _space = new(Constants.DefaultCommonSpace);
@@ -35,26 +35,26 @@ namespace VL.Fu.Core
         /// <summary>
         /// A reactive channel providing the current coordinate space.
         /// </summary>
-        public IChannel<CommonSpace> Space => _space.Channel;
+        public IChannel<CommonSpace> Space => _space;
 
         /// <summary>
         /// Sets a new coordinate space, which will be broadcast to all subscribers if it has changed.
         /// </summary>
         [Fragment]
         public void SetSpace(CommonSpace space = Constants.DefaultCommonSpace) =>
-            _space.TrySetValue(space);
+            _space.EnsureValue(space);
 
         protected readonly ChannelProperty<bool> _enabled = new(true);
 
         /// <summary>
         /// A reactive channel indicating whether the Fu context is active and should handle input.
         /// </summary>
-        public IChannel<bool> Enabled => _enabled.Channel;
+        public IChannel<bool> Enabled => _enabled;
 
         /// <summary>
         /// Sets whether the Fu context is enabled. When disabled, input handling will cease.
         /// </summary>
         [Fragment(Order = PinOrder.Enabled)]
-        public void SetEnabled(bool enabled = true) => _enabled.TrySetValue(enabled);
+        public void SetEnabled(bool enabled = true) => _enabled.EnsureValue(enabled);
     }
 }

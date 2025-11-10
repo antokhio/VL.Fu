@@ -1,56 +1,103 @@
-﻿using VL.Lib.Reactive;
+﻿using System.Reactive.Disposables;
+using VL.Lib.Reactive;
 
 namespace VL.Fu.Core.Property
 {
     /// <summary>
-    /// A reactive property that combines the "set only if changed" logic of a CachedProperty
-    /// with the broadcasting capabilities of an IChannel.
+    /// A mutable channel that can be dynamically connected to an upstream source for two-way synchronization.
+    /// It ensures that changes from the upstream channel are reflected locally, and local changes
+    /// are propagated back to the upstream channel.
     /// </summary>
     /// <typeparam name="T">The type of the value to hold.</typeparam>
-    public class ChannelProperty<T>
+    public class ChannelProperty<T> : ChannelPropertyBase<T>
     {
-        private readonly IChannel<T> _channel;
-
-        /// <summary>
-        /// The underlying reactive channel. Other parts of the system can subscribe to this to be notified of changes.
-        /// </summary>
-        public IChannel<T> Channel => _channel;
-
-        /// <summary>
-        /// Gets the current value of the property.
-        /// </summary>
-        public T Value => _channel.Value;
+        private IChannel<T>? _currentUpstreamChannel;
+        private IDisposable _subscriptions = Disposable.Empty;
+        private bool _isSyncing; // Re-entrancy guard to prevent infinite loops
+        private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the ChannelProperty with an initial value.
         /// </summary>
         /// <param name="initialValue">The starting value for the property.</param>
         public ChannelProperty(T initialValue)
+            : base(Channel.Create(initialValue)) { }
+
+        /// <summary>
+        /// Sets the upstream channel and establishes two-way data binding.
+        /// When set, it disconnects from any previous upstream channel. If set to null,
+        /// it operates as a standalone channel.
+        /// </summary>
+        public void SetChannel(IChannel<T>? channel = null)
         {
-            _channel = ChannelHelpers.CreateChannelOfType<T>();
-            _channel.Value = initialValue;
+            if (ReferenceEquals(_currentUpstreamChannel, channel))
+                return;
+
+            // Dispose of old subscriptions
+            _subscriptions.Dispose();
+
+            _currentUpstreamChannel = channel;
+
+            if (_currentUpstreamChannel != null)
+            {
+                var upstreamToInternal = _currentUpstreamChannel.Subscribe(newValue =>
+                {
+                    // If a sync is already happening, ignore this notification to prevent loops.
+                    if (_isSyncing)
+                        return;
+
+                    _isSyncing = true;
+                    try
+                    {
+                        _internalChannel.OnNext(newValue);
+                    }
+                    finally
+                    {
+                        _isSyncing = false;
+                    }
+                });
+
+                var internalToUpstream = _internalChannel.Subscribe(newValue =>
+                {
+                    // If a sync is already happening, ignore this notification to prevent loops.
+                    if (_isSyncing)
+                        return;
+
+                    _isSyncing = true;
+                    try
+                    {
+                        _currentUpstreamChannel.OnNext(newValue);
+                    }
+                    finally
+                    {
+                        _isSyncing = false;
+                    }
+                });
+
+                // Set the initial value from the upstream without causing a loop
+                _isSyncing = true;
+                _internalChannel.OnNext(_currentUpstreamChannel.Value);
+                _isSyncing = false;
+
+                _subscriptions = new CompositeDisposable(upstreamToInternal, internalToUpstream);
+            }
+            else
+            {
+                _subscriptions = Disposable.Empty;
+            }
         }
 
         /// <summary>
-        /// Tries to set a new value. If the new value is different from the current value,
-        /// it updates the property and pushes the change to the underlying channel.
+        /// Disposes resources and disconnects from the upstream channel.
         /// </summary>
-        /// <param name="newValue">The new value to set.</param>
-        /// <returns>True if the value was changed, false otherwise.</returns>
-        public bool TrySetValue(T newValue)
+        public override void Dispose()
         {
-            // Use EqualityComparer<T>.Default to handle both structs (value types)
-            // and classes (reference types) correctly.
-            if (EqualityComparer<T>.Default.Equals(Value, newValue))
-            {
-                return false;
-            }
+            if (_disposed)
+                return;
+            _disposed = true;
 
-            // If the value is different, update the channel.
-            // This will automatically notify all subscribers.
-            _channel.OnNext(newValue);
-
-            return true;
+            SetChannel(null); // This will dispose the subscriptions
+            base.Dispose();
         }
     }
 }

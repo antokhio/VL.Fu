@@ -1659,6 +1659,6 @@
     </Node>
   </Patch>
   <PlatformDependency Id="VVKY2dQHSuwQa9bHTsag5V" Location="./lib/Debug/net8.0/VL.Fu.dll" IsForward="true" />
-  <NugetDependency Id="ALZEHqz0CdsNyotdgPK1wV" Location="VL.Fu.Core" Version="0.0.0" />
+  <NugetDependency Id="ALZEHqz0CdsNyotdgPK1wV" Location="VL.Fu.Core" IsForward="true" Version="0.0.0" />
   <NugetDependency Id="U4vWHHjzO0HNpuNNKF0nfX" Location="VL.Skia" Version="2025.7.0" />
 </Document>

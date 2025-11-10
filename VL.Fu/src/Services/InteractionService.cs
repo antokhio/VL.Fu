@@ -2,39 +2,35 @@
 using System.Collections.Immutable;
 using System.Reactive.Disposables;
 using VL.Fu.Core;
+using VL.Fu.Core.Behaviour;
+using VL.Fu.Core.Gesture;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.InstanceId;
 using VL.Fu.Core.Repository;
+using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Services
 {
-    /// <summary>
-    /// Manages and processes all interactive behaviors in a scene.
-    /// It maintains a priority-sorted list of behaviors for efficient hit-testing.
-    /// </summary>
     public class InteractionService : IRepositoryService
     {
         private readonly CompositeDisposable _subscriptions = new();
 
-        // Stores all registered behaviors, keyed by the behavior's instance ID for fast updates.
         private readonly ConcurrentDictionary<
             int,
-            (IInteractiveHost Host, IFuBehaviour Behaviour)
+            (IInteractiveHost Host, IInteractiveBehavior Behaviour)
         > _behaviors = new();
-
-        // A sorted list used for fast input processing. Rebuilt whenever the main dictionary changes.
         private volatile IReadOnlyList<(
             IInteractiveHost Host,
-            IFuBehaviour Behaviour
-        )> _sortedBehaviors = ImmutableList<(IInteractiveHost Host, IFuBehaviour Behaviour)>.Empty;
+            IInteractiveBehavior Behaviour
+        )> _sortedBehaviors = ImmutableList<(IInteractiveHost, IInteractiveBehavior)>.Empty;
 
-        // State management for interactions (placeholders for now)
-        private readonly ConcurrentDictionary<int, IFuBehaviour> _capturedPointers = new();
+        // State management for interactions
+        private readonly ConcurrentDictionary<int, IInteractiveBehavior> _capturedPointers = new();
+        private readonly Dictionary<int, FuPointer> _pointerStates = new();
+        private readonly Dictionary<int, List<(IInteractiveBehavior, IGesture)>> _activeGestures =
+            new();
         private IReadOnlySet<FuKey> _keysDown = ImmutableHashSet<FuKey>.Empty;
 
-        /// <summary>
-        /// Initializes the service and subscribes to input streams.
-        /// </summary>
         public void Initialize(NotificationService notificationService)
         {
             _subscriptions.Add(notificationService.PointersStream.Subscribe(OnPointersUpdate));
@@ -42,36 +38,112 @@ namespace VL.Fu.Services
             _subscriptions.Add(notificationService.KeysDownStream.Subscribe(OnKeysUpdate));
         }
 
-        private void OnPointersUpdate(IReadOnlyDictionary<int, FuPointer> pointers)
+        private void OnPointersUpdate(IReadOnlyDictionary<int, FuPointer> currentPointers)
         {
-            // Main interaction logic will go here.
-            // 1. Iterate through active pointers.
-            // 2. Check if a pointer is captured.
-            // 3. If not, traverse _sortedBehaviors and perform hit-tests.
-            // 4. Dispatch events (OnPointerDown, OnPointerMove, OnPointerUp) to the target behavior.
+            // --- 1. Process existing pointers (Move, Up) ---
+            var previousPointerIds = _pointerStates.Keys.ToList();
+            foreach (var pointerId in previousPointerIds)
+            {
+                // Pointer was released (UP)
+                if (!currentPointers.ContainsKey(pointerId))
+                {
+                    // For now, we just clean up state.
+                    // Later, this is where OnDeactivate and TapGesture logic would go.
+                    _pointerStates.Remove(pointerId);
+                    _activeGestures.Remove(pointerId);
+                    if (_capturedPointers.TryRemove(pointerId, out var capturedBehavior))
+                    {
+                        capturedBehavior.OnDeactivate();
+                    }
+                }
+                // Pointer has moved (MOVE) - We will implement this in the next step
+                else
+                {
+                    // This is where OnAdvance logic for captured pointers would go.
+                }
+            }
+
+            // --- 2. Process new pointers (DOWN) ---
+            foreach (var pointer in currentPointers.Values)
+            {
+                if (
+                    !_pointerStates.ContainsKey(pointer.Id)
+                    && pointer.State == TouchNotificationKind.TouchDown
+                )
+                {
+                    // This is a new pointer, start the activation sequence.
+                    var context = new GestureInputContext(
+                        pointer,
+                        currentPointers,
+                        _keysDown,
+                        pointer.TimeStamp
+                    );
+
+                    // Find the winning behavior
+                    foreach (var (host, behavior) in _sortedBehaviors)
+                    {
+                        // A. Hit Test
+                        if (host.HitTest(pointer))
+                        {
+                            // B. Gesture Matching
+                            var gestures = behavior.GetGestures();
+                            foreach (var gesture in gestures)
+                            {
+                                gesture.Reset();
+                                gesture.ProcessInput(context);
+
+                                if (gesture.Status == GestureStatus.Matched)
+                                {
+                                    // C. Activation
+                                    behavior.OnActivate(gesture);
+
+                                    // Simple capture logic: the first behavior to match a gesture captures the pointer.
+                                    _capturedPointers[pointer.Id] = behavior;
+
+                                    // We found our winner, stop processing for this pointer.
+                                    goto nextPointer;
+                                }
+                                else if (gesture.Status == GestureStatus.Possible)
+                                {
+                                    // This gesture is interested, keep it for later (e.g., for a drag).
+                                    if (!_activeGestures.ContainsKey(pointer.Id))
+                                        _activeGestures[pointer.Id] =
+                                            new List<(IInteractiveBehavior, IGesture)>();
+                                    _activeGestures[pointer.Id].Add((behavior, gesture));
+                                }
+                            }
+                        }
+                    }
+                }
+                nextPointer:
+                ;
+            }
+
+            // --- 3. Update pointer state for the next frame ---
+            _pointerStates.Clear();
+            foreach (var kvp in currentPointers)
+            {
+                _pointerStates[kvp.Key] = kvp.Value;
+            }
         }
 
-        private void OnMouseUpdate(FuMouse mouse)
-        {
-            // Mouse-specific logic. Could be unified with pointers.
-            // 1. Check for hover events by hit-testing against _sortedBehaviors.
-            // 2. Dispatch mouse-specific events if needed (e.g., OnMouseWheel).
+        private void OnMouseUpdate(
+            FuMouse mouse
+        ) { /* TODO */
         }
 
-        private void OnKeysUpdate(IReadOnlySet<FuKey> keys)
-        {
-            _keysDown = keys;
-            // This can be used to modify pointer interactions (e.g., holding Shift to multi-select).
-        }
+        private void OnKeysUpdate(IReadOnlySet<FuKey> keys) => _keysDown = keys;
 
-        public void UpdateBehaviors(IInteractiveHost host, IEnumerable<IFuBehaviour> behaviors)
+        public void UpdateBehaviors(
+            IInteractiveHost host,
+            IEnumerable<IInteractiveBehavior> behaviors
+        )
         {
             var hostInstanceId = host.InstanceId;
             var behaviorsToRemove = _behaviors
                 .Where(kvp => kvp.Value.Host.InstanceId == hostInstanceId)
                 .Select(kvp => kvp.Key)
                 .ToList();
-
             foreach (var key in behaviorsToRemove)
             {
                 _behaviors.TryRemove(key, out _);
@@ -84,7 +156,6 @@ namespace VL.Fu.Services
                     _behaviors[behaviorWithId.InstanceId] = (host, behavior);
                 }
             }
-
             _sortedBehaviors = _behaviors
                 .Values.OrderByDescending(b => b.Behaviour.Priority)
                 .ToImmutableList();
@@ -94,7 +165,7 @@ namespace VL.Fu.Services
         {
             _subscriptions.Dispose();
             _behaviors.Clear();
-            _sortedBehaviors = ImmutableList<(IInteractiveHost Host, IFuBehaviour Behaviour)>.Empty;
+            _sortedBehaviors = ImmutableList<(IInteractiveHost, IInteractiveBehavior)>.Empty;
         }
     }
 }
