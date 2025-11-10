@@ -7,6 +7,7 @@ using VL.Fu.Core.Gesture;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.InstanceId;
 using VL.Fu.Core.Repository;
+using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Services
 {
@@ -45,12 +46,47 @@ namespace VL.Fu.Services
             var releasedPointerIds = _lastPointerStates.Keys.Except(currentPointers.Keys).ToList();
             foreach (var pointerId in releasedPointerIds)
             {
-                if (_capturedPointers.TryRemove(pointerId, out var capturedBehavior))
-                    capturedBehavior.OnDeactivate();
+                if (_activeGestures.TryGetValue(pointerId, out var possibleGesturesForUp))
+                {
+                    var lastState = _lastPointerStates[pointerId];
+                    var upContext = new GestureInputContext(
+                        lastState.WithState(TouchNotificationKind.TouchUp),
+                        currentPointers,
+                        _keysDown,
+                        lastState.TimeStamp
+                    );
 
+                    foreach (var (behavior, gesture) in possibleGesturesForUp)
+                    {
+                        gesture.ProcessInput(upContext);
+                        if (gesture.Status == GestureStatus.Matched)
+                        {
+                            behavior.OnActivate(gesture);
+                            _capturedPointers.TryRemove(pointerId, out _);
+                            goto pointerHandled;
+                        }
+                    }
+                }
+
+                if (_capturedPointers.TryRemove(pointerId, out var capturedBehavior))
+                {
+                    // We need the final state of the pointer to pass to OnDeactivate.
+                    var lastState = _lastPointerStates[pointerId];
+                    var upContext = new GestureInputContext(
+                        lastState.WithState(TouchNotificationKind.TouchUp),
+                        currentPointers,
+                        _keysDown,
+                        lastState.TimeStamp
+                    );
+                    capturedBehavior.OnDeactivate(upContext);
+                }
+
+                pointerHandled:
                 if (_activeGestures.Remove(pointerId, out var gesturesToCancel))
+                {
                     foreach (var (_, gesture) in gesturesToCancel)
                         gesture.Cancel();
+                }
             }
 
             // --- 2. Process DOWN and MOVE events ---
@@ -69,38 +105,48 @@ namespace VL.Fu.Services
                     // --- POINTER MOVE ---
                     if (_capturedPointers.TryGetValue(pointerId, out var capturedBehavior))
                     {
-                        // A behavior has already captured this pointer. Just advance it.
                         capturedBehavior.OnAdvance(context);
                     }
                     else if (_activeGestures.TryGetValue(pointerId, out var possibleGestures))
                     {
-                        // No capture yet, but there are gestures waiting for more input.
-                        // Iterate backwards so we can safely remove items.
                         for (int i = possibleGestures.Count - 1; i >= 0; i--)
                         {
                             var (behavior, gesture) = possibleGestures[i];
+
+                            // Allow the behavior to react to gesture state changes during the move.
+                            // This is key for Hoverable to detect when its gesture fails.
+                            behavior.OnAdvance(context);
+
                             gesture.ProcessInput(context);
 
                             if (gesture.Status == GestureStatus.Matched)
                             {
-                                // A gesture has won! Activate its behavior.
                                 behavior.OnActivate(gesture);
-                                _capturedPointers[pointerId] = behavior;
 
-                                // Cancel all other gestures that were in the running for this pointer.
-                                foreach (var (b, g) in possibleGestures)
-                                    if (g != gesture)
-                                        g.Cancel();
+                                if (!behavior.IsTransient)
+                                {
+                                    _capturedPointers[pointerId] = behavior;
 
-                                // Clear the list of possible gestures for this pointer.
-                                _activeGestures.Remove(pointerId);
+                                    // Cancel other pending gestures
+                                    foreach (var (b, g) in possibleGestures)
+                                        if (g != gesture)
+                                            g.Cancel();
+                                    _activeGestures.Remove(pointerId);
 
-                                // We have a winner for this pointer, move to the next one.
-                                goto nextPointer;
+                                    goto nextPointer; // Winner found
+                                }
+                                else
+                                {
+                                    // If transient, like Hoverable, reset the gesture immediately
+                                    // so it can check for new states on the next frame.
+                                    gesture.Reset();
+                                }
+
+                                // It was transient, so we remove it from the list of possibles, but keep searching.
+                                possibleGestures.RemoveAt(i);
                             }
                             else if (gesture.Status == GestureStatus.Failed)
                             {
-                                // This gesture is no longer viable, remove it from the list.
                                 possibleGestures.RemoveAt(i);
                             }
                         }
@@ -120,9 +166,15 @@ namespace VL.Fu.Services
 
                                 if (gesture.Status == GestureStatus.Matched)
                                 {
+                                    // Always activate on match.
                                     behavior.OnActivate(gesture);
-                                    _capturedPointers[pointerId] = behavior;
-                                    goto nextPointer;
+
+                                    // Only capture and stop if the behavior is NOT transient.
+                                    if (!behavior.IsTransient)
+                                    {
+                                        _capturedPointers[pointerId] = behavior;
+                                        goto nextPointer;
+                                    }
                                 }
                                 else if (gesture.Status == GestureStatus.Possible)
                                 {

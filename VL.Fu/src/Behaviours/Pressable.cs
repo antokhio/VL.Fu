@@ -47,7 +47,7 @@ namespace VL.Fu.Behaviours
 
         public void OnAdvance(GestureInputContext context) { }
 
-        public void OnDeactivate() { }
+        public void OnDeactivate(GestureInputContext context) { }
 
         public void OnCancel() { }
 

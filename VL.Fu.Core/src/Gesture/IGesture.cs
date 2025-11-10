@@ -13,6 +13,13 @@ namespace VL.Fu.Core.Gesture
         GestureStatus Status { get; }
 
         /// <summary>
+        /// Called by the host to provide the behavior with a reference to itself.
+        /// This allows the behavior to query properties from its host (e.g., Bounds).
+        /// </summary>
+        /// <param name="host">The interactive host that owns this behavior.</param>
+        void SetHost(IInteractiveHost host);
+
+        /// <summary>
         /// The contextual data available when the gesture's status becomes 'Matched'.
         /// </summary>
         object? ActivationData { get; }

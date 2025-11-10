@@ -15,6 +15,12 @@ namespace VL.Fu.Core.Behaviour
         int Priority { get; }
 
         /// <summary>
+        /// If true, this behavior will not capture the pointer or stop the search for other behaviors
+        /// when its gesture matches. Useful for passive states like hovering.
+        /// </summary>
+        bool IsTransient { get; }
+
+        /// <summary>
         /// Called by the host to provide the behavior with a reference to itself.
         /// This allows the behavior to query properties from its host (e.g., Bounds).
         /// </summary>
@@ -41,7 +47,7 @@ namespace VL.Fu.Core.Behaviour
         /// <summary>
         /// Called when the interaction ends (e.g., pointer up).
         /// </summary>
-        void OnDeactivate();
+        void OnDeactivate(GestureInputContext context);
 
         /// <summary>
         /// Called when the interaction is interrupted by a higher-priority behavior.

@@ -104,7 +104,7 @@ namespace VL.Fu.Behaviours
         /// <summary>
         /// Called when the pointer is released, ending the drag.
         /// </summary>
-        public void OnDeactivate()
+        public void OnDeactivate(GestureInputContext context)
         {
             // Nothing to do here for a simple drag.
             // A more complex implementation might send a "Drag Ended" event.

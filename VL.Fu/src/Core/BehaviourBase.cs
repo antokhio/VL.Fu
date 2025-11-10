@@ -14,7 +14,17 @@ namespace VL.Fu.Core
     public abstract class BehaviourBase : RepositoryConsumer, IInstanceId
     {
         protected IInteractiveHost? Host { get; private set; }
+
+        /// <summary>
+        /// Priority higher is more imidiate
+        /// </summary>
         public abstract int Priority { get; }
+
+        /// <summary>
+        /// Gets whether this behavior is transient. Defaults to false.
+        /// Transient behaviors do not capture the pointer.
+        /// </summary>
+        public virtual bool IsTransient => false;
 
         public abstract IEnumerable<IGesture> Gestures { get; }
 
@@ -33,7 +43,11 @@ namespace VL.Fu.Core
             {
                 foreach (var gesture in Gestures)
                 {
+                    if (gesture is null)
+                        continue;
+
                     gesture?.SetContextId(contextId);
+                    gesture?.SetHost(Host);
                 }
             }
         }

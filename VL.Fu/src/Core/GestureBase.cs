@@ -9,6 +9,8 @@ namespace VL.Fu.Core.Gesture
     [ProcessNode]
     public abstract class GestureBase : RepositoryConsumer, IGesture
     {
+        protected IInteractiveHost? Host { get; private set; }
+
         /// <summary>
         /// The current state of the gesture's recognition process.
         /// The setter is protected to ensure state is managed by the gesture's own logic.
@@ -64,6 +66,11 @@ namespace VL.Fu.Core.Gesture
         public virtual void Cancel()
         {
             Status = GestureStatus.Cancelled;
+        }
+
+        public void SetHost(IInteractiveHost host)
+        {
+            Host = host;
         }
     }
 }
