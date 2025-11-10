@@ -15,9 +15,16 @@ namespace VL.Fu.Core.Behaviour
         int Priority { get; }
 
         /// <summary>
-        /// Gets the collection of gestures that can activate this behavior.
+        /// Called by the host to provide the behavior with a reference to itself.
+        /// This allows the behavior to query properties from its host (e.g., Bounds).
         /// </summary>
-        IEnumerable<IGesture> GetGestures();
+        /// <param name="host">The interactive host that owns this behavior.</param>
+        void SetHost(IInteractiveHost host);
+
+        /// <summary>
+        /// A collection of gestures that can activate this behavior.
+        /// </summary>
+        IEnumerable<IGesture> Gestures { get; }
 
         /// <summary>
         /// Called by the InteractionService when one of the behavior's gestures is matched.

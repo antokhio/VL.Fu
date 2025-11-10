@@ -1,9 +1,11 @@
-﻿namespace VL.Fu.Core.Gesture
+﻿using VL.Fu.Core.Repository;
+
+namespace VL.Fu.Core.Gesture
 {
     /// <summary>
     /// Defines the contract for an object that recognizes a specific input pattern.
     /// </summary>
-    public interface IGesture
+    public interface IGesture : IRepositoryConsumer
     {
         /// <summary>
         /// The current state of the gesture's recognition process.

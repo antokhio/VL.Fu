@@ -42,7 +42,11 @@ namespace VL.Fu.Core
 
             foreach (var b in newBehaviours)
             {
-                b?.SetContextId(this.ContextId);
+                if (b is null)
+                    continue;
+
+                b.SetHost(this);
+                b.SetContextId(this.ContextId);
             }
 
             _interactionService.UpdateBehaviors(this, newBehaviours.Where(b => b is not null));

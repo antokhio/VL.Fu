@@ -1,3 +1,3 @@
 using VL.Core.Import;
 
-[assembly: ImportAsIs(Namespace = "VL.Fu.Core", Category = "Fu")]
+[assembly: ImportAsIs(Namespace = "VL.Fu.Core", Category = "Fu.Core")]

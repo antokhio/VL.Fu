@@ -17,14 +17,11 @@ namespace VL.Fu.Extensions
         /// <returns>A new rectangle in normalized coordinate space.</returns>
         public static RectangleF ToNormalizedSpace(this RectangleF pixelRect, Int2 size)
         {
-            float aspect = (float)size.X / size.Y;
-
-            float normX = (pixelRect.X / size.X) * 2f * aspect - aspect;
-            float normY = (pixelRect.Y / size.Y) * 2f - 1f;
-            float normWidth = (pixelRect.Width / size.X) * 2f * aspect;
-            float normHeight = (pixelRect.Height / size.Y) * 2f;
-
-            return new RectangleF(normX, normY, normWidth, normHeight);
+            var p1 = new Vector2(pixelRect.Left, pixelRect.Top).ToNormalizedSpace(size.ToVector());
+            var p2 = new Vector2(pixelRect.Right, pixelRect.Bottom).ToNormalizedSpace(
+                size.ToVector()
+            );
+            return new RectangleF(p1.X, p1.Y, p2.X - p1.X, p2.Y - p1.Y);
         }
 
         /// <summary>
@@ -103,11 +100,14 @@ namespace VL.Fu.Extensions
         public static Vector2 ToNormalizedSpace(this Vector2 pixelPosition, Vector2 size)
         {
             float aspect = size.X / size.Y;
-
-            float normX = (pixelPosition.X / size.X) * 2f * aspect - aspect;
-            float normY = (pixelPosition.Y / size.Y) * 2f - 1f;
-
-            return new Vector2(normX, normY);
+            Vector2 norm;
+            norm.X = (pixelPosition.X / size.X) * 2f - 1f;
+            norm.Y = (pixelPosition.Y / size.Y) * 2f - 1f;
+            if (aspect > 1f)
+                norm.X *= aspect;
+            else
+                norm.Y /= aspect;
+            return norm;
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace VL.Fu.Extensions
         /// <returns>A new vector in centered DIP space.</returns>
         public static Vector2 ToCenteredDIPSpace(
             this Vector2 pixelPosition,
-            Vector2 resolution,
+            Int2 resolution,
             float dipFactor
         )
         {
@@ -166,7 +166,7 @@ namespace VL.Fu.Extensions
         public static Vector2 ToRawPixels(
             this Vector2 value,
             CommonSpace fromSpace,
-            Vector2 resolution,
+            Int2 resolution,
             float dipFactor,
             float pixelFactor
         )
@@ -191,11 +191,11 @@ namespace VL.Fu.Extensions
 
         private static Vector2 UncenterAndScale(
             Vector2 centeredValue,
-            Vector2 resolution,
+            Int2 resolution,
             float factor
         )
         {
-            var spaceResolution = resolution / factor;
+            var spaceResolution = resolution.ToVector() / factor;
             var halfSpaceResolution = spaceResolution / 2f;
 
             // Add back the half-resolution to move origin to top-left, then scale up to raw pixels.
@@ -203,15 +203,144 @@ namespace VL.Fu.Extensions
             return topLeftValue * factor;
         }
 
-        private static Vector2 FromNormalized(Vector2 normalizedValue, Vector2 resolution)
+        private static Vector2 FromNormalized(Vector2 normalizedValue, Int2 resolution)
         {
-            float aspect = resolution.X / resolution.Y;
+            var p = normalizedValue;
+            var aspect = (float)resolution.X / resolution.Y;
+            if (aspect > 1f)
+                p.X /= aspect;
+            else
+                p.Y *= aspect;
+            var pix = new Vector2((p.X + 1f) / 2f * resolution.X, (p.Y + 1f) / 2f * resolution.Y);
+            return pix;
+        }
 
-            // Reverse the formulas from the original SpaceExtensions
-            float pixelX = (normalizedValue.X + aspect) / (2f * aspect) * resolution.X;
-            float pixelY = (normalizedValue.Y + 1f) / 2f * resolution.Y;
+        /// <summary>
+        /// Converts a Vector2 from a source space to a target space.
+        /// </summary>
+        /// <param name="value">The vector to convert.</param>
+        /// <param name="fromSpace">The source coordinate space.</param>
+        /// <param name="toSpace">The target coordinate space.</param>
+        /// <param name="resolution">The resolution of the screen/viewport.</param>
+        /// <param name="dipFactor">The factor to convert between DIPs and raw pixels.</param>
+        /// <param name="pixelFactor">The factor to convert between logical pixels and raw pixels.</param>
+        /// <returns>The converted Vector2.</returns>
+        public static Vector2 ConvertSpace(
+            this Vector2 value,
+            CommonSpace fromSpace,
+            CommonSpace toSpace,
+            Int2 resolution,
+            float dipFactor,
+            float pixelFactor
+        )
+        {
+            var rawPixelValue = value.ToRawPixels(fromSpace, resolution, dipFactor, pixelFactor);
 
-            return new Vector2(pixelX, pixelY);
+            return toSpace switch
+            {
+                CommonSpace.Normalized => rawPixelValue.ToNormalizedSpace(resolution.ToVector()),
+                CommonSpace.DIP => rawPixelValue.ToCenteredDIPSpace(resolution, dipFactor),
+                CommonSpace.DIPTopLeft => rawPixelValue.ToDIPTopLeftSpace(dipFactor),
+                CommonSpace.PixelTopLeft => rawPixelValue.ToPixelTopLeftSpace(pixelFactor),
+                _ => value,
+            };
+        }
+
+        /// <summary>
+        /// Converts a RectangleF from a source space to a target space.
+        /// </summary>
+        /// <param name="value">The rectangle to convert.</param>
+        /// <param name="fromSpace">The source coordinate space.</param>
+        /// <param name="toSpace">The target coordinate space.</param>
+        /// <param name="resolution">The resolution of the screen/viewport.</param>
+        /// <param name="dipFactor">The factor to convert between DIPs and raw pixels.</param>
+        /// <param name="pixelFactor">The factor to convert between logical pixels and raw pixels.</param>
+        /// <returns>The converted RectangleF.</returns>
+        public static RectangleF ConvertSpace(
+            this RectangleF value,
+            CommonSpace fromSpace,
+            CommonSpace toSpace,
+            Int2 resolution,
+            float dipFactor,
+            float pixelFactor
+        )
+        {
+            // A rectangle is defined by two points. The most robust way to convert it is
+            // to convert both points to the common pivot space (raw pixels).
+            var topLeftInRawPixels = value.TopLeft.ToRawPixels(
+                fromSpace,
+                resolution,
+                dipFactor,
+                pixelFactor
+            );
+
+            var bottomRightInRawPixels = value.BottomRight.ToRawPixels(
+                fromSpace,
+                resolution,
+                dipFactor,
+                pixelFactor
+            );
+
+            var rawPixelRect = new RectangleF(
+                topLeftInRawPixels.X,
+                topLeftInRawPixels.Y,
+                bottomRightInRawPixels.X - topLeftInRawPixels.X,
+                bottomRightInRawPixels.Y - topLeftInRawPixels.Y
+            );
+
+            // Now, convert the raw pixel rectangle to the final target space.
+            return toSpace switch
+            {
+                CommonSpace.Normalized => rawPixelRect.ToNormalizedSpace(resolution),
+                CommonSpace.DIP => rawPixelRect.ToCenteredDIPSpace(resolution, dipFactor),
+                CommonSpace.DIPTopLeft => rawPixelRect.ToDIPTopLeftSpace(dipFactor),
+                CommonSpace.PixelTopLeft => rawPixelRect.ToPixelTopLeftSpace(pixelFactor),
+                _ => value,
+            };
+        }
+
+        public static float ConvertSpace(
+            this float value,
+            CommonSpace fromSpace,
+            CommonSpace toSpace,
+            Int2 resolution,
+            float dipFactor,
+            float pixelFactor
+        )
+        {
+            float valueInRawPixels;
+            switch (fromSpace)
+            {
+                case CommonSpace.PixelTopLeft:
+                    valueInRawPixels = value * pixelFactor;
+                    break;
+                case CommonSpace.DIPTopLeft:
+                case CommonSpace.DIP: // A distance in centered DIP is the same as top-left DIP
+                    valueInRawPixels = value * dipFactor;
+                    break;
+                case CommonSpace.Normalized:
+                    // In normalized space, Y-axis is [-1, 1], so total height is 2 units.
+                    // The value is a fraction of the total normalized height (2).
+                    // We treat it as a ratio of the screen height.
+                    valueInRawPixels = (value / 2f) * resolution.Y;
+                    break;
+                default:
+                    return value;
+            }
+
+            // Now, convert the raw pixel distance to the target space distance.
+            switch (toSpace)
+            {
+                case CommonSpace.PixelTopLeft:
+                    return valueInRawPixels / pixelFactor;
+                case CommonSpace.DIPTopLeft:
+                case CommonSpace.DIP:
+                    return valueInRawPixels / dipFactor;
+                case CommonSpace.Normalized:
+                    return (valueInRawPixels / resolution.Y) * 2f;
+                default:
+                    return value;
+            }
         }
     }
 }

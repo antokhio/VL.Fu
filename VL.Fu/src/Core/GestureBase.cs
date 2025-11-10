@@ -1,10 +1,13 @@
-﻿namespace VL.Fu.Core.Gesture
+﻿using VL.Core.Import;
+
+namespace VL.Fu.Core.Gesture
 {
     /// <summary>
     /// An abstract base class for all gesture recognizers.
     /// It provides the common state management logic for the IGesture interface.
     /// </summary>
-    public abstract class GestureBase : IGesture
+    [ProcessNode]
+    public abstract class GestureBase : RepositoryConsumer, IGesture
     {
         /// <summary>
         /// The current state of the gesture's recognition process.

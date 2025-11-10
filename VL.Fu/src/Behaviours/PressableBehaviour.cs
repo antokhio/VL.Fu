@@ -14,11 +14,7 @@ namespace VL.Fu.Behaviours
     /// <summary>
     /// A behavior that sends a Unit notification through a channel when it is pressed down.
     /// </summary>
-    [ProcessNode(
-        Name = "Pressable",
-        HasStateOutput = true,
-        FragmentSelection = FragmentSelection.Explicit
-    )]
+    [ProcessNode(Name = "Pressable", FragmentSelection = FragmentSelection.Explicit)]
     public class Pressable : BehaviourBase, IInteractiveBehavior
     {
         private readonly ChannelProperty<Unit> _pressedChannel = new(new Unit());
@@ -39,7 +35,7 @@ namespace VL.Fu.Behaviours
         [Fragment(Order = PinOrder.Action)]
         public void SetChannel(IChannel<Unit>? channel) => _pressedChannel.SetChannel(channel);
 
-        public IEnumerable<IGesture> GetGestures() => _gestures;
+        public override IEnumerable<IGesture> Gestures => _gestures;
 
         /// <summary>
         /// When the PointerDownGesture matches, push a Unit value to the active channel.

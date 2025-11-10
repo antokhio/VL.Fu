@@ -7,7 +7,6 @@ using VL.Fu.Core.Gesture;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.InstanceId;
 using VL.Fu.Core.Repository;
-using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Services
 {
@@ -24,11 +23,13 @@ namespace VL.Fu.Services
             IInteractiveBehavior Behaviour
         )> _sortedBehaviors = ImmutableList<(IInteractiveHost, IInteractiveBehavior)>.Empty;
 
-        // State management for interactions
+        // --- State management for interactions ---
         private readonly ConcurrentDictionary<int, IInteractiveBehavior> _capturedPointers = new();
-        private readonly Dictionary<int, FuPointer> _pointerStates = new();
-        private readonly Dictionary<int, List<(IInteractiveBehavior, IGesture)>> _activeGestures =
-            new();
+        private readonly Dictionary<int, FuPointer> _lastPointerStates = new();
+        private readonly Dictionary<
+            int,
+            List<(IInteractiveBehavior Behaviour, IGesture Gesture)>
+        > _activeGestures = new();
         private IReadOnlySet<FuKey> _keysDown = ImmutableHashSet<FuKey>.Empty;
 
         public void Initialize(NotificationService notificationService)
@@ -40,76 +41,94 @@ namespace VL.Fu.Services
 
         private void OnPointersUpdate(IReadOnlyDictionary<int, FuPointer> currentPointers)
         {
-            // --- 1. Process existing pointers (Move, Up) ---
-            var previousPointerIds = _pointerStates.Keys.ToList();
-            foreach (var pointerId in previousPointerIds)
+            // --- 1. Process UP events ---
+            var releasedPointerIds = _lastPointerStates.Keys.Except(currentPointers.Keys).ToList();
+            foreach (var pointerId in releasedPointerIds)
             {
-                // Pointer was released (UP)
-                if (!currentPointers.ContainsKey(pointerId))
-                {
-                    // For now, we just clean up state.
-                    // Later, this is where OnDeactivate and TapGesture logic would go.
-                    _pointerStates.Remove(pointerId);
-                    _activeGestures.Remove(pointerId);
-                    if (_capturedPointers.TryRemove(pointerId, out var capturedBehavior))
-                    {
-                        capturedBehavior.OnDeactivate();
-                    }
-                }
-                // Pointer has moved (MOVE) - We will implement this in the next step
-                else
-                {
-                    // This is where OnAdvance logic for captured pointers would go.
-                }
+                if (_capturedPointers.TryRemove(pointerId, out var capturedBehavior))
+                    capturedBehavior.OnDeactivate();
+
+                if (_activeGestures.Remove(pointerId, out var gesturesToCancel))
+                    foreach (var (_, gesture) in gesturesToCancel)
+                        gesture.Cancel();
             }
 
-            // --- 2. Process new pointers (DOWN) ---
+            // --- 2. Process DOWN and MOVE events ---
             foreach (var pointer in currentPointers.Values)
             {
-                if (
-                    !_pointerStates.ContainsKey(pointer.Id)
-                    && pointer.State == TouchNotificationKind.TouchDown
-                )
-                {
-                    // This is a new pointer, start the activation sequence.
-                    var context = new GestureInputContext(
-                        pointer,
-                        currentPointers,
-                        _keysDown,
-                        pointer.TimeStamp
-                    );
+                var context = new GestureInputContext(
+                    pointer,
+                    currentPointers,
+                    _keysDown,
+                    pointer.TimeStamp
+                );
+                var pointerId = pointer.Id;
 
-                    // Find the winning behavior
+                if (_lastPointerStates.ContainsKey(pointerId))
+                {
+                    // --- POINTER MOVE ---
+                    if (_capturedPointers.TryGetValue(pointerId, out var capturedBehavior))
+                    {
+                        // A behavior has already captured this pointer. Just advance it.
+                        capturedBehavior.OnAdvance(context);
+                    }
+                    else if (_activeGestures.TryGetValue(pointerId, out var possibleGestures))
+                    {
+                        // No capture yet, but there are gestures waiting for more input.
+                        // Iterate backwards so we can safely remove items.
+                        for (int i = possibleGestures.Count - 1; i >= 0; i--)
+                        {
+                            var (behavior, gesture) = possibleGestures[i];
+                            gesture.ProcessInput(context);
+
+                            if (gesture.Status == GestureStatus.Matched)
+                            {
+                                // A gesture has won! Activate its behavior.
+                                behavior.OnActivate(gesture);
+                                _capturedPointers[pointerId] = behavior;
+
+                                // Cancel all other gestures that were in the running for this pointer.
+                                foreach (var (b, g) in possibleGestures)
+                                    if (g != gesture)
+                                        g.Cancel();
+
+                                // Clear the list of possible gestures for this pointer.
+                                _activeGestures.Remove(pointerId);
+
+                                // We have a winner for this pointer, move to the next one.
+                                goto nextPointer;
+                            }
+                            else if (gesture.Status == GestureStatus.Failed)
+                            {
+                                // This gesture is no longer viable, remove it from the list.
+                                possibleGestures.RemoveAt(i);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // --- POINTER DOWN ---
                     foreach (var (host, behavior) in _sortedBehaviors)
                     {
-                        // A. Hit Test
                         if (host.HitTest(pointer))
                         {
-                            // B. Gesture Matching
-                            var gestures = behavior.GetGestures();
-                            foreach (var gesture in gestures)
+                            foreach (var gesture in behavior.Gestures)
                             {
                                 gesture.Reset();
                                 gesture.ProcessInput(context);
 
                                 if (gesture.Status == GestureStatus.Matched)
                                 {
-                                    // C. Activation
                                     behavior.OnActivate(gesture);
-
-                                    // Simple capture logic: the first behavior to match a gesture captures the pointer.
-                                    _capturedPointers[pointer.Id] = behavior;
-
-                                    // We found our winner, stop processing for this pointer.
+                                    _capturedPointers[pointerId] = behavior;
                                     goto nextPointer;
                                 }
                                 else if (gesture.Status == GestureStatus.Possible)
                                 {
-                                    // This gesture is interested, keep it for later (e.g., for a drag).
-                                    if (!_activeGestures.ContainsKey(pointer.Id))
-                                        _activeGestures[pointer.Id] =
-                                            new List<(IInteractiveBehavior, IGesture)>();
-                                    _activeGestures[pointer.Id].Add((behavior, gesture));
+                                    if (!_activeGestures.ContainsKey(pointerId))
+                                        _activeGestures[pointerId] = new();
+                                    _activeGestures[pointerId].Add((behavior, gesture));
                                 }
                             }
                         }
@@ -120,10 +139,10 @@ namespace VL.Fu.Services
             }
 
             // --- 3. Update pointer state for the next frame ---
-            _pointerStates.Clear();
-            foreach (var kvp in currentPointers)
+            _lastPointerStates.Clear();
+            foreach (var (id, pointer) in currentPointers)
             {
-                _pointerStates[kvp.Key] = kvp.Value;
+                _lastPointerStates[id] = pointer;
             }
         }
 
@@ -152,9 +171,7 @@ namespace VL.Fu.Services
             foreach (var behavior in behaviors)
             {
                 if (behavior is IInstanceId behaviorWithId)
-                {
                     _behaviors[behaviorWithId.InstanceId] = (host, behavior);
-                }
             }
             _sortedBehaviors = _behaviors
                 .Values.OrderByDescending(b => b.Behaviour.Priority)
