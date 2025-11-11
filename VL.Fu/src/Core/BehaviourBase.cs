@@ -16,6 +16,12 @@ namespace VL.Fu.Core
         protected IInteractiveHost? Host { get; private set; }
         public abstract int Priority { get; }
 
+        /// <summary>
+        /// Gets a value indicating whether the behavior is transient. Overridden by behaviors like Hover.
+        /// Defaults to false, meaning the behavior participates in the normal pointer capture lifecycle.
+        /// </summary>
+        public virtual bool IsTransient => false;
+
         public abstract IEnumerable<IGesture> Gestures { get; }
 
         public virtual void SetHost(IInteractiveHost host)
