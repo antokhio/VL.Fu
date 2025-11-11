@@ -15,6 +15,12 @@ namespace VL.Fu.Core.Behaviour
         int Priority { get; }
 
         /// <summary>
+        /// Indicates whether the behavior is transient. Transient behaviors (like hover) do not capture
+        /// pointers but are notified of pointer movements over their host.
+        /// </summary>
+        bool IsTransient { get; }
+
+        /// <summary>
         /// Called by the host to provide the behavior with a reference to itself.
         /// This allows the behavior to query properties from its host (e.g., Bounds).
         /// </summary>
