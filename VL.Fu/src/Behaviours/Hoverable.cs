@@ -21,7 +21,6 @@ namespace VL.Fu.Behaviours
         private readonly Spread<IGesture> _gestures;
         public override int Priority => BehaviourPriority.Hover;
         public override bool IsTransient => true;
-        public override IEnumerable<IGesture> Gestures => Spread<IGesture>.Empty;
 
         [Fragment]
         public Hoverable()
@@ -29,37 +28,31 @@ namespace VL.Fu.Behaviours
             _gestures = new IGesture[] { new PointerMoveGesture() }.ToSpread();
         }
 
+        public override IEnumerable<IGesture> Gestures => _gestures;
+
         [Fragment(Order = PinOrder.Action)]
         public void SetIsHoveredChannel(IChannel<bool>? isHoveredChannel) =>
             _isHoveredChannel.SetChannel(isHoveredChannel);
-
-        /// <summary>
-        /// Called by the InteractionService when a pointer moves. For transient behaviors,
-        /// this is called when a pointer is over the host, regardless of capture state.
-        /// </summary>
-        public void OnAdvance(GestureInputContext context) { }
-
-        /// <summary>
-        /// Called by the InteractionService when the pointer is no longer considered to be
-        /// hovering over the host (e.g., it has moved off or was released).
-        /// </summary>
-        public void OnCancel()
-        {
-            _isHoveredChannel.OnNext(false);
-        }
 
         public void OnActivate(IGesture gesture)
         {
             _isHoveredChannel.OnNext(true);
         }
 
+        public void OnAdvance(GestureInputContext context) { }
+
         public void OnDeactivate()
         {
             _isHoveredChannel.OnNext(false);
         }
 
+        public void OnCancel()
+        {
+            _isHoveredChannel.OnNext(false);
+        }
+
         /// <summary>
-        /// A channel that is true when the host is being hovered, and false otherwise.
+        /// A value that is true when the host is being hovered, and false otherwise.
         /// </summary>
         [Fragment]
         public bool IsHovered => _isHoveredChannel.Value;

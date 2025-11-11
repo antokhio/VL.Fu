@@ -39,7 +39,11 @@ namespace VL.Fu.Core
             {
                 foreach (var gesture in Gestures)
                 {
-                    gesture?.SetContextId(contextId);
+                    if (gesture is not null)
+                    {
+                        gesture.SetContextId(contextId);
+                        gesture.SetHost(Host);
+                    }
                 }
             }
         }

@@ -10,6 +10,11 @@ namespace VL.Fu.Core.Gesture
     public abstract class GestureBase : RepositoryConsumer, IGesture
     {
         /// <summary>
+        /// The host that this gesture is scoped to.
+        /// </summary>
+        protected IInteractiveHost? Host { get; private set; }
+
+        /// <summary>
         /// The current state of the gesture's recognition process.
         /// The setter is protected to ensure state is managed by the gesture's own logic.
         /// </summary>
@@ -20,6 +25,11 @@ namespace VL.Fu.Core.Gesture
         /// The setter is protected, intended to be set by the derived class upon a successful match.
         /// </summary>
         public object? ActivationData { get; protected set; }
+
+        public void SetHost(IInteractiveHost? host)
+        {
+            Host = host;
+        }
 
         /// <summary>
         /// Processes the input and updates the gesture's status.

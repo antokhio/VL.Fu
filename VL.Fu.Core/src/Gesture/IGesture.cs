@@ -18,6 +18,12 @@ namespace VL.Fu.Core.Gesture
         object? ActivationData { get; }
 
         /// <summary>
+        /// Sets the interactive host that this gesture is associated with.
+        /// This is called by the parent behavior.
+        /// </summary>
+        void SetHost(IInteractiveHost? host);
+
+        /// <summary>
         /// Processes the current input context and updates the gesture's internal state.
         /// </summary>
         /// <param name="context">The state of all relevant inputs for the current frame.</param>

@@ -4,29 +4,31 @@ using VL.Lib.IO.Notifications;
 namespace VL.Fu.Gestures
 {
     /// <summary>
-    /// A simple gesture that recognizes any pointer "down" or "move" event.
-    /// It's intended for transient behaviors like Hover, where the goal is to react to
-    /// the pointer's presence without a complex recognition pattern.
+    /// A simple gesture that recognizes an immediate "move" event from a pointer.
+    /// It matches as soon as a pointer's state is TouchMove on the target.
+    /// It is intended for transient behaviors like hovering, which do not capture the pointer.
     /// </summary>
     public class PointerMoveGesture : GestureBase
     {
         protected override void OnProcessInput(GestureInputContext context)
         {
-            var pointerState = context.PrimaryPointer.State;
-
-            if (
-                pointerState == TouchNotificationKind.TouchDown
-                || pointerState == TouchNotificationKind.TouchMove
-            )
+            // This gesture only cares about move events.
+            if (Status == GestureStatus.Ready)
             {
-                // The pattern is matched as long as the pointer is active over the target.
-                Status = GestureStatus.Matched;
-                ActivationData = context.PrimaryPointer;
-            }
-            else if (pointerState == TouchNotificationKind.TouchUp)
-            {
-                // The interaction is over, reset for the next time.
-                Reset();
+                if (
+                    context.PrimaryPointer.State == TouchNotificationKind.TouchMove
+                    || context.PrimaryPointer.State == TouchNotificationKind.TouchDown
+                )
+                {
+                    // The pattern is matched.
+                    Status = GestureStatus.Matched;
+                    ActivationData = context.PrimaryPointer;
+                }
+                else
+                {
+                    // If the event is not a TouchMove, this gesture fails for this cycle.
+                    Status = GestureStatus.Failed;
+                }
             }
         }
     }
