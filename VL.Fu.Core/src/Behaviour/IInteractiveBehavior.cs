@@ -21,6 +21,11 @@ namespace VL.Fu.Core.Behaviour
         bool IsTransient { get; }
 
         /// <summary>
+        /// Gets whether the behavior is currently enabled and should process input.
+        /// </summary>
+        bool Enabled { get; }
+
+        /// <summary>
         /// Called by the host to provide the behavior with a reference to itself.
         /// This allows the behavior to query properties from its host (e.g., Bounds).
         /// </summary>

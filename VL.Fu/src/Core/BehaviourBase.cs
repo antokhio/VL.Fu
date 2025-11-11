@@ -48,6 +48,12 @@ namespace VL.Fu.Core
             }
         }
 
+        private bool _enabled = true;
+        public bool Enabled => _enabled;
+
+        [Fragment(Order = PinOrder.Enabled)]
+        public void SetEnabled(bool enabled = true) => _enabled = enabled;
+
         [Fragment(Order = PinOrder.Output)]
         public IInteractiveBehavior Output => (IInteractiveBehavior)(object)this;
     }

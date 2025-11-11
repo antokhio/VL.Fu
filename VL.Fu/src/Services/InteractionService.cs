@@ -69,24 +69,36 @@ namespace VL.Fu.Services
         {
             ProcessTransientBehaviorCancellations(currentPointers);
 
+            // Handle captured pointers, including cancelling them if they become disabled.
+            foreach (var (pointerId, capturedBehavior) in _capturedPointers)
+            {
+                if (!capturedBehavior.Enabled)
+                {
+                    if (_capturedPointers.TryRemove(pointerId, out var behaviorToCancel))
+                    {
+                        behaviorToCancel.OnCancel();
+                    }
+                    continue; // Skip to next captured pointer
+                }
+
+                if (currentPointers.TryGetValue(pointerId, out var pointer))
+                {
+                    var capturedContext = new GestureInputContext(
+                        pointer,
+                        currentPointers,
+                        _keysDown,
+                        pointer.TimeStamp
+                    );
+                    capturedBehavior.OnAdvance(capturedContext);
+                }
+            }
+
+            // Process uncaptured pointers for new interactions
             foreach (var pointer in currentPointers.Values)
             {
-                var context = new GestureInputContext(
-                    pointer,
-                    currentPointers,
-                    _keysDown,
-                    pointer.TimeStamp
-                );
-
-                if (_capturedPointers.TryGetValue(pointer.Id, out var capturedBehavior))
+                if (!_capturedPointers.ContainsKey(pointer.Id))
                 {
-                    // This is the part that was not being fired. It should now work correctly.
-                    capturedBehavior.OnAdvance(context);
-                }
-                else
-                {
-                    // This pointer is not captured. It could be new, or moving while gestures are being evaluated.
-                    ProcessUncapturedPointer(pointer, context);
+                    ProcessUncapturedPointer(pointer, currentPointers);
                 }
             }
         }
@@ -97,8 +109,11 @@ namespace VL.Fu.Services
         {
             foreach (var (pointerId, transientBehavior) in _activeTransientBehaviors)
             {
+                var shouldCancel = !transientBehavior.Enabled;
+
                 if (
-                    currentPointers.TryGetValue(pointerId, out var pointer)
+                    !shouldCancel
+                    && currentPointers.TryGetValue(pointerId, out var pointer)
                     && transientBehavior is IInstanceId instance
                 )
                 {
@@ -106,51 +121,52 @@ namespace VL.Fu.Services
                     {
                         if (!hostBehaviorPair.Host.HitTest(pointer))
                         {
-                            if (
-                                _activeTransientBehaviors.TryRemove(
-                                    pointerId,
-                                    out var behaviorToCancel
-                                )
-                            )
-                            {
-                                behaviorToCancel.OnCancel();
-                            }
+                            shouldCancel = true;
                         }
+                    }
+                }
+
+                if (shouldCancel)
+                {
+                    if (_activeTransientBehaviors.TryRemove(pointerId, out var behaviorToCancel))
+                    {
+                        behaviorToCancel.OnCancel();
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// Correctly handles an uncaptured pointer by distinguishing between a new "down" event
-        /// and a "move" event for a pointer that is already being tracked for possible gestures.
-        /// </summary>
-        private void ProcessUncapturedPointer(FuPointer pointer, GestureInputContext context)
+        private void ProcessUncapturedPointer(
+            FuPointer pointer,
+            IReadOnlyDictionary<int, FuPointer> allPointers
+        )
         {
-            // First, regardless of down/move, check for transient behaviors (like hover).
-            EvaluateTransientGestures(pointer, context);
+            EvaluateTransientGestures(pointer, allPointers);
 
             if (_lastPointerStates.ContainsKey(pointer.Id))
             {
-                // POINTER MOVE: The pointer existed last frame. Update "possible" gestures (like drag).
-                UpdatePossibleGestures(pointer.Id, context);
+                UpdatePossibleGestures(pointer, allPointers);
             }
             else
             {
-                // POINTER DOWN: This is a new pointer. Evaluate all gestures.
-                EvaluateCapturingGesturesForNewPointer(pointer, context);
+                EvaluateCapturingGesturesForNewPointer(pointer, allPointers);
             }
         }
 
-        /// <summary>
-        /// Iterates through all behaviors to find and activate matching transient gestures.
-        /// This runs for every uncaptured pointer movement.
-        /// </summary>
-        private void EvaluateTransientGestures(FuPointer pointer, GestureInputContext context)
+        private void EvaluateTransientGestures(
+            FuPointer pointer,
+            IReadOnlyDictionary<int, FuPointer> allPointers
+        )
         {
+            var context = new GestureInputContext(
+                pointer,
+                allPointers,
+                _keysDown,
+                pointer.TimeStamp
+            );
             foreach (var (host, behavior) in _sortedBehaviors)
             {
-                if (behavior.IsTransient && host.HitTest(pointer))
+                if (behavior.Enabled && behavior.IsTransient && host.HitTest(pointer))
                 {
                     foreach (var gesture in behavior.Gestures)
                     {
@@ -158,7 +174,6 @@ namespace VL.Fu.Services
                         gesture.ProcessInput(context);
                         if (gesture.Status == GestureStatus.Matched)
                         {
-                            // If it's already active, don't re-activate.
                             if (!_activeTransientBehaviors.ContainsKey(pointer.Id))
                             {
                                 behavior.OnActivate(gesture);
@@ -170,19 +185,21 @@ namespace VL.Fu.Services
             }
         }
 
-        /// <summary>
-        /// For a new pointer, evaluates non-transient gestures to find an immediate match or a possible gesture.
-        /// </summary>
         private void EvaluateCapturingGesturesForNewPointer(
             FuPointer pointer,
-            GestureInputContext context
+            IReadOnlyDictionary<int, FuPointer> allPointers
         )
         {
             var pointerId = pointer.Id;
+            var context = new GestureInputContext(
+                pointer,
+                allPointers,
+                _keysDown,
+                pointer.TimeStamp
+            );
             foreach (var (host, behavior) in _sortedBehaviors)
             {
-                // Skip transient behaviors in this pass
-                if (behavior.IsTransient)
+                if (!behavior.Enabled || behavior.IsTransient)
                     continue;
 
                 if (host.HitTest(pointer))
@@ -194,14 +211,12 @@ namespace VL.Fu.Services
 
                         if (gesture.Status == GestureStatus.Matched)
                         {
-                            // Immediate match (e.g., PointerDown), capture and we are done.
                             behavior.OnActivate(gesture);
                             _capturedPointers[pointerId] = behavior;
-                            return; // Pointer is captured, exit.
+                            return;
                         }
                         else if (gesture.Status == GestureStatus.Possible)
                         {
-                            // A gesture is now "possible" (e.g., DragGesture after TouchDown).
                             if (!_activeGestures.ContainsKey(pointerId))
                                 _activeGestures[pointerId] = new();
                             _activeGestures[pointerId].Add((behavior, gesture));
@@ -211,28 +226,44 @@ namespace VL.Fu.Services
             }
         }
 
-        private void UpdatePossibleGestures(int pointerId, GestureInputContext context)
+        private void UpdatePossibleGestures(
+            FuPointer pointer,
+            IReadOnlyDictionary<int, FuPointer> allPointers
+        )
         {
+            var pointerId = pointer.Id;
             if (!_activeGestures.TryGetValue(pointerId, out var possibleGestures))
                 return;
 
+            var context = new GestureInputContext(
+                pointer,
+                allPointers,
+                _keysDown,
+                pointer.TimeStamp
+            );
             for (int i = possibleGestures.Count - 1; i >= 0; i--)
             {
                 var (behavior, gesture) = possibleGestures[i];
+
+                if (!behavior.Enabled)
+                    continue;
+
                 gesture.ProcessInput(context);
 
                 if (gesture.Status == GestureStatus.Matched)
                 {
-                    // A "possible" gesture has now matched. Capture the pointer.
                     behavior.OnActivate(gesture);
-                    _capturedPointers[pointerId] = behavior;
+                    if (!behavior.IsTransient)
+                    {
+                        _capturedPointers[pointerId] = behavior;
+                    }
 
                     foreach (var (b, g) in possibleGestures)
                         if (g != gesture)
                             g.Cancel();
 
                     _activeGestures.Remove(pointerId);
-                    return; // Pointer is now captured.
+                    return;
                 }
                 else if (gesture.Status == GestureStatus.Failed)
                 {
