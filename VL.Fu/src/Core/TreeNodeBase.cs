@@ -23,14 +23,19 @@ namespace VL.Fu.Core
         {
             foreach (var oldChild in Children)
             {
-                if (oldChild != null)
-                    oldChild.Parent = null;
+                if (oldChild is null)
+                    break;
+
+                oldChild.Parent = null;
             }
 
             Children = newChildren;
 
             foreach (var newChild in Children)
             {
+                if (newChild is null)
+                    break;
+
                 newChild.Parent = this;
 
                 // If the new child is a repository consumer, propagate our own context ID to it.

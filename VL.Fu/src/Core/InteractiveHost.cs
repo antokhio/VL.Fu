@@ -22,24 +22,66 @@ namespace VL.Fu.Core
 
         private InteractionService? _interactionService;
 
+        private bool _behaviorsNeedRegistration = false;
+
         /// <summary>
         /// Sets the spread of composable behaviors to be hosted by this node.
         /// </summary>
         [Fragment(Order = PinOrder.Behaviour)]
-        public void SetBehaviours(Spread<IInteractiveBehavior> behaviours)
+        public void SetBehaviours(Spread<IInteractiveBehavior> behaviours) =>
+            _behaviours.TrySetValue(
+                behaviours,
+                (prev, next) =>
+                {
+                    _behaviorsNeedRegistration = true;
+                    RegisterBehaviorsWithService();
+                }
+            );
+
+        public override void SetContextId(int contextId)
         {
-            _behaviours.TrySetValue(behaviours, OnBehavioursChanged);
+            var contextChanged = contextId != this.ContextId;
+            base.SetContextId(contextId);
+
+            if (contextChanged)
+            {
+                // The context has changed, which means we MUST re-register our behaviors
+                // with the service belonging to the new context.
+                _behaviorsNeedRegistration = true;
+
+                // Propagate the new context ID to all current behaviors.
+                foreach (var behaviour in _behaviours.Value)
+                {
+                    behaviour?.SetContextId(contextId);
+                }
+
+                // Attempt to register. This will succeed if behaviors have already been set.
+                RegisterBehaviorsWithService();
+            }
         }
 
-        private void OnBehavioursChanged(
-            Spread<IInteractiveBehavior> oldBehaviours,
-            Spread<IInteractiveBehavior> newBehaviours
-        )
+        /// <summary>
+        /// A robust method to register behaviors with the InteractionService.
+        /// It will only execute if all conditions are met: a valid context ID,
+        /// a non-null InteractionService, and a pending registration flag.
+        /// </summary>
+        private void RegisterBehaviorsWithService()
         {
+            // Do nothing if there's no new registration pending.
+            if (!_behaviorsNeedRegistration)
+                return;
+
+            // Try to get the InteractionService. This will only succeed if ContextId is valid.
             _interactionService ??= GetService<InteractionService>();
+
+            // If we couldn't get the service (because context is still not set), we just wait.
+            // This method will be called again when SetContextId is called.
             if (_interactionService is null)
                 return;
 
+            var newBehaviours = _behaviours.Value;
+
+            // Set the host and context on the new behaviors.
             foreach (var b in newBehaviours)
             {
                 if (b is null)
@@ -49,20 +91,11 @@ namespace VL.Fu.Core
                 b.SetContextId(this.ContextId);
             }
 
+            // Perform the update.
             _interactionService.UpdateBehaviors(this, newBehaviours.Where(b => b is not null));
-        }
 
-        public override void SetContextId(int contextId)
-        {
-            if (contextId == this.ContextId)
-                return;
-
-            base.SetContextId(contextId);
-
-            foreach (var behaviour in _behaviours.Value)
-            {
-                behaviour?.SetContextId(contextId);
-            }
+            // Mark registration as complete.
+            _behaviorsNeedRegistration = false;
         }
 
         public virtual bool Notify(INotification notification, CallerInfo caller)
