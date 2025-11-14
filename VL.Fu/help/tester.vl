@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document xmlns:p="property" xmlns:r="reflection" Id="UF2LACGI02GPbJZ8Uh56e6" LanguageVersion="2025.7.1-0101-ge364e43d33" Version="0.128">
+  <NugetDependency Id="D6bbt5yVMtYP1HCin38KKS" Location="VL.CoreLib" Version="2025.7.1-0101-ge364e43d33" />
+  <Patch Id="QvcUNNPZ7bNOiRG51KQ1Na">
+    <Canvas Id="Oulk0vyNb5xP5pHZSvCzdL" DefaultCategory="Main" BordersChecked="false" CanvasType="FullCategory" />
+    <!--
+
+    ************************ Application ************************
+
+-->
+    <Node Name="Application" Bounds="100,100" Id="EGn0H8AStUIMEN9u657euM">
+      <p:NodeReference>
+        <Choice Kind="ContainerDefinition" Name="Process" />
+        <CategoryReference Kind="Category" Name="Primitive" />
+      </p:NodeReference>
+      <Patch Id="UVmC7hjz8Q8LM7LCy6RS3r">
+        <Canvas Id="HGaS2odeMHEMZaNi6nSadh" CanvasType="Group">
+          <Node Bounds="265,302,253,156" Id="UTspB11JzV7O2WzswwYWso">
+            <p:NodeReference LastCategoryFullName="Fu" LastDependency="VL.Fu.vl">
+              <Choice Kind="StatefulRegion" Name="Region (Stateful)" Fixed="true" />
+              <Choice Kind="ProcessAppFlag" Name="FuRoot" />
+            </p:NodeReference>
+            <Pin Id="CcV8alt0723Pg9MC661psG" Name="Node Context" Kind="InputPin" IsHidden="true" />
+            <Pin Id="VAlWH2QJjAKM4crz0EJhLr" Name="Input" Kind="InputPin" />
+            <Pin Id="EdAIAquFkiLNdcnan7lJHp" Name="Update" Kind="ApplyPin" />
+            <Pin Id="LJ8qONlrz0SLGuH3v25iVQ" Name="Dip Factor" Kind="InputPin" />
+            <Pin Id="TnK0vOsi1wdMIMjPvmZDS5" Name="Space" Kind="InputPin" />
+            <Pin Id="D8kWr2INDpvLBI2ptTAXe8" Name="Output" Kind="StateOutputPin" />
+            <Patch Id="RwylqOwrAu5Pxwo9JJPe8W" ManuallySortedPins="true">
+              <Patch Id="JzRdknFDYlXQSo6xleJvQt" Name="Create" ManuallySortedPins="true" />
+              <Patch Id="PxtdQFHfV0HPCNk8AolMrb" Name="Execute" ManuallySortedPins="true">
+                <Pin Id="SiVHrXrGhL9O90Mlc5mMF4" Name="Provider" Kind="InputPin" />
+                <Pin Id="HR7vEKBOMdtLCIeVEYewhN" Name="Root" Kind="OutputPin" />
+              </Patch>
+              <Patch Id="EcYytkjzoJkNhRnAiWUKhZ" Name="Dispose" ManuallySortedPins="true" />
+              <ControlPoint Id="QKrYNEEpcuBMyBAoWTkg4s" Bounds="279,320" />
+              <Node Bounds="277,331,72,26" Id="KvF0f2Ow1x3NS8QAVmV8aM">
+                <p:NodeReference LastCategoryFullName="Fu.Core.Context.IServiceRegistry" LastDependency="VL.Fu.vl">
+                  <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                  <FullNameCategoryReference ID="Fu.Core.Context.IServiceRegistry" />
+                  <Choice Kind="OperationCallFlag" Name="GetService" />
+                </p:NodeReference>
+                <Pin Id="AyTulvZ8tWpNXYxuUVTKTC" Name="Input" Kind="StateInputPin" />
+                <Pin Id="Rrh1zNoYeKFPq0jgUjF8ua" Name="Output" Kind="StateOutputPin" />
+                <Pin Id="Q1eFmRNRcG9P0snYkHQE5V" Name="Result" Kind="OutputPin" />
+              </Node>
+              <Pad Id="GkscsUZVM8qLrG1ZWXiEk6" Comment="" Bounds="346,370">
+                <p:TypeAnnotation LastCategoryFullName="Fu.Services" LastDependency="VL.Fu.vl">
+                  <Choice Kind="TypeFlag" Name="ViewService" />
+                </p:TypeAnnotation>
+              </Pad>
+              <Node Bounds="344,381,59,26" Id="BuSKJerrMmHM7K2OwJ3Ghg">
+                <p:NodeReference LastCategoryFullName="Fu.Services.ViewService" LastDependency="VL.Fu.vl">
+                  <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                  <FullNameCategoryReference ID="Fu.Services.ViewService" />
+                  <Choice Kind="OperationCallFlag" Name="DIPFactor" />
+                </p:NodeReference>
+                <Pin Id="OKwcKGVDpfiMAhUkUslP2B" Name="Input" Kind="StateInputPin" />
+                <Pin Id="H2tgBst8oxaMZHncWW90jk" Name="Output" Kind="StateOutputPin" />
+                <Pin Id="T89jawAzi3NM7BxbeBzJTK" Name="DIPFactor" Kind="OutputPin" />
+              </Node>
+              <Pad Id="FF1hPcM2fD6QFShRHsiUSF" Comment="DIPFactor" Bounds="400,430,41,15" ShowValueBox="true" isIOBox="true" />
+            </Patch>
+            <Pin Id="I5XR4QNzFGJQcqfWrUTw2N" Name="Dip Factor Mode" Kind="InputPin" />
+          </Node>
+          <Node Bounds="266,550,145,19" Id="C8pt89BxDPsNOkDP7FzuW1">
+            <p:NodeReference LastCategoryFullName="Graphics.Skia" LastDependency="VL.Skia.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="ProcessAppFlag" Name="Renderer" />
+            </p:NodeReference>
+            <Pin Id="OswOGvJKRdlOcpP0rGR97y" Name="Node Context" Kind="InputPin" IsHidden="true" />
+            <Pin Id="FKELBcPCMMVN6DGq5brAaI" Name="Bounds" Kind="InputPin" DefaultValue="1704, 289, 579, 408" IsHidden="true" />
+            <Pin Id="J8Tist1z3aMQVCdrF7O4k1" Name="Save Bounds" Kind="InputPin" IsHidden="true" />
+            <Pin Id="F5SOhPfzf6EPbHrUKlGbwH" Name="Bound to Document" Kind="InputPin" IsHidden="true" />
+            <Pin Id="Jdusc4BvqpTPw8tc3GIvWQ" Name="Dialog If Document Changed" Kind="InputPin" IsHidden="true" />
+            <Pin Id="HjufCWwEasSMRJHNtABZZE" Name="Always On Top" Kind="InputPin" IsHidden="true" />
+            <Pin Id="EKJDGi8Z1sMMzJyqf9ygHt" Name="Extend Into Title Bar" Kind="InputPin" IsHidden="true" />
+            <Pin Id="F6tEqg4Z5qDPu0nwPdot7I" Name="Input" Kind="InputPin" />
+            <Pin Id="LjrVqaNA2QCPMW6F3zOXbn" Name="Title" Kind="InputPin" />
+            <Pin Id="RCMjt20sUATQQ2JM8QWSlT" Name="Title Bar Interaction Width" Kind="InputPin" IsHidden="true" />
+            <Pin Id="ATuBAHyEEz7Mjjg3jq3CGU" Name="Color" Kind="InputPin" />
+            <Pin Id="VWow6J9p87qMqQCNqEkn8J" Name="Clear" Kind="InputPin" />
+            <Pin Id="C9GnjiStYmCM7Y1mZUG1Cc" Name="Space" Kind="InputPin" />
+            <Pin Id="SNKsgwXXDa1L5TByvM2vll" Name="Show Cursor" Kind="InputPin" />
+            <Pin Id="HbqRKlpEhlAMC3CdxUBbTp" Name="VSync" Kind="InputPin" />
+            <Pin Id="G8ptURXk7LCNGPy4MWpxZM" Name="Commands" Kind="InputPin" IsHidden="true" />
+            <Pin Id="VSyjIrSdlikOPZ4VofL7Z2" Name="Enable Keyboard Shortcuts" Kind="InputPin" IsHidden="true" />
+            <Pin Id="PrnmiM5yJp1P5IopqroN1w" Name="Enabled" Kind="InputPin" />
+            <Pin Id="GSrfPAgQDWjLAjl4q5Mf8J" Name="Form Bounds Notifications" Kind="OutputPin" IsHidden="true" />
+            <Pin Id="NpZRy8nXCITMDLxG5GAq40" Name="Form" Kind="OutputPin" />
+            <Pin Id="JiHTzKdZI6TOZaoIbqC9nf" Name="ClientBounds" Kind="OutputPin" />
+            <Pin Id="DCw2UPZMB9nMWjkbDIfNyx" Name="Render Time" Kind="OutputPin" />
+          </Node>
+        </Canvas>
+        <Patch Id="KRqvQT4n7UbQH61287XBO3" Name="Create" />
+        <Patch Id="ASLRfxkPhYTPjVx2qZ7CoN" Name="Update" />
+        <ProcessDefinition Id="QhEyPkWuiOnPzppo5JULXW">
+          <Fragment Id="KLSfUXZNCrUNVeyoUz80tk" Patch="KRqvQT4n7UbQH61287XBO3" Enabled="true" />
+          <Fragment Id="EMeacSfG0MMQV2oyuIdddt" Patch="ASLRfxkPhYTPjVx2qZ7CoN" Enabled="true" />
+        </ProcessDefinition>
+        <Link Id="O4eH1R3tyDWLbEuJMh3t1T" Ids="D8kWr2INDpvLBI2ptTAXe8,F6tEqg4Z5qDPu0nwPdot7I" />
+        <Link Id="ViTFPxp47eqNhRBDCSrUHQ" Ids="SiVHrXrGhL9O90Mlc5mMF4,QKrYNEEpcuBMyBAoWTkg4s" IsHidden="true" />
+        <Link Id="V5TGF2cG13SOlrK8zIVYS7" Ids="QKrYNEEpcuBMyBAoWTkg4s,AyTulvZ8tWpNXYxuUVTKTC" />
+        <Link Id="BdkzznbjYYfOmuks16uMqW" Ids="Q1eFmRNRcG9P0snYkHQE5V,GkscsUZVM8qLrG1ZWXiEk6" />
+        <Link Id="DQ6OZzwzVPNNxZsbaSKayu" Ids="GkscsUZVM8qLrG1ZWXiEk6,OKwcKGVDpfiMAhUkUslP2B" />
+        <Link Id="QbMp4OqwxnqQQXG73ulnrh" Ids="T89jawAzi3NM7BxbeBzJTK,FF1hPcM2fD6QFShRHsiUSF" />
+      </Patch>
+    </Node>
+  </Patch>
+  <NugetDependency Id="UI9079M3yR4NM2eAijKBP4" Location="VL.Fu" Version="0.0.0" />
+  <NugetDependency Id="I55KX0RWIraOJCWAneKTDl" Location="VL.Skia" Version="2025.7.1-0101-ge364e43d33" />
+</Document>
