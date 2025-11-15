@@ -24,6 +24,7 @@
             <Pin Id="VAlWH2QJjAKM4crz0EJhLr" Name="Input" Kind="InputPin" />
             <Pin Id="EdAIAquFkiLNdcnan7lJHp" Name="Update" Kind="ApplyPin" />
             <Pin Id="LJ8qONlrz0SLGuH3v25iVQ" Name="Dip Factor" Kind="InputPin" />
+            <Pin Id="Cn1Ys3qJdFjMjy5vE7zciA" Name="Pixel Factor" Kind="InputPin" />
             <Pin Id="TnK0vOsi1wdMIMjPvmZDS5" Name="Space" Kind="InputPin" />
             <Pin Id="D8kWr2INDpvLBI2ptTAXe8" Name="Output" Kind="StateOutputPin" />
             <Patch Id="RwylqOwrAu5Pxwo9JJPe8W" ManuallySortedPins="true">
@@ -61,7 +62,7 @@
               </Node>
               <Pad Id="FF1hPcM2fD6QFShRHsiUSF" Comment="DIPFactor" Bounds="400,430,41,15" ShowValueBox="true" isIOBox="true" />
             </Patch>
-            <Pin Id="I5XR4QNzFGJQcqfWrUTw2N" Name="Dip Factor Mode" Kind="InputPin" />
+            <Pin Id="LlhzvyIrvFoNLRtHkYbSYR" Name="Scaling Mode" Kind="InputPin" />
           </Node>
           <Node Bounds="266,550,145,19" Id="C8pt89BxDPsNOkDP7FzuW1">
             <p:NodeReference LastCategoryFullName="Graphics.Skia" LastDependency="VL.Skia.vl">

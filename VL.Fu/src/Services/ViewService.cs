@@ -35,38 +35,31 @@ namespace VL.Fu.Services
         {
             _subscriptions.Add(configuration.Space.Subscribe(space => Space = space));
 
-            _subscriptions.Add(
-                configuration.PixelFactor.Subscribe(pixelFactor =>
-                    PixelFactor = ScalingMode.ToPixelFactor(pixelFactor, Scaling)
-                )
-            );
-            _subscriptions.Add(configuration.Space.Subscribe(space => Space = space));
-            _subscriptions.Add(
-                configuration.DIPFactor.Subscribe(dipFactor =>
-                    DIPFactor = ScalingMode.ToDIPFactor(dipFactor, Scaling)
-                )
-            );
-            _subscriptions.Add(
-                configuration.ScalingMode.Subscribe(scalingMode =>
-                {
-                    ScalingMode = scalingMode;
-                    PixelFactor = ScalingMode.ToPixelFactor(
-                        configuration.PixelFactor.Value,
-                        Scaling
-                    );
-                    DIPFactor = ScalingMode.ToDIPFactor(configuration.DIPFactor.Value, Scaling);
-                })
+            var factorsStream = Observable.CombineLatest(
+                configuration.PixelFactor.StartWith(configuration.PixelFactor.Value),
+                configuration.DIPFactor.StartWith(configuration.DIPFactor.Value),
+                configuration.ScalingMode.StartWith(configuration.ScalingMode.Value),
+                _scaling.StartWith(Constants.DefaultScaling),
+                (pixelFactor, dipFactor, scalingMode, scaling) =>
+                    new
+                    {
+                        PixelFactor = pixelFactor,
+                        DIPFactor = dipFactor,
+                        ScalingMode = scalingMode,
+                        Scaling = scaling,
+                    }
             );
 
             _subscriptions.Add(
-                _scaling.Subscribe(scaling =>
+                factorsStream.Subscribe(state =>
                 {
-                    Scaling = scaling;
-                    PixelFactor = ScalingMode.ToPixelFactor(
-                        configuration.PixelFactor.Value,
-                        Scaling
-                    );
-                    DIPFactor = ScalingMode.ToDIPFactor(configuration.DIPFactor.Value, Scaling);
+                    // Update properties in explicit order
+                    ScalingMode = state.ScalingMode;
+                    Scaling = state.Scaling;
+
+                    // Calculate factors with consistent state
+                    PixelFactor = state.ScalingMode.ToPixelFactor(state.PixelFactor, state.Scaling);
+                    DIPFactor = state.ScalingMode.ToDIPFactor(state.DIPFactor, state.Scaling);
                 })
             );
 
@@ -78,11 +71,9 @@ namespace VL.Fu.Services
             _subscriptions.Add(
                 clientAreaStream.Subscribe(clientArea =>
                 {
-                    // 3. When the trigger fires, use the *current values* of the properties.
                     Resolution = new Int2((int)clientArea.X, (int)clientArea.Y);
                     var boundsInPixels = new RectangleF(0, 0, clientArea.X, clientArea.Y);
 
-                    // Use the class properties which are kept up-to-date by their own subscriptions.
                     ViewBounds = Space switch
                     {
                         CommonSpace.Normalized => boundsInPixels.ToNormalizedSpace(Resolution),
