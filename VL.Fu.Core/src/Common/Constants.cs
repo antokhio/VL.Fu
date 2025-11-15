@@ -2,7 +2,7 @@
 
 namespace VL.Fu.Core.Common
 {
-    public struct Constants
+    public static class Constants
     {
         public const int MousePointerId = -1;
 
@@ -10,10 +10,10 @@ namespace VL.Fu.Core.Common
 
         public const int DefaultPixelFactor = 100;
 
-        public const CommonSpace DefaultCommonSpace = CommonSpace.Normalized;
+        public const CommonSpace DefaultSpace = CommonSpace.Normalized;
 
-        public const DipFactorMode DefaultDipFactorMode = DipFactorMode.Scaling;
+        public const ScalingMode DefaultScalingMode = ScalingMode.DIPAndPixel;
 
-        public const float DefaultScalling = 1.0f;
+        public const float DefaultScaling = 1.0f;
     }
 }

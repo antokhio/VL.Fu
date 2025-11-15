@@ -13,45 +13,56 @@ namespace VL.Fu.Core
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public abstract class Configuration : NotificationsProvider
     {
-        public readonly int PixelFactor = Constants.DefaultPixelFactor;
-
-        public readonly IChannel<CommonSpace> Space = new ChannelProperty<CommonSpace>(
-            Constants.DefaultCommonSpace
+        /// <summary>
+        /// Reactive channel that stores user specified DIP factor.
+        /// </summary>
+        public readonly IChannel<int> DIPFactor = new ChannelProperty<int>(
+            Constants.DefaultDIPFactor
         );
 
-        public IChannel<int> DIPFactor = new ChannelProperty<int>(Constants.DefaultDIPFactor);
+        /// <summary>
+        /// Reactive channel that stores user specified pixel factor.
+        /// </summary>
+        public readonly IChannel<int> PixelFactor = new ChannelProperty<int>(
+            Constants.DefaultPixelFactor
+        );
 
-        public IChannel<DipFactorMode> DipFactorMode = new ChannelProperty<DipFactorMode>(
-            Constants.DefaultDipFactorMode
+        /// <summary>
+        /// Reactive channel that stores user specified working space.
+        /// </summary>
+        public readonly IChannel<CommonSpace> Space = new ChannelProperty<CommonSpace>(
+            Constants.DefaultSpace
+        );
+
+        /// <summary>
+        /// Reactive channel that stores user specified scaling handling.
+        /// </summary>
+        public readonly IChannel<ScalingMode> ScalingMode = new ChannelProperty<ScalingMode>(
+            Constants.DefaultScalingMode
         );
 
         [Fragment]
         public Configuration(NodeContext nodeContext)
             : base(nodeContext) { }
 
-        /// <summary>
-        /// Sets a new DIP factor, which will be broadcast to all subscribers if it has changed.
-        /// </summary>
         /// <param name="dipFactor">User specified DIP Factor</param>
         [Fragment]
         public void SetDIPFactor(int dipFactor = Constants.DefaultDIPFactor) =>
             DIPFactor.EnsureValue(dipFactor);
 
-        /// <summary>
-        /// Sets a new coordinate space, which will be broadcast to all subscribers if it has changed.
-        /// </summary>
-        /// <param name="space">User specified CommonSpace to use</param>
+        /// <param name="pixelFactor">User specified pixel factor</param>
         [Fragment]
-        public void SetSpace(CommonSpace space = Constants.DefaultCommonSpace) =>
+        public void SetPixelFactor(int pixelFactor = Constants.DefaultPixelFactor) =>
+            PixelFactor.EnsureValue(pixelFactor);
+
+        /// <param name="space">User specified working Space</param>
+        [Fragment]
+        public void SetSpace(CommonSpace space = Constants.DefaultSpace) =>
             Space.EnsureValue(space);
 
-        /// <summary>
-        /// Sets a new DIP factor, which will be broadcast to all subscribers if it has changed.
-        /// </summary>
-        /// <param name="dipFactor">User specified DIP Factor</param>
+        /// <param name="scalingMode">Render Scaling handling mode</param>
         [Fragment]
-        public void SetDIPFactorMode(
-            DipFactorMode dipFactorMode = Constants.DefaultDipFactorMode
-        ) => DipFactorMode.EnsureValue(dipFactorMode);
+        public void SetScalingMode(ScalingMode scalingMode = Constants.DefaultScalingMode) =>
+            ScalingMode.EnsureValue(scalingMode);
     }
 }
