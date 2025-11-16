@@ -72,6 +72,17 @@
                 <Pin Id="UH3nDgSFY0QQGa57nkjtuM" Name="View Bounds" Kind="OutputPin" />
               </Node>
               <Pad Id="IH539IqQIqbNUHmizNlVfV" Comment="View Bounds" Bounds="536,410,315,125" ShowValueBox="true" isIOBox="true" />
+              <Node Bounds="656,341,64,26" Id="KU6dte8KDTvMB7vhZj1S0G">
+                <p:NodeReference LastCategoryFullName="Fu.Services.ViewService" LastDependency="VL.Fu.vl">
+                  <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                  <FullNameCategoryReference ID="Fu.Services.ViewService" />
+                  <Choice Kind="OperationCallFlag" Name="Resolution" />
+                </p:NodeReference>
+                <Pin Id="O0SugsUVNMbPN4T7dcxmII" Name="Input" Kind="StateInputPin" />
+                <Pin Id="VHc3WJmaHToMl7i764VdqJ" Name="Output" Kind="StateOutputPin" />
+                <Pin Id="PmmLrS5IVnwOYDHeUMWZ4F" Name="Resolution" Kind="OutputPin" />
+              </Node>
+              <Pad Id="PSXGzTYHfAmM0K3KofeLc6" Comment="Resolution" Bounds="736,361,35,28" ShowValueBox="true" isIOBox="true" />
             </Patch>
             <Pin Id="LlhzvyIrvFoNLRtHkYbSYR" Name="Scaling Mode" Kind="InputPin" />
           </Node>
@@ -81,7 +92,7 @@
               <Choice Kind="ProcessAppFlag" Name="Renderer" />
             </p:NodeReference>
             <Pin Id="OswOGvJKRdlOcpP0rGR97y" Name="Node Context" Kind="InputPin" IsHidden="true" />
-            <Pin Id="FKELBcPCMMVN6DGq5brAaI" Name="Bounds" Kind="InputPin" DefaultValue="1704, 289, 579, 408" IsHidden="true" />
+            <Pin Id="FKELBcPCMMVN6DGq5brAaI" Name="Bounds" Kind="InputPin" DefaultValue="1855, -42, 555, 315" IsHidden="true" />
             <Pin Id="J8Tist1z3aMQVCdrF7O4k1" Name="Save Bounds" Kind="InputPin" IsHidden="true" />
             <Pin Id="F5SOhPfzf6EPbHrUKlGbwH" Name="Bound to Document" Kind="InputPin" IsHidden="true" />
             <Pin Id="Jdusc4BvqpTPw8tc3GIvWQ" Name="Dialog If Document Changed" Kind="InputPin" IsHidden="true" />
@@ -104,11 +115,35 @@
             <Pin Id="DCw2UPZMB9nMWjkbDIfNyx" Name="Render Time" Kind="OutputPin" />
           </Node>
           <Pad Id="TaEcVyg862nM0yHhbP5r5g" Comment="ClientBounds" Bounds="341,740,404,136" ShowValueBox="true" isIOBox="true" />
-          <Pad Id="T0ZsOPkxmihLj241wzo80n" Comment="Space" Bounds="679,150,87,15" ShowValueBox="true" isIOBox="true" Value="DIP">
+          <Pad Id="T0ZsOPkxmihLj241wzo80n" Comment="Space" Bounds="679,150,87,15" ShowValueBox="true" isIOBox="true" Value="Normalized">
             <p:TypeAnnotation LastCategoryFullName="VL.Skia" LastDependency="VL.Fu.vl">
               <Choice Kind="TypeFlag" Name="CommonSpace" />
             </p:TypeAnnotation>
           </Pad>
+          <Node Bounds="269,880,81,26" Id="QPfebucqC9DQcuY81KKYtI">
+            <p:NodeReference LastCategoryFullName="Graphics.Skia.SkiaRenderer" LastDependency="VL.Skia.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <FullNameCategoryReference ID="Graphics.Skia.SkiaRenderer" />
+              <Choice Kind="OperationCallFlag" Name="BoundsStream" />
+            </p:NodeReference>
+            <Pin Id="Sg6S5brknZzMsQ6vMwpjf2" Name="Input" Kind="StateInputPin" />
+            <Pin Id="DTmXOK1sbNKQBy1wNFQZnH" Name="Output" Kind="StateOutputPin" />
+            <Pin Id="CvMW88iKWv6NXOwvZCN8g4" Name="Bounds Stream" Kind="OutputPin" />
+          </Node>
+          <Node Bounds="345,920,65,19" Id="S5oumznHr21LVwFCt8nlJ9">
+            <p:NodeReference LastCategoryFullName="Reactive" LastDependency="VL.CoreLib.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="ProcessAppFlag" Name="HoldLatest" />
+            </p:NodeReference>
+            <Pin Id="UPQgrtB5eWPM4NRqhrcIG8" Name="Node Context" Kind="InputPin" IsHidden="true" />
+            <Pin Id="GHylMT3b8TLM7SOijq6V6H" Name="Initial Result" Kind="InputPin" IsHidden="true" />
+            <Pin Id="J8uVb4xFszSMG5sTyhRXkw" Name="Async Notifications" Kind="InputPin" />
+            <Pin Id="UwvWTw2NtP1NiLd3rVtetu" Name="Reset" Kind="InputPin" />
+            <Pin Id="FxYNrGlGhREOP8D4WLky4B" Name="Output" Kind="OutputPin" IsHidden="true" />
+            <Pin Id="IONioWv5DLqLgVeiVix3Mw" Name="Value" Kind="OutputPin" />
+            <Pin Id="KVH2WtZqNxWMgnmlXTHCoq" Name="On Data" Kind="OutputPin" />
+          </Node>
+          <Pad Id="CN4XuyrabymNI0GrTJz6xk" Comment="" Bounds="347,970,502,132" ShowValueBox="true" isIOBox="true" />
         </Canvas>
         <Patch Id="KRqvQT4n7UbQH61287XBO3" Name="Create" />
         <Patch Id="ASLRfxkPhYTPjVx2qZ7CoN" Name="Update" />
@@ -127,6 +162,11 @@
         <Link Id="SRLqGFJ2oYTMqYFZjYiE8U" Ids="JiHTzKdZI6TOZaoIbqC9nf,TaEcVyg862nM0yHhbP5r5g" />
         <Link Id="AfwHj53lN4YNm2xDu7kL2t" Ids="T0ZsOPkxmihLj241wzo80n,C9GnjiStYmCM7Y1mZUG1Cc" />
         <Link Id="KRU4jofCdNLNimWFpBYKPe" Ids="T0ZsOPkxmihLj241wzo80n,TnK0vOsi1wdMIMjPvmZDS5" />
+        <Link Id="B1q9KSW7Z4JNvF4qUPoq0j" Ids="NpZRy8nXCITMDLxG5GAq40,Sg6S5brknZzMsQ6vMwpjf2" />
+        <Link Id="UVkqoTcwDBdMtRcYwSz7Ue" Ids="CvMW88iKWv6NXOwvZCN8g4,J8uVb4xFszSMG5sTyhRXkw" />
+        <Link Id="Rg9XX8mkrnoLOgayS0XhFw" Ids="IONioWv5DLqLgVeiVix3Mw,CN4XuyrabymNI0GrTJz6xk" />
+        <Link Id="BIqTyxMlzlSPeRVGvHLbmw" Ids="Q1eFmRNRcG9P0snYkHQE5V,O0SugsUVNMbPN4T7dcxmII" />
+        <Link Id="KXIOQZFDgXbLfQxoD2sMIp" Ids="PmmLrS5IVnwOYDHeUMWZ4F,PSXGzTYHfAmM0K3KofeLc6" />
       </Patch>
     </Node>
   </Patch>

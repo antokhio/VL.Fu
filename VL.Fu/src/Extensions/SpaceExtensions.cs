@@ -206,7 +206,7 @@ namespace VL.Fu.Extensions
         private static Vector2 FromNormalized(Vector2 normalizedValue, Int2 resolution)
         {
             var p = normalizedValue;
-            var aspect = (float)resolution.X / resolution.Y;
+            var aspect = resolution.X / resolution.Y;
             if (aspect > 1f)
                 p.X /= aspect;
             else
