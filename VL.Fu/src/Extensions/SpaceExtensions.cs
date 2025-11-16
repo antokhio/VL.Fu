@@ -6,7 +6,7 @@ namespace VL.Fu.Extensions
     /// <summary>
     /// Provides extension methods for converting Vector2 and RectangleF coordinates between different 2D coordinate spaces.
     /// </summary>
-    public static class SpaceExtensions
+    public static partial class SpaceExtensions
     {
         /// <summary>
         /// Converts a rectangle from pixel coordinates to a normalized, aspect-ratio-corrected space where (0,0) is the center.

@@ -2,7 +2,6 @@
 using VL.Core.Import;
 using VL.Fu.Core.Root;
 using VL.Lib.IO.Notifications;
-using VL.Skia;
 
 namespace VL.Fu.Core
 {
@@ -25,11 +24,11 @@ namespace VL.Fu.Core
             }
         }
 
-        public void BroadcastNotification(INotification notification, CallerInfo caller)
+        public void BroadcastNotification(INotification notification)
         {
             foreach (var notifiable in _notifiables)
             {
-                notifiable.Notify(notification, caller);
+                notifiable.Notify(notification);
             }
         }
     }

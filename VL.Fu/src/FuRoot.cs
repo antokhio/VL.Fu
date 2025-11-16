@@ -11,7 +11,7 @@ using VL.Skia;
 namespace VL.Fu
 {
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit, HasStateOutput = true)]
-    public class FuRoot : Configuration, IContextProvider, ILayer
+    public class FuRoot : ViewportBoundsProvider, IContextProvider, ILayer
     {
         public RectangleF? Bounds => Root?.Bounds;
 
@@ -29,12 +29,13 @@ namespace VL.Fu
 
         public void Render(CallerInfo caller)
         {
+            base.Render(caller);
             Root?.Render(caller);
         }
 
         public bool Notify(INotification notification, CallerInfo caller)
         {
-            BroadcastNotification(notification, caller);
+            BroadcastNotification(notification);
             return Root?.Notify(notification, caller) ?? false;
         }
     }
