@@ -18,25 +18,25 @@ namespace VL.Fu.Core
         protected readonly IChannel<SKRect> _viewportBounds = new ChannelProperty<SKRect>(
             SKRect.Empty
         );
-        protected readonly IChannel<SKMatrix> _viewpotTransformation =
+        protected readonly IChannel<SKMatrix> _viewportTransformation =
             new ChannelProperty<SKMatrix>(SKMatrix.Identity);
 
-        protected readonly IChannel<float> _viewportScalling = new ChannelProperty<float>(
+        protected readonly IChannel<float> _viewportScaling = new ChannelProperty<float>(
             Constants.DefaultScaling
         );
 
-        private readonly CompositeDisposable _vieportStreamSubscription = new();
+        private readonly CompositeDisposable _viewportStreamSubscription = new();
 
         protected ViewportBoundsProvider(NodeContext nodeContext)
             : base(nodeContext)
         {
-            var viewportStraem = Observable
+            var viewportStream = Observable
                 .CombineLatest(
                     _viewportBounds.StartWith(SKRect.Empty),
-                    _viewpotTransformation.StartWith(SKMatrix.Identity),
+                    _viewportTransformation.StartWith(SKMatrix.Identity),
                     ScalingMode.StartWith(Constants.DefaultScalingMode),
                     Space.StartWith(Constants.DefaultSpace),
-                    _viewportScalling.StartWith(Constants.DefaultScaling),
+                    _viewportScaling.StartWith(Constants.DefaultScaling),
                     (bounds, transformation, scalingMode, currentSpace, scaling) =>
                     {
                         var top = bounds.Top;
@@ -65,28 +65,31 @@ namespace VL.Fu.Core
                 )
                 .DistinctUntilChanged();
 
-            _vieportStreamSubscription.Add(
-                viewportStraem.Subscribe(state =>
+            _viewportStreamSubscription.Add(
+                viewportStream.Subscribe(state =>
+                {
+                    Bounds = state.Bounds;
+
                     BroadcastNotification(
                         new ViewportBoundsNotification(state.Bounds, state.Scaling, this)
-                    )
-                )
+                    );
+                })
             );
         }
 
-        public RectangleF? Bounds => Root?.Bounds;
+        public RectangleF? Bounds { get; private set; }
 
         public virtual void Render(CallerInfo caller)
         {
             _viewportBounds.EnsureValue(caller.ViewportBounds);
-            _viewpotTransformation.EnsureValue(caller.Transformation);
-            _viewportScalling.EnsureValue(caller.Scaling);
+            _viewportTransformation.EnsureValue(caller.Transformation);
+            _viewportScaling.EnsureValue(caller.Scaling);
         }
 
         public override void Dispose()
         {
             base.Dispose();
-            _vieportStreamSubscription.Dispose();
+            _viewportStreamSubscription.Dispose();
         }
     }
 }

@@ -24,7 +24,7 @@ namespace VL.Fu.Services
         public float Scaling { get; private set; } = Constants.DefaultScaling;
 
         private readonly Subject<INotification> _notifications = new();
-        protected readonly CompositeDisposable _subscriptions = new();
+        private readonly CompositeDisposable _subscriptions = new();
 
         public ViewService(Configuration configuration)
         {
@@ -41,7 +41,7 @@ namespace VL.Fu.Services
                 .OfType<ViewportBoundsNotification>()
                 .Select(n => n.Scaling);
 
-            // Combine all congfiguratin streams
+            // Combine all configuration streams
             var factorsStream = Observable
                 .CombineLatest(
                     // Factors
@@ -62,10 +62,8 @@ namespace VL.Fu.Services
                             DIPFactor = dipFactor,
                             ScalingMode = scalingMode,
                             Scaling = scaling,
-
                             ClientArea = clientArea,
                             Space = space,
-
                             ViewportBounds = bounds,
                         }
                 )
@@ -101,6 +99,7 @@ namespace VL.Fu.Services
         public void Dispose()
         {
             _subscriptions?.Dispose();
+            _notifications?.Dispose();
         }
     }
 }
