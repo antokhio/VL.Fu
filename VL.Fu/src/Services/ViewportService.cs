@@ -10,7 +10,7 @@ using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Services
 {
-    public class ViewportService : InstancedId, IContextedService, INotifiable
+    public class ViewportService : InstancedId, IViewportService
     {
         public FuViewport Viewport { get; private set; }
 

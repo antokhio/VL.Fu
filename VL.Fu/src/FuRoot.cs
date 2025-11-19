@@ -22,8 +22,8 @@ namespace VL.Fu
             var viewPortService = new ViewportService(this);
             var inputService = new InputService(this, viewPortService);
 
-            RegisterService(viewPortService);
-            RegisterService(inputService);
+            RegisterService<IViewportService>(viewPortService);
+            RegisterService<IInputService>(inputService);
         }
 
         [Fragment(Order = PinOrder.Input)]

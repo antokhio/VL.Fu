@@ -13,12 +13,9 @@ using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Services
 {
-    public class InputService : IContextedService, INotifiable
+    public class InputService : InstancedId, IInputService
     {
-        // Final combined output stream
-        public Subject<FuInputState> InputStateStream { get; } = new();
-
-        // --- Public streams for debugging and inspection ---
+        public Subject<FuInputState> InputStateStream { get; } = new Subject<FuInputState>();
         public IObservable<bool> IsTouchActiveStream { get; }
         public IObservable<IReadOnlyDictionary<int, FuPointer>> PointersStream { get; }
         public IObservable<FuMouse> MouseStream { get; }
@@ -34,7 +31,7 @@ namespace VL.Fu.Services
 
         private record CleanupPointer(int Id);
 
-        public InputService(Configuration configuration, ViewportService viewportService)
+        public InputService(Configuration configuration, IViewportService viewportService)
         {
             var enabledNotifications = _notifications
                 .Where(_ => configuration.Enabled.Value)
