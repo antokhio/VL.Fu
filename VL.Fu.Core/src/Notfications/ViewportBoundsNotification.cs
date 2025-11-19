@@ -18,6 +18,7 @@ namespace VL.Fu.Core.Notfications
             : base(sender, modifierKeys)
         {
             ViewportBounds = viewportBounds;
+            Scaling = scaling;
         }
 
         public override INotification Transform(INotificationSpaceTransformer transformer)

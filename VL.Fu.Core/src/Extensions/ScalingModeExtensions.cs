@@ -3,7 +3,7 @@ using VL.Fu.Core.Common;
 using VL.Lib.Mathematics;
 using VL.Skia;
 
-namespace VL.Fu.Extensions
+namespace VL.Fu.Core.Extensions
 {
     public static class ScalingModeExtensions
     {

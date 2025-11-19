@@ -2,7 +2,7 @@
 
 namespace VL.Fu.Core.Common
 {
-    public static class Constants
+    public struct Constants
     {
         public const int MousePointerId = -1;
 

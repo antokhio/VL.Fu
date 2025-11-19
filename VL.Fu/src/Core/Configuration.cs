@@ -41,6 +41,11 @@ namespace VL.Fu.Core
             Constants.DefaultScalingMode
         );
 
+        /// <summary>
+        /// Reactive channel that stores whether the input is enabled.
+        /// </summary>
+        public readonly IChannel<bool> Enabled = new ChannelProperty<bool>(true);
+
         [Fragment]
         public Configuration(NodeContext nodeContext)
             : base(nodeContext) { }
@@ -64,5 +69,9 @@ namespace VL.Fu.Core
         [Fragment]
         public void SetScalingMode(ScalingMode scalingMode = Constants.DefaultScalingMode) =>
             ScalingMode.EnsureValue(scalingMode);
+
+        /// <param name="enabled">Whether input is enabled</param>
+        [Fragment]
+        public void SetEnabled(bool enabled = true) => Enabled.EnsureValue(enabled);
     }
 }
