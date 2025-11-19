@@ -1,6 +1,6 @@
 ﻿using Stride.Core.Mathematics;
 
-namespace VL.Fu.Extensions
+namespace VL.Fu.Core.Extensions
 {
     public static class MathExtensions
     {
