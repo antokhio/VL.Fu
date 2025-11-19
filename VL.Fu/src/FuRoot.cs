@@ -20,8 +20,10 @@ namespace VL.Fu
             : base(nodeContext)
         {
             var viewPortService = new ViewportService(this);
+            var inputService = new InputService(this, viewPortService);
 
             RegisterService(viewPortService);
+            RegisterService(inputService);
         }
 
         [Fragment(Order = PinOrder.Input)]

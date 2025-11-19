@@ -30,9 +30,7 @@ namespace VL.Fu.Services
                 .RefCount();
 
             var viewportBoundsStream = viewportNotificationStream.Select(n => n.ViewportBounds);
-            var viewportScalingStream = viewportNotificationStream
-                .Select(n => n.Scaling)
-
+            var viewportScalingStream = viewportNotificationStream.Select(n => n.Scaling);
 
             // Combine all configuration streams
             var streams = Observable
