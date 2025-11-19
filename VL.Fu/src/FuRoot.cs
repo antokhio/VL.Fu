@@ -19,7 +19,7 @@ namespace VL.Fu
         public FuRoot(NodeContext nodeContext)
             : base(nodeContext)
         {
-            var viewPortService = new ViewService(this);
+            var viewPortService = new ViewportService(this);
 
             RegisterService(viewPortService);
         }

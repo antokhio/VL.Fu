@@ -25,7 +25,7 @@ namespace VL.Fu.Core
             Constants.DefaultScaling
         );
 
-        private readonly CompositeDisposable _viewportStreamSubscription = new();
+        private readonly CompositeDisposable _subscriptions = new();
 
         protected ViewportBoundsProvider(NodeContext nodeContext)
             : base(nodeContext)
@@ -65,7 +65,7 @@ namespace VL.Fu.Core
                 )
                 .DistinctUntilChanged();
 
-            _viewportStreamSubscription.Add(
+            _subscriptions.Add(
                 viewportStream.Subscribe(state =>
                 {
                     Bounds = state.Bounds;
@@ -88,8 +88,9 @@ namespace VL.Fu.Core
 
         public override void Dispose()
         {
+            _subscriptions.Dispose();
+
             base.Dispose();
-            _viewportStreamSubscription.Dispose();
         }
     }
 }

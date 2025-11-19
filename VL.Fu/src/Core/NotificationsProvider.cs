@@ -6,7 +6,7 @@ using VL.Lib.IO.Notifications;
 namespace VL.Fu.Core
 {
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
-    public abstract class NotificationsProvider : ContextProvider
+    public abstract class NotificationsProvider : ContextProvider, IDisposable
     {
         protected readonly List<INotifiable> _notifiables = new();
 
@@ -30,6 +30,13 @@ namespace VL.Fu.Core
             {
                 notifiable.Notify(notification);
             }
+        }
+
+        public override void Dispose()
+        {
+            _notifiables.Clear();
+
+            base.Dispose();
         }
     }
 }

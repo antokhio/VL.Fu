@@ -11,7 +11,7 @@ using VL.Skia;
 
 namespace VL.Fu.Services
 {
-    public class ViewService : InstancedId, IContextedService, INotifiable, IDisposable
+    public class ViewportService : InstancedId, IContextedService, INotifiable
     {
         public RectangleF ViewportBounds { get; private set; } = RectangleF.Empty;
         public Int2 Resolution { get; private set; } = Int2.Zero;
@@ -26,7 +26,7 @@ namespace VL.Fu.Services
         private readonly Subject<INotification> _notifications = new();
         private readonly CompositeDisposable _subscriptions = new();
 
-        public ViewService(Configuration configuration)
+        public ViewportService(Configuration configuration)
         {
             var clientAreaStream = _notifications
                 .OfType<NotificationWithClientArea>()

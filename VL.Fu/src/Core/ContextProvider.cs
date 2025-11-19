@@ -103,6 +103,8 @@ namespace VL.Fu.Core.Root
             }
             _inlay = null;
 
+            Root = null;
+
             if (_store is IDisposable disposableStore)
             {
                 disposableStore.Dispose();

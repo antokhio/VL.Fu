@@ -4,6 +4,9 @@ using VL.Fu.Core.Context;
 
 namespace VL.Fu.Core
 {
+    /// <summary>
+    /// Base class for managing contexted service lifetime.
+    /// </summary>
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public abstract class ServiceRegistry : InstancedId, IServiceRegistry
     {
@@ -20,7 +23,15 @@ namespace VL.Fu.Core
         {
             var type = typeof(T);
             var weakRef = new WeakReference<IContextedService>(service);
-            _serviceRegistry.AddOrUpdate(type, weakRef, (_, __) => weakRef);
+
+            if (_serviceRegistry.TryGetValue(type, out var existingRef))
+            {
+                throw new InvalidOperationException(
+                    $"Service of type {type.FullName} is already registered."
+                );
+            }
+
+            _serviceRegistry.TryAdd(type, weakRef);
         }
 
         public T? GetService<T>()
@@ -40,7 +51,15 @@ namespace VL.Fu.Core
 
         public virtual void Dispose()
         {
-            _serviceRegistry?.Clear();
+            foreach (var serviceRef in _serviceRegistry.Values)
+            {
+                if (serviceRef.TryGetTarget(out var service))
+                {
+                    service?.Dispose();
+                }
+            }
+
+            _serviceRegistry.Clear();
         }
     }
 }

@@ -1,4 +1,4 @@
 ﻿namespace VL.Fu.Core
 {
-    public interface IContextedService { }
+    public interface IContextedService : IDisposable { }
 }
