@@ -1,4 +1,5 @@
-﻿using VL.Fu.Core.Input;
+﻿using System.Reactive;
+using VL.Fu.Core.Input;
 
 namespace VL.Fu.Core
 {
@@ -27,9 +28,15 @@ namespace VL.Fu.Core
         /// </summary>
         IObservable<FuMouse> MouseStream { get; }
 
+        IObservable<FuPointer> MousePointerStream { get; }
+
         /// <summary>
         /// A stream providing the set of currently pressed keys.
         /// </summary>
         IObservable<IReadOnlySet<FuKey>> KeysStream { get; }
+
+        public IObservable<bool> FocusedStream { get; }
+
+        public IObservable<Unit> ResetSignal { get; }
     }
 }

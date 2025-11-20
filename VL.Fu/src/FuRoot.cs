@@ -38,6 +38,7 @@ namespace VL.Fu
         public bool Notify(INotification notification, CallerInfo caller)
         {
             BroadcastNotification(notification);
+
             return Root?.Notify(notification, caller) ?? false;
         }
     }

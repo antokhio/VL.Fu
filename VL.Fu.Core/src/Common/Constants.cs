@@ -15,5 +15,7 @@ namespace VL.Fu.Core.Common
         public const ScalingMode DefaultScalingMode = ScalingMode.DIPAndPixel;
 
         public const float DefaultScaling = 1.0f;
+
+        public static TimeSpan DefaultTouchActivityTimeout = TimeSpan.FromMilliseconds(150);
     }
 }

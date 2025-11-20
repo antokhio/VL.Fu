@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿using Stride.Core.Mathematics;
 using VL.Fu.Core.Input;
 using VL.Lib.IO.Notifications;
 using VL.Skia;
@@ -28,21 +28,72 @@ namespace VL.Fu.Core.Extensions
         {
             return viewport.Space switch
             {
-                CommonSpace.Normalized => notification.Position.ToNormalizedSpace(
-                    notification.ClientArea
-                ),
-                CommonSpace.DIP => notification.Position.ToCenteredDIPSpace(
-                    notification.ClientArea,
-                    viewport.DIPFactor
-                ),
-                CommonSpace.DIPTopLeft => notification.Position.ToDIPTopLeftSpace(
-                    viewport.DIPFactor
-                ),
-                CommonSpace.PixelTopLeft => notification.Position.ToPixelTopLeftSpace(
-                    viewport.PixelFactor
-                ),
+                CommonSpace.Normalized => notification.ToNormalizedSpace(),
+                CommonSpace.DIP => notification.ToDIPCenteredSpace(viewport.DIPFactor),
+                CommonSpace.DIPTopLeft => notification.ToDIPTopLeftSpace(viewport.DIPFactor),
+                CommonSpace.PixelTopLeft => notification.ToPixelTopLeftSpace(viewport.PixelFactor),
                 _ => throw new ArgumentOutOfRangeException(nameof(viewport.Space)),
             };
+        }
+
+        public static Vector2 ToNormalizedSpace(this NotificationWithPosition notification)
+        {
+            float aspect = notification.ClientArea.X / notification.ClientArea.Y;
+            var norm = new Vector2(
+                (notification.Position.X / notification.ClientArea.X) * 2f - 1f,
+                (notification.Position.Y / notification.ClientArea.Y) * 2f - 1f
+            );
+
+            if (aspect > 1f)
+                norm.X *= aspect;
+            else
+                norm.Y /= aspect;
+
+            return norm;
+        }
+
+        public static Vector2 ToDIPCenteredSpace(
+            this NotificationWithPosition notification,
+            int dipFactor
+        )
+        {
+            var halfSize = new Vector2(
+                (notification.ClientArea.X / dipFactor) / 2f,
+                (notification.ClientArea.Y / dipFactor) / 2f
+            );
+
+            var norm = new Vector2(
+                (notification.Position.X / dipFactor) - halfSize.X,
+                (notification.Position.Y / dipFactor) - halfSize.Y
+            );
+
+            return norm;
+        }
+
+        public static Vector2 ToDIPTopLeftSpace(
+            this NotificationWithPosition notification,
+            int dipFactor
+        )
+        {
+            var scaled = new Vector2(
+                notification.Position.X / dipFactor,
+                notification.Position.Y / dipFactor
+            );
+
+            return scaled;
+        }
+
+        public static Vector2 ToPixelTopLeftSpace(
+            this NotificationWithPosition notification,
+            int pixelFactor
+        )
+        {
+            var scaled = new Vector2(
+                notification.Position.X / pixelFactor,
+                notification.Position.Y / pixelFactor
+            );
+
+            return scaled;
         }
     }
 }
