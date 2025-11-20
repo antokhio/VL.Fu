@@ -11,5 +11,10 @@ namespace VL.Fu.Core
         /// Gets the current state of the viewport, including resolution, scaling, and coordinate space information.
         /// </summary>
         FuViewport Viewport { get; }
+
+        /// <summary>
+        /// Gets observable of the current state of viewport.
+        /// </summary>
+        IObservable<FuViewport> ViewportStream { get; }
     }
 }

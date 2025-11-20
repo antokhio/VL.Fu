@@ -1,5 +1,7 @@
 ﻿using Stride.Core.Mathematics;
 using VL.Fu.Core.Context;
+using VL.Fu.Core.Input;
+using VL.Lib.Mathematics;
 using VL.Skia;
 
 namespace VL.Fu.Core.Extensions
@@ -9,6 +11,60 @@ namespace VL.Fu.Core.Extensions
     /// </summary>
     public static class ProviderExtensions
     {
+        public static bool TryGetPointersStream(
+            this IContextProvider provider,
+            out IObservable<IReadOnlyDictionary<int, FuPointer>>? pointersStream
+        )
+        {
+            var service = provider?.GetService<IInputService>();
+            pointersStream = service?.PointersStream;
+
+            return pointersStream is not null;
+        }
+
+        public static bool TryGetMouseStream(
+            this IContextProvider provider,
+            out IObservable<FuMouse>? mouseStream
+        )
+        {
+            var service = provider?.GetService<IInputService>();
+            mouseStream = service?.MouseStream;
+
+            return mouseStream is not null;
+        }
+
+        public static bool TryGetKeysStream(
+            this IContextProvider provider,
+            out IObservable<IReadOnlySet<FuKey>>? keysStream
+        )
+        {
+            var service = provider?.GetService<IInputService>();
+            keysStream = service?.KeysStream;
+
+            return keysStream is not null;
+        }
+
+        public static bool TryGetViewportStream(
+            this IContextProvider provider,
+            out IObservable<FuViewport>? viewportStream
+        )
+        {
+            var service = provider?.GetService<IViewportService>();
+            viewportStream = service?.ViewportStream;
+
+            return viewportStream is not null;
+        }
+
+        /// <summary>
+        /// Retrieves the FuViewport from the provider's service registry.
+        /// </summary>
+        /// <param name="provider">The context provider.</param>
+        /// <returns>The FuViewport if the service is available, otherwise null.</returns>
+        public static FuViewport? GetViewport(this IContextProvider provider)
+        {
+            return provider.GetService<IViewportService>()?.Viewport;
+        }
+
         /// <summary>
         /// Converts a Vector2 from a specified space to the provider's current viewport space.
         /// </summary>
@@ -22,11 +78,8 @@ namespace VL.Fu.Core.Extensions
             CommonSpace fromSpace
         )
         {
-            var viewportService = provider.GetService<IViewportService>();
-            if (viewportService is null)
-                return value;
-
-            return viewportService.Viewport.ConvertSize(value, fromSpace);
+            var viewport = provider.GetViewport();
+            return viewport?.ConvertSize(value, fromSpace) ?? value;
         }
 
         /// <summary>
@@ -42,11 +95,25 @@ namespace VL.Fu.Core.Extensions
             CommonSpace fromSpace
         )
         {
-            var viewportService = provider.GetService<IViewportService>();
-            if (viewportService is null)
-                return value;
+            var viewport = provider.GetViewport();
+            return viewport?.ConvertPosition(value, fromSpace) ?? value;
+        }
 
-            return viewportService.Viewport.ConvertPosition(value, fromSpace);
+        /// <summary>
+        /// Converts a Circle from a specified source space to the provider's current viewport space.
+        /// </summary>
+        /// <param name="provider">The context provider, used to access the ViewportService.</param>
+        /// <param name="value">The circle to convert.</param>
+        /// <param name="fromSpace">The coordinate space of the input circle.</param>
+        /// <returns>The converted circle, or the original circle if the conversion cannot be performed.</returns>
+        public static Circle ConvertSpace(
+            this IContextProvider provider,
+            Circle value,
+            CommonSpace fromSpace
+        )
+        {
+            var viewport = provider.GetViewport();
+            return viewport?.ConvertSpace(value, fromSpace) ?? value;
         }
 
         /// <summary>
@@ -62,11 +129,8 @@ namespace VL.Fu.Core.Extensions
             CommonSpace fromSpace
         )
         {
-            var viewportService = provider.GetService<IViewportService>();
-            if (viewportService is null)
-                return value;
-
-            return viewportService.Viewport.ConvertSpace(value, fromSpace);
+            var viewport = provider.GetViewport();
+            return viewport?.ConvertSpace(value, fromSpace) ?? value;
         }
 
         /// <summary>
@@ -82,11 +146,8 @@ namespace VL.Fu.Core.Extensions
             CommonSpace fromSpace
         )
         {
-            var viewportService = provider.GetService<IViewportService>();
-            if (viewportService is null)
-                return value;
-
-            return viewportService.Viewport.ConvertSpace(value, fromSpace);
+            var viewport = provider.GetViewport();
+            return viewport?.ConvertSpace(value, fromSpace) ?? value;
         }
     }
 }

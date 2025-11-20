@@ -99,6 +99,31 @@ namespace VL.Fu.Core.Extensions
         }
 
         /// <summary>
+        /// Converts a Circle from a specified source space to the viewport's current space.
+        /// </summary>
+        /// <param name="viewport">The context viewport.</param>
+        /// <param name="circle">The circle to convert.</param>
+        /// <param name="fromSpace">The coordinate space of the input circle.</param>
+        /// <returns>The converted circle in the viewport's space.</returns>
+        public static Circle ConvertSpace(
+            this FuViewport viewport,
+            Circle circle,
+            CommonSpace fromSpace
+        )
+        {
+            if (fromSpace == viewport.Space)
+            {
+                return circle;
+            }
+
+            var newCenter = viewport.ConvertPosition(circle.Center, fromSpace);
+            // The radius is a distance. We use the float conversion, which correctly scales based on the height of the coordinate spaces.
+            var newRadius = viewport.ConvertSpace(circle.Radius, fromSpace);
+
+            return new Circle(newCenter, newRadius);
+        }
+
+        /// <summary>
         /// Converts a scalar value (representing a distance) from a specified source space to the viewport's current space.
         /// </summary>
         /// <param name="viewport">The context viewport.</param>

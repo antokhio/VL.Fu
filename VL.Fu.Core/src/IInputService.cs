@@ -1,5 +1,4 @@
-﻿using System.Reactive.Subjects;
-using VL.Fu.Core.Input;
+﻿using VL.Fu.Core.Input;
 
 namespace VL.Fu.Core
 {
@@ -11,7 +10,7 @@ namespace VL.Fu.Core
         /// <summary>
         /// The main output stream that combines all input sources into a single, comprehensive state object.
         /// </summary>
-        Subject<FuInputState> InputStateStream { get; }
+        IObservable<FuInputState> InputStateStream { get; }
 
         /// <summary>
         /// A stream that indicates whether a touch interaction is currently active.

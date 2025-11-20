@@ -11,6 +11,7 @@ namespace VL.Fu.Core.Input
         public Vector2 Delta { get; init; } = Vector2.Zero;
         public TouchNotificationKind State { get; init; }
         public DateTimeOffset TimeStamp { get; init; } = DateTimeOffset.UtcNow;
+        public TimeSpan Lifetime => DateTimeOffset.UtcNow - TimeStamp;
 
         public FuPointer(int id, Vector2 position, TouchNotificationKind state)
         {

@@ -1,9 +1,9 @@
-﻿using Stride.Core.Mathematics;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using Stride.Core.Mathematics;
 using VL.Fu.Core;
 using VL.Fu.Core.Common;
 using VL.Fu.Core.Extensions;
@@ -15,7 +15,8 @@ namespace VL.Fu.Services
 {
     public class InputService : InstancedId, IInputService
     {
-        public Subject<FuInputState> InputStateStream { get; } = new Subject<FuInputState>();
+        protected readonly Subject<FuInputState> _inputStateStream = new();
+        public IObservable<FuInputState> InputStateStream => _inputStateStream.AsObservable();
         public IObservable<bool> IsTouchActiveStream { get; }
         public IObservable<IReadOnlyDictionary<int, FuPointer>> PointersStream { get; }
         public IObservable<FuMouse> MouseStream { get; }
@@ -287,7 +288,7 @@ namespace VL.Fu.Services
                     }
                 )
                 .StartWith(ImmutableHashSet<FuKey>.Empty)
-                .Publish()
+                .Replay(1)
                 .RefCount();
 
             // --- Combine all public streams into a single FuInputState ---
@@ -316,7 +317,7 @@ namespace VL.Fu.Services
                 }
             );
 
-            _subscriptions.Add(combinedInputStream.Subscribe(InputStateStream));
+            _subscriptions.Add(combinedInputStream.Subscribe(_inputStateStream));
         }
 
         public void Notify(INotification notification) => _notifications.OnNext(notification);
@@ -325,7 +326,7 @@ namespace VL.Fu.Services
         {
             _notifications.Dispose();
             _subscriptions.Dispose();
-            InputStateStream.Dispose();
+            _inputStateStream.Dispose();
         }
     }
 }
