@@ -2,13 +2,12 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Stride.Core.Mathematics;
-using VL.Fu.Core;
 using VL.Fu.Core.Common;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.Notfications;
 using VL.Lib.IO.Notifications;
 
-namespace VL.Fu.Services
+namespace VL.Fu.Core.Services
 {
     public class ViewportService : InstancedId, IViewportService
     {

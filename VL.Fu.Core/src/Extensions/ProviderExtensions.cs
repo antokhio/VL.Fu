@@ -11,12 +11,22 @@ namespace VL.Fu.Core.Extensions
     /// </summary>
     public static class ProviderExtensions
     {
+        public static bool TryGetNotificationsService(
+            this IContextProvider provider,
+            out INotificationsService? notificationsService
+        )
+        {
+            notificationsService = provider?.GetService<INotificationsService>();
+
+            return notificationsService != null;
+        }
+
         public static bool TryGetPointersStream(
             this IContextProvider provider,
             out IObservable<IReadOnlyDictionary<int, FuPointer>>? pointersStream
         )
         {
-            var service = provider?.GetService<IInputService>();
+            provider.TryGetNotificationsService(out var service);
             pointersStream = service?.PointersStream;
 
             return pointersStream is not null;
@@ -27,7 +37,7 @@ namespace VL.Fu.Core.Extensions
             out IObservable<FuMouse>? mouseStream
         )
         {
-            var service = provider?.GetService<IInputService>();
+            provider.TryGetNotificationsService(out var service);
             mouseStream = service?.MouseStream;
 
             return mouseStream is not null;
@@ -38,10 +48,20 @@ namespace VL.Fu.Core.Extensions
             out IObservable<IReadOnlySet<FuKey>>? keysStream
         )
         {
-            var service = provider?.GetService<IInputService>();
+            provider.TryGetNotificationsService(out var service);
             keysStream = service?.KeysStream;
 
             return keysStream is not null;
+        }
+
+        public static bool TryGetViewportService(
+            this IContextProvider provider,
+            out IViewportService? viewportService
+        )
+        {
+            viewportService = provider?.GetService<IViewportService>();
+
+            return viewportService is not null;
         }
 
         public static bool TryGetViewportStream(

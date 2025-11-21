@@ -3,7 +3,7 @@ using System.Reactive.Linq;
 using VL.Fu.Core.Common;
 using VL.Lib.IO.Notifications;
 
-namespace VL.Fu.Services.Input
+namespace VL.Fu.Core.Handlers
 {
     public class TouchActiveHandler : IObservable<bool>
     {

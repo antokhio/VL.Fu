@@ -44,10 +44,10 @@ namespace VL.Fu.Core.Extensions
                 (notification.Position.Y / notification.ClientArea.Y) * 2f - 1f
             );
 
-            if (aspect > 1f)
-                norm.X *= aspect;
-            else
-                norm.Y /= aspect;
+            //if (aspect > 1f)
+            norm.X *= aspect;
+            //else
+            //  norm.Y /= aspect;
 
             return norm;
         }

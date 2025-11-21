@@ -2,7 +2,7 @@
 using System.Reactive.Linq;
 using VL.Lib.IO.Notifications;
 
-namespace VL.Fu.Services.Input
+namespace VL.Fu.Core.Handlers
 {
     public class FocusHandler : IObservable<bool>
     {

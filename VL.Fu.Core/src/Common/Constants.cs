@@ -17,5 +17,6 @@ namespace VL.Fu.Core.Common
         public const float DefaultScaling = 1.0f;
 
         public static TimeSpan DefaultTouchActivityTimeout = TimeSpan.FromMilliseconds(150);
+        public static TimeSpan DefaultInputActivityTimeout = TimeSpan.FromMilliseconds(150);
     }
 }

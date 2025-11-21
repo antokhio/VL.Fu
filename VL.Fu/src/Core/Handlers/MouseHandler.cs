@@ -6,7 +6,7 @@ using VL.Fu.Core.Input;
 using VL.Lib.IO;
 using VL.Lib.IO.Notifications;
 
-namespace VL.Fu.Services.Input
+namespace VL.Fu.Core.Handlers
 {
     public class MouseHandler : IObservable<FuMouse>
     {

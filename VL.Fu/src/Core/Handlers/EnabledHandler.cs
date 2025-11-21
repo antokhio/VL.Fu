@@ -1,7 +1,6 @@
 ﻿using System.Reactive.Linq;
-using VL.Fu.Core;
 
-namespace VL.Fu.Services.Input
+namespace VL.Fu.Core.Handlers
 {
     public class EnabledHandler : IObservable<bool>
     {
@@ -9,7 +8,10 @@ namespace VL.Fu.Services.Input
 
         public EnabledHandler(Configuration configuration)
         {
-            _activeStream = configuration.Enabled.DistinctUntilChanged<bool>().Replay(1).RefCount();
+            _activeStream = Observable
+                .Defer(() => configuration.Enabled.StartWith(configuration.Enabled.Value))
+                .Replay(1)
+                .RefCount();
         }
 
         public IDisposable Subscribe(IObserver<bool> observer)

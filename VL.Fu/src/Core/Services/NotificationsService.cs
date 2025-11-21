@@ -1,26 +1,24 @@
 ﻿using System.Reactive;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using VL.Fu.Core;
+using VL.Fu.Core.Handlers;
 using VL.Fu.Core.Input;
-using VL.Fu.Services.Input;
 using VL.Lib.IO.Notifications;
 
-namespace VL.Fu.Services
+namespace VL.Fu.Core.Services
 {
-    public class NotificationsService : InstancedId, IContextedService, INotifiable
+    public class NotificationsService : InstancedId, INotificationsService
     {
-        public IObservable<bool> IsEnabled => _enabledHandler;
-        public IObservable<bool> IsFocused => _focusHandler;
+        public IObservable<bool> EnabledStream => _enabledHandler;
+        public IObservable<bool> FocusedStream => _focusHandler;
         public IObservable<Unit> OnFocusFound => _focusHandler.OnFocusFound;
         public IObservable<Unit> OnFocusLost => _focusHandler.OnFocusLost;
         public IObservable<Unit> OnReset => _resetHandler;
-        public IObservable<FuMouse> Mouse => _mouseHandler;
-        public IObservable<IReadOnlyDictionary<int, FuPointer>> Pointers { get; }
-        public IObservable<IReadOnlySet<FuKey>> Keys => _keysHandler;
-        public IObservable<bool> IsTouchActive => _touchActiveHandler;
-        public IObservable<bool> IsInputActive { get; }
+        public IObservable<FuMouse> MouseStream => _mouseHandler;
+        public IObservable<IReadOnlyDictionary<int, FuPointer>> PointersStream => _pointersHandler;
+        public IObservable<IReadOnlySet<FuKey>> KeysStream => _keysHandler;
+        public IObservable<bool> TouchActiveStream => _touchActiveHandler;
+        public IObservable<bool> IsActiveStream => _activityHandler;
 
         private readonly FocusHandler _focusHandler;
         private readonly EnabledHandler _enabledHandler;
@@ -29,11 +27,11 @@ namespace VL.Fu.Services
         private readonly MouseHandler _mouseHandler;
         private readonly KeysHandler _keysHandler;
         private readonly PointersHandler _pointersHandler;
+        private readonly ActivityHandler _activityHandler;
 
         private readonly IObservable<FuViewport> _viewport;
 
         private readonly Subject<INotification> _notifications = new();
-        private readonly CompositeDisposable _subscriptions = new();
 
         public NotificationsService(Configuration configuration, IViewportService viewportService)
         {
@@ -43,27 +41,36 @@ namespace VL.Fu.Services
             _enabledHandler = new EnabledHandler(configuration);
             _resetHandler = new ResetHandler(_enabledHandler, _focusHandler);
 
-            var enablledNotifications = _enabledHandler.Select(IsEnabled =>
-                IsEnabled ? _notifications : Observable.Empty<INotification>()
+            var enabledAndFocused = _enabledHandler.CombineLatest(
+                _focusHandler,
+                (enabled, focused) => enabled && focused
             );
 
-            _mouseHandler = new MouseHandler(_notifications, _viewport, _resetHandler);
-            _keysHandler = new KeysHandler(_notifications, _resetHandler);
+            var enabledNotifications = enabledAndFocused
+                .Select(enabledAndFocused =>
+                    enabledAndFocused ? _notifications : Observable.Empty<INotification>()
+                )
+                .Switch();
 
-            _touchActiveHandler = new TouchActiveHandler(_notifications, OnReset);
+            _mouseHandler = new MouseHandler(enabledNotifications, _viewport, _resetHandler);
+            _keysHandler = new KeysHandler(enabledNotifications, _resetHandler);
 
-            // TODO:
+            _touchActiveHandler = new TouchActiveHandler(enabledNotifications, OnReset);
+
             _pointersHandler = new PointersHandler(
-                _notifications,
+                enabledNotifications,
                 _mouseHandler,
                 _touchActiveHandler,
+                _viewport,
                 _resetHandler
             );
+
+            _activityHandler = new ActivityHandler(_mouseHandler, _keysHandler, _pointersHandler);
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _notifications.Dispose();
         }
 
         public void Notify(INotification notification)
