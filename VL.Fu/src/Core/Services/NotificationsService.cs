@@ -20,6 +20,7 @@ namespace VL.Fu.Core.Services
         public IObservable<bool> TouchActiveStream => _touchActiveHandler;
         public IObservable<Unit> OnTouchActive => _touchActiveHandler.OnTouchActive;
         public IObservable<bool> IsActiveStream => _activityHandler;
+        public IObservable<FuInputState> InputStateStream => _inputStateHandler;
 
         private readonly FocusHandler _focusHandler;
         private readonly EnabledHandler _enabledHandler;
@@ -29,6 +30,7 @@ namespace VL.Fu.Core.Services
         private readonly KeysHandler _keysHandler;
         private readonly PointersHandler _pointersHandler;
         private readonly ActivityHandler _activityHandler;
+        private readonly InputStateHandler _inputStateHandler;
 
         private readonly IObservable<FuViewport> _viewport;
 
@@ -73,6 +75,8 @@ namespace VL.Fu.Core.Services
             );
 
             _activityHandler = new ActivityHandler(_mouseHandler, _keysHandler, _pointersHandler);
+
+            _inputStateHandler = new InputStateHandler(this);
         }
 
         public void Dispose()
