@@ -39,6 +39,8 @@ namespace VL.Fu
         {
             BroadcastNotification(notification);
 
+            Console.WriteLine($"{notification.GetType().ToString()} {caller.GetHashCode()}");
+
             return Root?.Notify(notification, caller) ?? false;
         }
     }
