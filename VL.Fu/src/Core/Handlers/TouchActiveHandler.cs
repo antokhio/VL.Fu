@@ -9,6 +9,8 @@ namespace VL.Fu.Core.Handlers
     {
         private readonly IObservable<bool> _activeStream;
 
+        public IObservable<Unit> OnTouchActive { get; }
+
         public TouchActiveHandler(
             IObservable<INotification> notifications,
             IObservable<Unit> resetSignal,
@@ -22,6 +24,8 @@ namespace VL.Fu.Core.Handlers
             var onInactive = touchNotifications.Throttle(touchActivityTimeout).Select(_ => false);
 
             var onReset = resetSignal.Select(_ => false);
+
+            OnTouchActive = onActive.Select(_ => Unit.Default);
 
             _activeStream = Observable
                 .Merge(onActive, onInactive, onReset)

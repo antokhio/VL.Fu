@@ -15,11 +15,17 @@ namespace VL.Fu.Core.Handlers
         public MouseHandler(
             IObservable<INotification> notifications,
             IObservable<FuViewport> viewportStream,
-            IObservable<Unit> resetStream
+            TouchActiveHandler touchActiveHandler,
+            IObservable<Unit> onReset
         )
         {
-            var mouseNotifications = notifications
+            var activeNotifications = notifications
                 .OfType<MouseNotification>()
+                .WithLatestFrom(touchActiveHandler, (n, active) => (n, active))
+                .Where(t => !t.active)
+                .Select(t => t.n);
+
+            var mouseNotifications = activeNotifications
                 .CombineLatest(viewportStream, (notification, viewport) => (notification, viewport))
                 .Scan(
                     new FuMouse(),
@@ -95,7 +101,9 @@ namespace VL.Fu.Core.Handlers
                     }
                 );
 
-            var resetEvent = resetStream.Select(_ => new FuMouse());
+            var resetEvent = Observable
+                .Merge(onReset, touchActiveHandler.OnTouchActive)
+                .Select(_ => new FuMouse());
 
             _activeStream = Observable
                 .Merge(mouseNotifications, resetEvent)

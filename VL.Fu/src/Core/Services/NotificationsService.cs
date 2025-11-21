@@ -18,6 +18,7 @@ namespace VL.Fu.Core.Services
         public IObservable<IReadOnlyDictionary<int, FuPointer>> PointersStream => _pointersHandler;
         public IObservable<IReadOnlySet<FuKey>> KeysStream => _keysHandler;
         public IObservable<bool> TouchActiveStream => _touchActiveHandler;
+        public IObservable<Unit> OnTouchActive => _touchActiveHandler.OnTouchActive;
         public IObservable<bool> IsActiveStream => _activityHandler;
 
         private readonly FocusHandler _focusHandler;
@@ -52,10 +53,16 @@ namespace VL.Fu.Core.Services
                 )
                 .Switch();
 
-            _mouseHandler = new MouseHandler(enabledNotifications, _viewport, _resetHandler);
-            _keysHandler = new KeysHandler(enabledNotifications, _resetHandler);
-
             _touchActiveHandler = new TouchActiveHandler(enabledNotifications, OnReset);
+
+            _mouseHandler = new MouseHandler(
+                enabledNotifications,
+                _viewport,
+                _touchActiveHandler,
+                _resetHandler
+            );
+
+            _keysHandler = new KeysHandler(enabledNotifications, _resetHandler);
 
             _pointersHandler = new PointersHandler(
                 enabledNotifications,

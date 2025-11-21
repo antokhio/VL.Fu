@@ -38,9 +38,6 @@ namespace VL.Fu
         public bool Notify(INotification notification, CallerInfo caller)
         {
             BroadcastNotification(notification);
-
-            Console.WriteLine($"{notification.GetType().ToString()} {caller.GetHashCode()}");
-
             return Root?.Notify(notification, caller) ?? false;
         }
     }
