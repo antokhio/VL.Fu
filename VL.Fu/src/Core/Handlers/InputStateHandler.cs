@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.Collections.Immutable;
+using System.Reactive.Linq;
 using VL.Fu.Core.Input;
 
 namespace VL.Fu.Core.Handlers
@@ -11,11 +12,13 @@ namespace VL.Fu.Core.Handlers
         {
             _inputStateStream = Observable
                 .CombineLatest(
-                    notificationsService.PointersStream,
-                    notificationsService.KeysStream,
-                    notificationsService.MouseStream,
-                    notificationsService.EnabledStream,
-                    notificationsService.FocusedStream,
+                    notificationsService.PointersStream.StartWith(
+                        ImmutableDictionary<int, FuPointer>.Empty
+                    ),
+                    notificationsService.KeysStream.StartWith(ImmutableHashSet<FuKey>.Empty),
+                    notificationsService.MouseStream.StartWith(new FuMouse()),
+                    notificationsService.EnabledStream.StartWith(true),
+                    notificationsService.FocusedStream.StartWith(true),
                     (pointers, allKeys, mouse, enabled, focused) =>
                     {
                         var keys = allKeys.Where(k => !k.IsModifier()).ToHashSet();
