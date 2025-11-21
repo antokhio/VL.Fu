@@ -9,18 +9,24 @@ namespace VL.Fu.Core.Input
         public IReadOnlySet<FuKey> Keys { get; init; } = ImmutableHashSet<FuKey>.Empty;
         public IReadOnlySet<FuKey> Modifiers { get; init; } = ImmutableHashSet<FuKey>.Empty;
         public FuMouse Mouse { get; init; } = default;
+        public bool IsEnabled { get; init; }
+        public bool IsFocused { get; init; }
 
         public FuInputState(
             IReadOnlyDictionary<int, FuPointer> pointers,
             IReadOnlySet<FuKey> keys,
             IReadOnlySet<FuKey> modifiers,
-            FuMouse mouse
+            FuMouse mouse,
+            bool isEnabled,
+            bool isFocused
         )
         {
             Pointers = pointers;
             Keys = keys;
             Modifiers = modifiers;
             Mouse = mouse;
+            IsEnabled = isEnabled;
+            IsFocused = isFocused;
         }
     }
 }

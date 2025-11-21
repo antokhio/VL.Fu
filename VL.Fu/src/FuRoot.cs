@@ -4,7 +4,7 @@ using VL.Core.Import;
 using VL.Fu.Core;
 using VL.Fu.Core.Common;
 using VL.Fu.Core.Context;
-using VL.Fu.Services;
+using VL.Fu.Core.Services;
 using VL.Lib.IO.Notifications;
 using VL.Skia;
 
@@ -20,10 +20,10 @@ namespace VL.Fu
             : base(nodeContext)
         {
             var viewPortService = new ViewportService(this);
-            var inputService = new InputService(this, viewPortService);
+            var notificationsSerivce = new NotificationsService(this, viewPortService);
 
-            RegisterService(viewPortService);
-            RegisterService(inputService);
+            RegisterService<IViewportService>(viewPortService);
+            RegisterService<INotificationsService>(notificationsSerivce);
         }
 
         [Fragment(Order = PinOrder.Input)]

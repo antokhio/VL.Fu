@@ -6,7 +6,7 @@ using VL.Lib.Reactive;
 namespace VL.Fu.Core.Property
 {
     /// <summary>
-    /// An abstract base class that implements IChannel<T> by wrapping an internal channel.
+    /// An abstract base class that implements IChannel T by wrapping an internal channel.
     /// This class handles the boilerplate of delegating all interface members to the internal channel.
     /// </summary>
     /// <typeparam name="T">The type of the value to hold.</typeparam>

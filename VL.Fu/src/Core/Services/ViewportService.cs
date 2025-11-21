@@ -1,18 +1,18 @@
-﻿using Stride.Core.Mathematics;
-using System.Reactive.Disposables;
+﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using VL.Fu.Core;
+using Stride.Core.Mathematics;
 using VL.Fu.Core.Common;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.Notfications;
 using VL.Lib.IO.Notifications;
 
-namespace VL.Fu.Services
+namespace VL.Fu.Core.Services
 {
-    public class ViewportService : InstancedId, IContextedService, INotifiable
+    public class ViewportService : InstancedId, IViewportService
     {
         public FuViewport Viewport { get; private set; }
+        public IObservable<FuViewport> ViewportStream { get; }
 
         private readonly Subject<INotification> _notifications = new();
         private readonly CompositeDisposable _subscriptions = new();
@@ -33,7 +33,7 @@ namespace VL.Fu.Services
             var viewportScalingStream = viewportNotificationStream.Select(n => n.Scaling);
 
             // Combine all configuration streams
-            var streams = Observable
+            ViewportStream = Observable
                 .CombineLatest(
                     // Factors
                     configuration.PixelFactor.StartWith(configuration.PixelFactor.Value),
@@ -61,7 +61,7 @@ namespace VL.Fu.Services
 
             // Produce state update
             _subscriptions.Add(
-                streams.Subscribe(state =>
+                ViewportStream.Subscribe(state =>
                 {
                     Viewport = state;
                 })
