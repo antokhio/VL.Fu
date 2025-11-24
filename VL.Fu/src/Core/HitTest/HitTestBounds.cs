@@ -8,11 +8,6 @@ namespace VL.Fu.Core.HitTest
     /// </summary>
     public record HitTestBounds : IHitTest
     {
-        /// <summary>
-        /// Shared singleton instance to avoid allocations.
-        /// </summary>
-        public static readonly HitTestBounds Instance = new HitTestBounds();
-
         public bool HitTest(IFuNode node, FuPointer pointer)
         {
             var bounds = node.Bounds;

@@ -5,13 +5,6 @@
     /// </summary>
     public class AreaTestBounds : IAreaTest
     {
-        /// <summary>
-        /// Shared singleton instance to avoid allocations.
-        /// </summary>
-        public static readonly AreaTestBounds Instance = new AreaTestBounds();
-
-        private AreaTestBounds() { }
-
         public bool IsContainedIn(IFuNode node, ISelectionShape shape)
         {
             if (node.Bounds is null)
