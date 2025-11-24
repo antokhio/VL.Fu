@@ -2,5 +2,5 @@
 
 namespace VL.Fu.Core
 {
-    public interface IFuNode : ITreeNode, ILayer { }
+    public interface IFuNode : ITreeNode, ILayer, IInteractable { }
 }

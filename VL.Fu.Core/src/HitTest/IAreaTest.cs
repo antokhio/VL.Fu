@@ -5,6 +5,9 @@
     /// </summary>
     public interface IAreaTest
     {
+        /// <summary>
+        /// Executes the area test using the configured strategy.
+        /// </summary>
         bool IsContainedIn(IFuNode node, ISelectionShape shape);
     }
 }
