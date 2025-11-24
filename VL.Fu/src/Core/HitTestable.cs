@@ -30,8 +30,14 @@ namespace VL.Fu.Core
             [Pin(Visibility = Model.PinVisibility.Optional)] IAreaTest? areaTest
         ) => _areaTest.TrySetValue(areaTest ?? AreaTestBounds.Instance);
 
-        public abstract bool HitTest(FuPointer pointer);
+        public bool HitTest(FuPointer pointer)
+        {
+            return _hitTest.Value.HitTest((IFuNode)this, pointer);
+        }
 
-        public abstract bool IsContainedIn(ISelectionShape shape);
+        public bool IsContainedIn(ISelectionShape shape)
+        {
+            return _areaTest.Value.IsContainedIn((IFuNode)this, shape);
+        }
     }
 }
