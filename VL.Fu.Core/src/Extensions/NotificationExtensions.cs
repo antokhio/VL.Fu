@@ -5,6 +5,10 @@ using VL.Skia;
 
 namespace VL.Fu.Core.Extensions
 {
+    /// <summary>
+    /// This extensions are meant to work with pointers, since pointers are in ClientArea coords.
+    /// ClienArea includes window toolbar and borders, making it size different then a rendering.
+    /// </summary>
     public static class NotificationExtensions
     {
         public static FuPointer ToFuPointer(
@@ -44,10 +48,7 @@ namespace VL.Fu.Core.Extensions
                 (notification.Position.Y / notification.ClientArea.Y) * 2f - 1f
             );
 
-            //if (aspect > 1f)
             norm.X *= aspect;
-            //else
-            //  norm.Y /= aspect;
 
             return norm;
         }
