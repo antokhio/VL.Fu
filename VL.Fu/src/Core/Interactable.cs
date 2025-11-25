@@ -1,6 +1,7 @@
-﻿using VL.Core;
+﻿using System.Collections.Immutable;
+using VL.Core;
 using VL.Core.Import;
-using VL.Fu.Core.Behaviours;
+using VL.Fu.Core.Interaction;
 using VL.Fu.Core.Property;
 using VL.Lib.Collections;
 using VL.Lib.IO.Notifications;
@@ -15,7 +16,7 @@ namespace VL.Fu.Core
             Spread<IFuBehaviour>.Empty
         );
 
-        public IReadOnlyList<IFuBehaviour> Behaviours => _behaviours.Value;
+        public IReadOnlyList<IFuBehaviour> Behaviours { get; private set; }
 
         [Fragment]
         protected Interactable(NodeContext nodeContext)
@@ -23,7 +24,15 @@ namespace VL.Fu.Core
 
         [Fragment]
         public void SetBehaviours(Spread<IFuBehaviour> behaviours) =>
-            _behaviours.TrySetValue(behaviours);
+            _behaviours.TrySetValue(
+                behaviours,
+                (curr, next) =>
+                {
+                    Behaviours = next.Where(b => b != null)
+                        .OrderByDescending(b => b.Priority)
+                        .ToImmutableList();
+                }
+            );
 
         // Implements vvvv IBehaviour for convinence
         public virtual bool Notify(INotification notification, CallerInfo caller)

@@ -1,31 +1,30 @@
-﻿using VL.Fu.Core.Input;
-using VL.Fu.Core.Interaction;
-
-namespace VL.Fu.Core.Behaviours
+﻿namespace VL.Fu.Core.Interaction
 {
     public interface IFuBehaviour : IContextConsumer
     {
-        /// <summary>
-        /// The priority of the behavior, used for sorting. Higher numbers are processed first.
-        /// </summary>
+        IReadOnlyList<IFuGesture> Gestures { get; }
         int Priority { get; }
-
-        /// <summary>
-        /// Indicates whether the behavior is transient. Transient behaviors (like hover) do not capture
-        /// pointers but are notified of pointer movements over their host.
-        /// </summary>
         bool IsTransient { get; }
-
-        /// <summary>
-        /// Gets whether the behavior is currently enabled and should process input.
-        /// </summary>
         bool Enabled { get; }
 
         /// <summary>
-        /// A collection of gestures that can activate this behavior.
+        /// Called when one of the behavior's gestures transitions to a Matched state.
         /// </summary>
-        IReadOnlyList<IFuGesture> Gestures { get; }
+        void OnActivate(IFuNode host, FuGestureEvent ev);
 
-        bool TryActivate(IFuNode host, FuInputState inputState, out object? actovator);
+        /// <summary>
+        /// Called on every frame where the driving gesture continues to be valid/active.
+        /// </summary>
+        void OnAdvance(IFuNode host, FuGestureEvent ev);
+
+        /// <summary>
+        /// Called when the gesture ends successfully or the interaction completes.
+        /// </summary>
+        void OnDeactivate(IFuNode host, FuGestureEvent ev);
+
+        /// <summary>
+        /// Called when the interaction is forcefully cancelled.
+        /// </summary>
+        void OnCancel(IFuNode host);
     }
 }

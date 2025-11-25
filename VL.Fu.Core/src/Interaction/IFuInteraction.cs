@@ -1,6 +1,4 @@
-﻿using VL.Fu.Core.Behaviours;
-
-namespace VL.Fu.Core.Interaction
+﻿namespace VL.Fu.Core.Interaction
 {
     public readonly record struct IFuInteraction
     {
