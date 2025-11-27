@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using VL.Fu.Core.Context;
 using VL.Fu.Core.Input;
+using VL.Fu.Core.Interaction;
 using VL.Fu.Extensions;
 using VL.Lib.Collections;
 using VL.Lib.IO.Notifications;
@@ -29,43 +30,19 @@ namespace VL.Fu.Core.Services
 
         public void OnUpdateInput(FuInputState inputState)
         {
-            if (!inputState.IsEnabled)
+            if (!inputState.IsEnabled || !inputState.IsFocused)
             {
                 CancelAll();
                 return;
             }
 
-            // 1. Cleanup Finished Sessions
+            // 1. Advance Active Sessions
             for (int i = _activeSessions.Count - 1; i >= 0; i--)
             {
                 var session = _activeSessions[i];
-                if (session.IsFinished)
-                {
-                    _activeSessions.RemoveAt(i);
-                    foreach (var pid in session.CapturedPointerIds)
-                        _globalCapturedPointers.Remove(pid);
+                var state = session.Gesture.Advance(session.Host, inputState);
 
-                    session.Gesture.Reset();
-                }
-            }
-
-            // 2. Advance Active Sessions
-            for (int i = _activeSessions.Count - 1; i >= 0; i--)
-            {
-                var session = _activeSessions[i];
-
-                if (session.Gesture.Advance(session.Host, inputState, out var evt))
-                {
-                    if (evt.HasValue)
-                        session.Behaviour.OnAdvance(session.Host, evt.Value);
-                }
-                else
-                {
-                    if (evt.HasValue)
-                        session.Behaviour.OnDeactivate(session.Host, evt.Value);
-                    else
-                        session.Behaviour.OnCancel(session.Host);
-                }
+                ProcessGestureResult(session, state, i);
             }
 
             _globalCapturedPointers.Clear();
@@ -73,12 +50,99 @@ namespace VL.Fu.Core.Services
             foreach (var pid in session.CapturedPointerIds)
                 _globalCapturedPointers.Add(pid);
 
-            // 3. Discover New Interactions
+            // 2. Discover New Interactions
             if (_provider.Root is IFuNode rootNode)
             {
                 ProcessFreePointers(rootNode, inputState);
-                ProcessKeys(rootNode, inputState);
             }
+        }
+
+        private void ProcessGestureResult(
+            InteractionSession session,
+            FuGestureState state,
+            int sessionIndex = -1
+        )
+        {
+            switch (state.Phase)
+            {
+                case GesturePhase.Possible:
+                case GesturePhase.Changed:
+                    if (state.Event.HasValue)
+                        session.Behaviour.OnUpdate(session.Host, state.Event.Value);
+                    break;
+
+                case GesturePhase.Began:
+                    // Gesture has committed (e.g. Drag threshold crossed).
+                    if (state.Event.HasValue)
+                        session.Behaviour.OnUpdate(session.Host, state.Event.Value);
+
+                    // Cancel other sessions sharing the same pointer (e.g. Cancel Click)
+                    ResolveConflicts(session);
+                    break;
+
+                case GesturePhase.Matched:
+                    if (state.Event.HasValue)
+                        session.Behaviour.OnStop(session.Host, state.Event.Value, isSuccess: true);
+
+                    CleanupSession(session, sessionIndex);
+                    break;
+
+                case GesturePhase.Failed:
+                case GesturePhase.Cancelled:
+                    if (state.Event.HasValue)
+                        session.Behaviour.OnStop(session.Host, state.Event.Value, isSuccess: false);
+                    else
+                        session.Behaviour.OnCancel(session.Host);
+
+                    CleanupSession(session, sessionIndex);
+                    break;
+            }
+        }
+
+        private void ResolveConflicts(InteractionSession winner)
+        {
+            if (winner.CapturedPointerIds.Count == 0)
+                return;
+
+            for (int i = _activeSessions.Count - 1; i >= 0; i--)
+            {
+                var other = _activeSessions[i];
+                if (other == winner)
+                    continue;
+
+                bool conflict = false;
+                foreach (var pid in winner.CapturedPointerIds)
+                {
+                    if (other.IsCapturing(pid))
+                    {
+                        conflict = true;
+                        break;
+                    }
+                }
+
+                if (conflict)
+                {
+                    other.Behaviour.OnCancel(other.Host);
+                    other.Gesture.Reset();
+                    RemoveCapture(other);
+                    _activeSessions.RemoveAt(i);
+                }
+            }
+        }
+
+        private void CleanupSession(InteractionSession session, int index)
+        {
+            session.Gesture.Reset();
+            RemoveCapture(session);
+
+            if (index >= 0 && index < _activeSessions.Count)
+                _activeSessions.RemoveAt(index);
+        }
+
+        private void RemoveCapture(InteractionSession session)
+        {
+            foreach (var pid in session.CapturedPointerIds)
+                _globalCapturedPointers.Remove(pid);
         }
 
         private void ProcessFreePointers(IFuNode root, FuInputState inputState)
@@ -100,79 +164,104 @@ namespace VL.Fu.Core.Services
                     {
                         if (node is IFuNode fuNode)
                         {
-                            if (
-                                TryStartInteraction(fuNode, pointer, inputState, out var newSession)
-                            )
-                            {
-                                _activeSessions.Add(newSession);
+                            bool nodeCapturedPointer = false;
 
-                                if (!newSession.Behaviour.IsTransient)
+                            // FIX: Track captured pointers locally for this node scope.
+                            // This ensures we don't block subsequent behaviors (like Drag)
+                            // just because a previous behavior (like Click) started on the SAME node.
+                            var pointersCapturedByThisNode = new List<int>();
+
+                            foreach (var behaviour in fuNode.Behaviours)
+                            {
+                                if (!behaviour.Enabled)
+                                    continue;
+
+                                foreach (var gesture in behaviour.Gestures)
                                 {
-                                    newSession.CapturePointer(pointer.Id);
-                                    _globalCapturedPointers.Add(pointer.Id);
-                                    break;
+                                    // AttemptStart checks _globalCapturedPointers.
+                                    // Since we haven't committed to global yet, multiple behaviors can start here.
+                                    if (
+                                        AttemptStart(
+                                            fuNode,
+                                            behaviour,
+                                            gesture,
+                                            pointer,
+                                            inputState
+                                        )
+                                    )
+                                    {
+                                        var newSession = _activeSessions.Last();
+
+                                        if (!behaviour.IsTransient)
+                                        {
+                                            newSession.CapturePointer(pointer.Id);
+                                            pointersCapturedByThisNode.Add(pointer.Id);
+                                            nodeCapturedPointer = true;
+
+                                            // Do NOT break here. Allow Click & Drag to coexist initially.
+                                        }
+                                    }
                                 }
                             }
+
+                            // Commit to global to prevent bubbling parents from capturing
+                            foreach (var pid in pointersCapturedByThisNode)
+                                _globalCapturedPointers.Add(pid);
+
+                            if (nodeCapturedPointer)
+                                break;
                         }
                     }
                 }
             }
         }
 
-        private void ProcessKeys(IFuNode root, FuInputState inputState)
-        {
-            if (inputState.Keys.Count == 0)
-                return;
-
-            if (TryStartInteraction(root, null, inputState, out var newSession))
-            {
-                _activeSessions.Add(newSession);
-            }
-        }
-
-        private bool TryStartInteraction(
+        private bool AttemptStart(
             IFuNode node,
-            object? activator,
-            FuInputState input,
-            out InteractionSession session
+            IFuBehaviour behaviour,
+            IFuGesture gesture,
+            object activator,
+            FuInputState input
         )
         {
-            session = null;
+            var state = gesture.Match(node, input);
 
-            foreach (var behaviour in node.Behaviours)
+            if (state.IsActive)
             {
-                if (!behaviour.Enabled)
-                    continue;
+                // Ensure the gesture matches the specific pointer we are processing
+                if (
+                    activator != null
+                    && state.Event.HasValue
+                    && !object.Equals(state.Event.Value.Activator, activator)
+                )
+                    return false;
 
-                foreach (var gesture in behaviour.Gestures)
+                // Ensure the pointer isn't already captured by a DIFFERENT node (active session)
+                if (
+                    state.Event.HasValue
+                    && state.Event.Value.Activator is FuPointer p
+                    && _globalCapturedPointers.Contains(p.Id)
+                )
+                    return false;
+
+                var session = new InteractionSession(behaviour, gesture, node);
+                _activeSessions.Add(session);
+
+                if (state.Event.HasValue)
+                    behaviour.OnStart(node, state.Event.Value);
+
+                if (state.Phase == GesturePhase.Began)
                 {
-                    if (gesture.Match(node, input, out var evt))
-                    {
-                        // FIX: Use object.Equals for value type structural equality
-                        if (
-                            activator != null
-                            && evt.HasValue
-                            && !object.Equals(evt.Value.Activator, activator)
-                        )
-                            continue;
-
-                        if (
-                            evt.HasValue
-                            && evt.Value.Activator is FuPointer p
-                            && _globalCapturedPointers.Contains(p.Id)
-                        )
-                            continue;
-
-                        session = new InteractionSession(behaviour, gesture, node);
-
-                        if (evt.HasValue)
-                            behaviour.OnActivate(node, evt.Value);
-
-                        return true;
-                    }
+                    ResolveConflicts(session);
                 }
-            }
 
+                if (state.IsTerminal)
+                {
+                    ProcessGestureResult(session, state, _activeSessions.Count - 1);
+                }
+
+                return true;
+            }
             return false;
         }
 

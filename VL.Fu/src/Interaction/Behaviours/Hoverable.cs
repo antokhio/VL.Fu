@@ -13,7 +13,9 @@ namespace VL.Fu.Interaction.Behaviours
     public class Hoverable : BehaviourBase, IFuBehaviour
     {
         public IReadOnlyList<IFuGesture> Gestures { get; }
-        public bool IsTransient => true;
+
+        // Hover is transient (doesn't capture input, allows bubbling)
+        public override bool IsTransient => true;
 
         [Fragment]
         public bool IsHovered => _isHoveredChannel.Value;
@@ -33,15 +35,25 @@ namespace VL.Fu.Interaction.Behaviours
         public void SetIsHoveredChannel(IChannel<bool>? isHoveredChannel) =>
             _isHoveredChannel.SetChannel(isHoveredChannel);
 
-        public void OnActivate(IFuNode host, FuGestureEvent ev) =>
+        public override void OnStart(IFuNode host, FuGestureEvent ev)
+        {
             _isHoveredChannel.EnsureValue(true);
+        }
 
-        public void OnAdvance(IFuNode host, FuGestureEvent ev) =>
+        public override void OnUpdate(IFuNode host, FuGestureEvent ev)
+        {
             _isHoveredChannel.EnsureValue(true);
+        }
 
-        public void OnDeactivate(IFuNode host, FuGestureEvent ev) =>
+        public override void OnStop(IFuNode host, FuGestureEvent ev, bool isSuccess)
+        {
+            // Whether it failed (moved out) or matched (rare for hover), reset state
             _isHoveredChannel.EnsureValue(false);
+        }
 
-        public void OnCancel(IFuNode host) => _isHoveredChannel.EnsureValue(false);
+        public override void OnCancel(IFuNode host)
+        {
+            _isHoveredChannel.EnsureValue(false);
+        }
     }
 }

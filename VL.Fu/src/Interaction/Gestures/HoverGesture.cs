@@ -1,26 +1,20 @@
 ﻿using VL.Core;
 using VL.Fu.Core;
-using VL.Fu.Core.Common;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.Interaction;
 using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Interaction.Gestures
 {
-    public class HoverGesture : ContextConsumer, IFuGesture
+    public class HoverGesture : GestureBase
     {
         public HoverGesture(NodeContext nodeContext)
             : base(nodeContext) { }
 
-        public GestureState State { get; private set; } = GestureState.Ready;
-
-        public bool Match(
-            IFuNode host,
-            FuInputState inputState,
-            out FuGestureEvent? gestureMatchedEvent
-        )
+        public override FuGestureState Match(IFuNode host, FuInputState inputState)
         {
-            gestureMatchedEvent = null;
+            if (Phase != GesturePhase.Idle)
+                return FuGestureState.Idle;
 
             foreach (var pointer in inputState.Pointers.Values)
             {
@@ -29,23 +23,19 @@ namespace VL.Fu.Interaction.Gestures
 
                 if (host.HitTest(pointer))
                 {
-                    State = GestureState.Possible;
-                    gestureMatchedEvent = new FuGestureEvent(this, pointer, inputState);
-                    return true;
+                    // Hover is immediately active.
+                    // Using 'Began' here is fine, but since Hover doesn't capture pointers,
+                    // it won't trigger conflict resolution against Click/Drag.
+                    Phase = GesturePhase.Began;
+                    return FuGestureState.Began(new FuGestureEvent(this, pointer, inputState));
                 }
             }
 
-            return false;
+            return FuGestureState.Idle;
         }
 
-        public bool Advance(
-            IFuNode host,
-            FuInputState inputState,
-            out FuGestureEvent? gestureAdvancedEvent
-        )
+        public override FuGestureState Advance(IFuNode host, FuInputState inputState)
         {
-            gestureAdvancedEvent = null;
-
             bool isOver = false;
             object? activator = null;
 
@@ -61,15 +51,12 @@ namespace VL.Fu.Interaction.Gestures
 
             if (isOver)
             {
-                State = GestureState.Possible;
-                gestureAdvancedEvent = new FuGestureEvent(this, activator, inputState);
-                return true;
+                Phase = GesturePhase.Changed;
+                return FuGestureState.Changed(new FuGestureEvent(this, activator!, inputState));
             }
 
-            State = GestureState.Failed;
-            return false;
+            Phase = GesturePhase.Failed;
+            return FuGestureState.Fail();
         }
-
-        public void Reset() => State = GestureState.Ready;
     }
 }

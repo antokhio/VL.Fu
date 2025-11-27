@@ -13,13 +13,12 @@ namespace VL.Fu.Interaction.Behaviours
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public class Clickable : BehaviourBase, IFuBehaviour
     {
-        public IReadOnlyList<IFuGesture> Gestures { get; }
         public bool IsTransient => false;
 
-        // Stores the event channel. Initialized with Default Unit.
         private readonly ChannelProperty<Unit> _clickedChannel = new(Unit.Default);
+        private readonly ChannelProperty<bool> _isPressedChannel = new(false);
         private readonly ClickGesture _gesture;
-        private int _previousRevision;
+        private int _previousRevision = 0;
 
         [Fragment]
         public Clickable(NodeContext nodeContext)
@@ -28,37 +27,45 @@ namespace VL.Fu.Interaction.Behaviours
             _gesture = new ClickGesture(nodeContext);
             Gestures = new[] { _gesture };
 
+            // Initialize revision to match starting state to prevent start-up bang
             _previousRevision = _clickedChannel.Revision;
         }
 
         [Fragment(Order = PinOrder.Action)]
-        public void SetClickedChannel(IChannel<Unit>? channel) =>
-            _clickedChannel.SetChannel(channel);
-
-        // Called on Touch Down
-        public void OnActivate(IFuNode host, FuGestureEvent ev)
+        public void SetClickedChannel(IChannel<Unit>? channel)
         {
-            // Optional: You could set an "IsPressed" state here if needed visually
+            _clickedChannel.SetChannel(channel);
+            _previousRevision = _clickedChannel.Revision;
         }
 
-        public void OnAdvance(IFuNode host, FuGestureEvent ev) { }
+        [Fragment(Order = PinOrder.Action)]
+        public void SetIsPressedChannel(IChannel<bool>? channel) =>
+            _isPressedChannel.SetChannel(channel);
 
-        // Called on Touch Up (End of interaction)
-        public void OnDeactivate(IFuNode host, FuGestureEvent ev)
+        public override void OnStart(IFuNode host, FuGestureEvent ev) =>
+            _isPressedChannel.EnsureValue(true);
+
+        public override void OnUpdate(IFuNode host, FuGestureEvent ev) =>
+            _isPressedChannel.EnsureValue(true);
+
+        public override void OnStop(IFuNode host, FuGestureEvent ev, bool isSuccess)
         {
-            // Only fire the click if the gesture successfully Matched (Released inside bounds)
-            if (ev.Gesture.State == GestureState.Matched)
+            _isPressedChannel.EnsureValue(false); // Always release press
+
+            if (isSuccess)
             {
+                // No more checking ev.State! The Service guaranteed this is a Success.
                 _clickedChannel.OnNext(Unit.Default);
             }
         }
 
-        public void OnCancel(IFuNode host) { }
+        public override void OnCancel(IFuNode host) => _isPressedChannel.EnsureValue(false);
 
-        [Fragment(Order = PinOrder.Output)]
-        public void Update(out bool isClick)
+        [Fragment]
+        public void Update(out bool isClick, out bool isPressed)
         {
-            // Check if the channel was written to since the last frame
+            isPressed = _isPressedChannel.Value;
+
             var currentRevision = _clickedChannel.Revision;
             isClick = _previousRevision != currentRevision;
             _previousRevision = currentRevision;

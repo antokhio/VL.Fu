@@ -1,6 +1,5 @@
 ﻿using VL.Core;
 using VL.Fu.Core;
-using VL.Fu.Core.Common;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.Interaction;
 using VL.Lib.IO.Notifications;
@@ -9,73 +8,66 @@ namespace VL.Fu.Interaction.Gestures
 {
     public class ClickGesture : GestureBase
     {
-        private int _trackedPointerId = -1;
+        private int? _trackedPointerId = null;
 
         public ClickGesture(NodeContext nodeContext)
             : base(nodeContext) { }
 
-        public override bool Match(
-            IFuNode host,
-            FuInputState inputState,
-            out FuGestureEvent? gestureMatchedEvent
-        )
+        public override FuGestureState Match(IFuNode host, FuInputState inputState)
         {
-            gestureMatchedEvent = null;
+            if (Phase != GesturePhase.Idle)
+                return FuGestureState.Idle;
 
             foreach (var pointer in inputState.Pointers.Values)
             {
                 if (pointer.State == TouchNotificationKind.TouchDown && host.HitTest(pointer))
                 {
                     _trackedPointerId = pointer.Id;
-                    State = GestureState.Possible;
-                    gestureMatchedEvent = new FuGestureEvent(this, pointer, inputState);
-                    return true;
+
+                    // Start tracking in Possible state
+                    Phase = GesturePhase.Possible;
+                    return FuGestureState.Possible(new FuGestureEvent(this, pointer, inputState));
                 }
             }
-            return false;
+            return FuGestureState.Idle;
         }
 
-        public override bool Advance(
-            IFuNode host,
-            FuInputState inputState,
-            out FuGestureEvent? gestureAdvancedEvent
-        )
+        public override FuGestureState Advance(IFuNode host, FuInputState inputState)
         {
-            gestureAdvancedEvent = null;
-
             if (
-                _trackedPointerId == -1
-                || !inputState.Pointers.TryGetValue(_trackedPointerId, out var pointer)
+                _trackedPointerId == null
+                || !inputState.Pointers.TryGetValue(_trackedPointerId.Value, out var pointer)
             )
             {
-                State = GestureState.Cancelled;
-                return false;
+                Phase = GesturePhase.Cancelled;
+                return FuGestureState.Cancel();
             }
+
+            var evt = new FuGestureEvent(this, pointer, inputState);
 
             if (pointer.State == TouchNotificationKind.TouchUp)
             {
-                if (host.HitTest(pointer))
+                if (inputState.IsFocused && host.HitTest(pointer))
                 {
-                    State = GestureState.Matched; // Click confirmed!
-                    gestureAdvancedEvent = new FuGestureEvent(this, pointer, inputState);
-                    return false; // Interaction finished
+                    Phase = GesturePhase.Matched;
+                    return FuGestureState.Matched(evt);
                 }
                 else
                 {
-                    State = GestureState.Failed; // Released outside
-                    return false;
+                    Phase = GesturePhase.Failed;
+                    return FuGestureState.Fail(evt);
                 }
             }
 
-            State = GestureState.Possible; // Still held down
-            gestureAdvancedEvent = new FuGestureEvent(this, pointer, inputState);
-            return true;
+            // Continue tracking (Possible)
+            Phase = GesturePhase.Possible;
+            return FuGestureState.Possible(evt);
         }
 
         public override void Reset()
         {
             base.Reset();
-            _trackedPointerId = -1;
+            _trackedPointerId = null;
         }
     }
 }

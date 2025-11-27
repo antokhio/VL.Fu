@@ -29,7 +29,12 @@ namespace VL.Fu.Core.Property
         /// When set, it disconnects from any previous upstream channel. If set to null,
         /// it operates as a standalone channel.
         /// </summary>
-        public void SetChannel(IChannel<T>? channel = null)
+        /// <param name="channel">The new upstream channel to connect to.</param>
+        /// <param name="onChannelSet">An optional callback executed immediately when a new non-null channel is set, before subscriptions are active. Useful for synchronizing state (e.g. Revisions).</param>
+        public void SetChannel(
+            IChannel<T>? channel = null,
+            Action<IChannel<T>>? onChannelSet = null
+        )
         {
             if (ReferenceEquals(_currentUpstreamChannel, channel))
                 return;
@@ -43,7 +48,6 @@ namespace VL.Fu.Core.Property
             {
                 var upstreamToInternal = _currentUpstreamChannel.Subscribe(newValue =>
                 {
-                    // If a sync is already happening, ignore this notification to prevent loops.
                     if (_isSyncing)
                         return;
 
@@ -60,7 +64,6 @@ namespace VL.Fu.Core.Property
 
                 var internalToUpstream = _internalChannel.Subscribe(newValue =>
                 {
-                    // If a sync is already happening, ignore this notification to prevent loops.
                     if (_isSyncing)
                         return;
 
@@ -75,10 +78,22 @@ namespace VL.Fu.Core.Property
                     }
                 });
 
-                // Set the initial value from the upstream without causing a loop
-                _isSyncing = true;
-                _internalChannel.OnNext(_currentUpstreamChannel.Value);
-                _isSyncing = false;
+                // Sync initial value ONLY if they differ
+                // This prevents 'Unit' channels (events) from firing a false positive on connection
+                if (
+                    !EqualityComparer<T>.Default.Equals(
+                        _internalChannel.Value,
+                        _currentUpstreamChannel.Value
+                    )
+                )
+                {
+                    _isSyncing = true;
+                    _internalChannel.OnNext(_currentUpstreamChannel.Value);
+                    _isSyncing = false;
+                }
+
+                // Execute callback (e.g. to sync external state trackers)
+                onChannelSet?.Invoke(_currentUpstreamChannel);
 
                 _subscriptions = new CompositeDisposable(upstreamToInternal, internalToUpstream);
             }

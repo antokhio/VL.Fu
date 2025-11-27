@@ -16,10 +16,11 @@ namespace VL.Fu.Core.Services
         private readonly HashSet<int> _capturedPointerIds = new();
         public IReadOnlySet<int> CapturedPointerIds => _capturedPointerIds;
 
+        // Updated to use the new GesturePhase enum from the standardized pipeline
         public bool IsFinished =>
-            Gesture.State == Common.GestureState.Matched
-            || Gesture.State == Common.GestureState.Failed
-            || Gesture.State == Common.GestureState.Cancelled;
+            Gesture.Phase == GesturePhase.Matched
+            || Gesture.Phase == GesturePhase.Failed
+            || Gesture.Phase == GesturePhase.Cancelled;
 
         public InteractionSession(IFuBehaviour behaviour, IFuGesture gesture, IFuNode host)
         {

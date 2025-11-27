@@ -1,29 +1,18 @@
-﻿using VL.Fu.Core.Common;
-using VL.Fu.Core.Input;
+﻿using VL.Fu.Core.Input;
 
 namespace VL.Fu.Core.Interaction
 {
     public interface IFuGesture : IContextConsumer
     {
-        GestureState State { get; }
+        // The last reported phase (internal state)
+        GesturePhase Phase { get; }
 
-        /// <summary>
-        /// Evaluates the input state against a specific host node to determine if the gesture should start.
-        /// </summary>
-        public bool Match(
-            IFuNode host,
-            FuInputState inputState,
-            out FuGestureEvent? gestureMatchedEvent
-        );
+        // Detection Entry Point
+        FuGestureState Match(IFuNode host, FuInputState inputState);
 
-        /// <summary>
-        /// Updates the state of a running gesture based on new input and the host context.
-        /// </summary>
-        public bool Advance(
-            IFuNode host,
-            FuInputState inputState,
-            out FuGestureEvent? gestureAdvancedEvent
-        );
-        public void Reset();
+        // Update Step
+        FuGestureState Advance(IFuNode host, FuInputState inputState);
+
+        void Reset();
     }
 }
