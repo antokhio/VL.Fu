@@ -5,7 +5,7 @@
     /// Higher numbers have higher priority and are processed first. This allows
     /// for clear arbitration when multiple behaviors could respond to the same input.
     /// </summary>
-    public static class BehaviourPriority
+    public static class GesturePriority
     {
         public const int Highest = 1000;
         public const int Drag = 800;

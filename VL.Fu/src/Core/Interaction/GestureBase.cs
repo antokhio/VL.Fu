@@ -1,22 +1,29 @@
-﻿using VL.Core;
-using VL.Fu.Core.Input;
+﻿using VL.Fu.Core.Input;
 
 namespace VL.Fu.Core.Interaction
 {
-    public abstract class GestureBase : ContextConsumer, IFuGesture
+    public abstract class GestureBase : InstancedId, IFuGesture
     {
-        public GesturePhase Phase { get; protected set; } = GesturePhase.Idle;
+        public IFuBehaviour Behaviour { get; }
+        public IFuNode? Host { get; set; }
 
-        protected GestureBase(NodeContext nodeContext)
-            : base(nodeContext) { }
+        public GestureStatus Status { get; protected set; } = GestureStatus.Idle;
+        public virtual int Priority { get; protected set; } = 0;
 
-        public abstract FuGestureState Match(IFuNode host, FuInputState inputState);
+        protected readonly List<FuPointer> _activators = new();
+        public IReadOnlyList<FuPointer> Activators => _activators;
 
-        public abstract FuGestureState Advance(IFuNode host, FuInputState inputState);
+        protected GestureBase(IFuBehaviour behaviour)
+        {
+            Behaviour = behaviour;
+        }
+
+        public abstract void Evaluate(FuInputState inputState, IEnumerable<FuPointer> candidates);
 
         public virtual void Reset()
         {
-            Phase = GesturePhase.Idle;
+            Status = GestureStatus.Idle;
+            _activators.Clear();
         }
     }
 }

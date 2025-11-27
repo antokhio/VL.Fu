@@ -8,13 +8,14 @@ namespace VL.Fu.Core.Interaction
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public abstract class BehaviourBase : ContextConsumer, IFuBehaviour
     {
-        public IReadOnlyList<IFuGesture> Gestures { get; protected set; }
+        public IReadOnlyList<IFuGesture> Gestures { get; protected set; } =
+            Array.Empty<IFuGesture>();
         public virtual int Priority => _priority.Value;
         public virtual bool Enabled => _enabled.Value;
         public virtual bool IsTransient => false;
 
         protected readonly CachedProperty<bool> _enabled = new(true);
-        protected readonly CachedProperty<int> _priority = new(BehaviourPriority.None);
+        protected readonly CachedProperty<int> _priority = new(GesturePriority.None);
 
         [Fragment]
         protected BehaviourBase(NodeContext nodeContext)
@@ -24,12 +25,12 @@ namespace VL.Fu.Core.Interaction
 
         public virtual void OnUpdate(IFuNode host, FuGestureEvent ev) { }
 
-        public virtual void OnStop(IFuNode host, FuGestureEvent ev, bool isSuccess) { }
+        public virtual void OnFinish(IFuNode host, FuGestureEvent ev) { }
 
-        public virtual void OnCancel(IFuNode host) { }
+        public virtual void OnCancel(IFuNode host, FuGestureEvent ev) { }
 
         [Fragment(Order = PinOrder.Priority)]
-        public virtual void SetPriority(int priority = BehaviourPriority.None)
+        public virtual void SetPriority(int priority = GesturePriority.None)
         {
             _priority.TrySetValue(priority);
         }

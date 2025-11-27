@@ -1,22 +1,24 @@
-﻿using System.Reactive.Disposables;
+﻿using System.Collections.Immutable;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using VL.Fu.Core.Context;
+using VL.Fu.Core.Extensions;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.Interaction;
-using VL.Fu.Extensions;
-using VL.Lib.Collections;
-using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Core.Services
 {
     public class InteractionService : IContextedService, IInteractionService
     {
         private readonly IContextProvider _provider;
-        private readonly INotificationsService _notifications;
         private readonly CompositeDisposable _subscriptions = new();
+        private readonly BehaviorSubject<IReadOnlyList<IFuGesture>> _gestureDispatch = new(
+            ImmutableList<IFuGesture>.Empty
+        );
+        public IObservable<IReadOnlyList<IFuGesture>> GestureDispatch => _gestureDispatch;
 
-        private readonly List<InteractionSession> _activeSessions = new();
-        private readonly HashSet<int> _globalCapturedPointers = new();
+        private readonly HashSet<IFuGesture> _activeGestures = new();
 
         public InteractionService(
             IContextProvider provider,
@@ -24,280 +26,239 @@ namespace VL.Fu.Core.Services
         )
         {
             _provider = provider;
-            _notifications = notificationsService;
             _subscriptions.Add(notificationsService.InputStateStream.Subscribe(OnUpdateInput));
         }
 
         public void OnUpdateInput(FuInputState inputState)
         {
-            if (!inputState.IsEnabled || !inputState.IsFocused)
+            var dispatchList = new List<IFuGesture>();
+
+            if (
+                !_provider.TryGetViewportStream(out _)
+                || _provider.Root is not IFuNode root
+                || !inputState.IsEnabled
+            )
             {
-                CancelAll();
+                CancelAll(inputState);
+                _gestureDispatch.OnNext(ImmutableList<IFuGesture>.Empty);
                 return;
             }
 
-            // 1. Advance Active Sessions
-            for (int i = _activeSessions.Count - 1; i >= 0; i--)
+            // --- 1. Discovery & Pre-Calculation ---
+            var candidatesList = new List<IFuGesture>();
+            var seenCandidates = new HashSet<IFuGesture>();
+            var gesturePreCalculatedCandidates = new Dictionary<IFuGesture, List<FuPointer>>();
+            var pointerHitCount = new Dictionary<int, int>();
+
+            if (inputState.IsFocused)
             {
-                var session = _activeSessions[i];
-                var state = session.Gesture.Advance(session.Host, inputState);
-
-                ProcessGestureResult(session, state, i);
-            }
-
-            _globalCapturedPointers.Clear();
-            foreach (var session in _activeSessions)
-            foreach (var pid in session.CapturedPointerIds)
-                _globalCapturedPointers.Add(pid);
-
-            // 2. Discover New Interactions
-            if (_provider.Root is IFuNode rootNode)
-            {
-                ProcessFreePointers(rootNode, inputState);
-            }
-        }
-
-        private void ProcessGestureResult(
-            InteractionSession session,
-            FuGestureState state,
-            int sessionIndex = -1
-        )
-        {
-            switch (state.Phase)
-            {
-                case GesturePhase.Possible:
-                case GesturePhase.Changed:
-                    if (state.Event.HasValue)
-                        session.Behaviour.OnUpdate(session.Host, state.Event.Value);
-                    break;
-
-                case GesturePhase.Began:
-                    // Gesture has committed (e.g. Drag threshold crossed).
-                    if (state.Event.HasValue)
-                        session.Behaviour.OnUpdate(session.Host, state.Event.Value);
-
-                    // Cancel other sessions sharing the same pointer (e.g. Cancel Click)
-                    ResolveConflicts(session);
-                    break;
-
-                case GesturePhase.Matched:
-                    if (state.Event.HasValue)
-                        session.Behaviour.OnStop(session.Host, state.Event.Value, isSuccess: true);
-
-                    CleanupSession(session, sessionIndex);
-                    break;
-
-                case GesturePhase.Failed:
-                case GesturePhase.Cancelled:
-                    if (state.Event.HasValue)
-                        session.Behaviour.OnStop(session.Host, state.Event.Value, isSuccess: false);
-                    else
-                        session.Behaviour.OnCancel(session.Host);
-
-                    CleanupSession(session, sessionIndex);
-                    break;
-            }
-        }
-
-        private void ResolveConflicts(InteractionSession winner)
-        {
-            if (winner.CapturedPointerIds.Count == 0)
-                return;
-
-            for (int i = _activeSessions.Count - 1; i >= 0; i--)
-            {
-                var other = _activeSessions[i];
-                if (other == winner)
-                    continue;
-
-                bool conflict = false;
-                foreach (var pid in winner.CapturedPointerIds)
+                foreach (var pointer in inputState.Pointers.Values)
                 {
-                    if (other.IsCapturing(pid))
+                    if (pointer.State == Lib.IO.Notifications.TouchNotificationKind.TouchUp)
+                        continue;
+
+                    foreach (var node in HitTestNodes(root, pointer))
                     {
-                        conflict = true;
-                        break;
-                    }
-                }
+                        if (!pointerHitCount.ContainsKey(pointer.Id))
+                            pointerHitCount[pointer.Id] = 0;
+                        pointerHitCount[pointer.Id]++;
 
-                if (conflict)
-                {
-                    other.Behaviour.OnCancel(other.Host);
-                    other.Gesture.Reset();
-                    RemoveCapture(other);
-                    _activeSessions.RemoveAt(i);
-                }
-            }
-        }
-
-        private void CleanupSession(InteractionSession session, int index)
-        {
-            session.Gesture.Reset();
-            RemoveCapture(session);
-
-            if (index >= 0 && index < _activeSessions.Count)
-                _activeSessions.RemoveAt(index);
-        }
-
-        private void RemoveCapture(InteractionSession session)
-        {
-            foreach (var pid in session.CapturedPointerIds)
-                _globalCapturedPointers.Remove(pid);
-        }
-
-        private void ProcessFreePointers(IFuNode root, FuInputState inputState)
-        {
-            foreach (var pointer in inputState.Pointers.Values)
-            {
-                if (pointer.State == TouchNotificationKind.TouchUp)
-                    continue;
-                if (_globalCapturedPointers.Contains(pointer.Id))
-                    continue;
-
-                var hitNode = HitTestDeepest(root, pointer);
-
-                if (hitNode != null)
-                {
-                    var bubblePath = hitNode.Ancestors().Prepend(hitNode);
-
-                    foreach (var node in bubblePath)
-                    {
-                        if (node is IFuNode fuNode)
+                        foreach (var behaviour in node.Behaviours)
                         {
-                            bool nodeCapturedPointer = false;
-
-                            // FIX: Track captured pointers locally for this node scope.
-                            // This ensures we don't block subsequent behaviors (like Drag)
-                            // just because a previous behavior (like Click) started on the SAME node.
-                            var pointersCapturedByThisNode = new List<int>();
-
-                            foreach (var behaviour in fuNode.Behaviours)
+                            if (!behaviour.Enabled)
+                                continue;
+                            foreach (var gesture in behaviour.Gestures)
                             {
-                                if (!behaviour.Enabled)
-                                    continue;
+                                gesture.Host = node;
 
-                                foreach (var gesture in behaviour.Gestures)
-                                {
-                                    // AttemptStart checks _globalCapturedPointers.
-                                    // Since we haven't committed to global yet, multiple behaviors can start here.
-                                    if (
-                                        AttemptStart(
-                                            fuNode,
-                                            behaviour,
-                                            gesture,
-                                            pointer,
-                                            inputState
-                                        )
+                                if (seenCandidates.Add(gesture))
+                                    candidatesList.Add(gesture);
+
+                                if (
+                                    !gesturePreCalculatedCandidates.TryGetValue(
+                                        gesture,
+                                        out var list
                                     )
-                                    {
-                                        var newSession = _activeSessions.Last();
-
-                                        if (!behaviour.IsTransient)
-                                        {
-                                            newSession.CapturePointer(pointer.Id);
-                                            pointersCapturedByThisNode.Add(pointer.Id);
-                                            nodeCapturedPointer = true;
-
-                                            // Do NOT break here. Allow Click & Drag to coexist initially.
-                                        }
-                                    }
+                                )
+                                {
+                                    list = new List<FuPointer>();
+                                    gesturePreCalculatedCandidates[gesture] = list;
                                 }
+                                list.Add(pointer);
                             }
-
-                            // Commit to global to prevent bubbling parents from capturing
-                            foreach (var pid in pointersCapturedByThisNode)
-                                _globalCapturedPointers.Add(pid);
-
-                            if (nodeCapturedPointer)
-                                break;
                         }
                     }
                 }
             }
+
+            foreach (var active in _activeGestures)
+            {
+                if (seenCandidates.Add(active))
+                    candidatesList.Add(active);
+
+                if (!gesturePreCalculatedCandidates.ContainsKey(active))
+                    gesturePreCalculatedCandidates[active] = new List<FuPointer>();
+            }
+
+            // --- 2. Evaluation Phase ---
+            foreach (var gesture in candidatesList)
+            {
+                if (gesturePreCalculatedCandidates.TryGetValue(gesture, out var ptrs))
+                {
+                    if (ptrs.Count > 1)
+                    {
+                        ptrs.Sort(
+                            (a, b) =>
+                            {
+                                int countA = pointerHitCount.GetValueOrDefault(a.Id, int.MaxValue);
+                                int countB = pointerHitCount.GetValueOrDefault(b.Id, int.MaxValue);
+                                return countA.CompareTo(countB);
+                            }
+                        );
+                    }
+                    gesture.Evaluate(inputState, ptrs);
+                }
+            }
+
+            // --- 3. Conflict Resolution Phase ---
+            // Flatten all gesture-activator pairs to group by pointer ID
+            var pairs = candidatesList.SelectMany(g =>
+                g.Activators.Select(p => new { Gesture = g, PointerId = p.Id })
+            );
+
+            var groups = pairs.GroupBy(x => x.PointerId);
+
+            foreach (var group in groups)
+            {
+                // Winner is highest priority Active gesture for this pointer
+                var winners = group
+                    .Select(x => x.Gesture)
+                    .Where(g => g.Status == GestureStatus.Start || g.Status == GestureStatus.Update)
+                    .OrderByDescending(g => g.Priority)
+                    .Distinct()
+                    .ToList();
+
+                if (winners.Any())
+                {
+                    var primaryWinner = winners.First(); // Respects deep-first order implicitly via candidatesList stability?
+                    // Note: 'candidatesList' order logic applies if priority is equal.
+
+                    foreach (var item in group)
+                    {
+                        var gesture = item.Gesture;
+                        if (gesture == primaryWinner)
+                            continue;
+
+                        if (
+                            gesture.Status == GestureStatus.Finish
+                            || gesture.Status == GestureStatus.Cancel
+                            || gesture.Status == GestureStatus.Idle
+                        )
+                            continue;
+
+                        bool isLowerPriority = gesture.Priority < primaryWinner.Priority;
+                        bool isSamePriorityAndActive =
+                            (gesture.Priority == primaryWinner.Priority)
+                            && (
+                                gesture.Status == GestureStatus.Start
+                                || gesture.Status == GestureStatus.Update
+                            );
+
+                        if (isLowerPriority || isSamePriorityAndActive)
+                        {
+                            DispatchToBehaviour(gesture, GestureStatus.Cancel, inputState);
+                            gesture.Reset();
+                        }
+                    }
+                }
+            }
+
+            // --- 4. Dispatch Phase ---
+            _activeGestures.Clear();
+
+            foreach (var gesture in candidatesList)
+            {
+                if (gesture.Status == GestureStatus.Idle || gesture.Host == null)
+                    continue;
+
+                DispatchToBehaviour(gesture, gesture.Status, inputState);
+
+                if (
+                    gesture.Status == GestureStatus.Finish
+                    || gesture.Status == GestureStatus.Cancel
+                )
+                {
+                    gesture.Reset();
+                }
+                else
+                {
+                    _activeGestures.Add(gesture);
+                    dispatchList.Add(gesture);
+                }
+            }
+
+            dispatchList.Sort((a, b) => b.Priority.CompareTo(a.Priority));
+            _gestureDispatch.OnNext(dispatchList.ToImmutableList());
         }
 
-        private bool AttemptStart(
-            IFuNode node,
-            IFuBehaviour behaviour,
+        private void DispatchToBehaviour(
             IFuGesture gesture,
-            object activator,
+            GestureStatus status,
             FuInputState input
         )
         {
-            var state = gesture.Match(node, input);
+            if (gesture.Host == null)
+                return;
+            // Use first activator as primary for event arguments
+            var primary = gesture.Activators.FirstOrDefault();
+            var evt = new FuGestureEvent(gesture, primary, input);
 
-            if (state.IsActive)
+            switch (status)
             {
-                // Ensure the gesture matches the specific pointer we are processing
-                if (
-                    activator != null
-                    && state.Event.HasValue
-                    && !object.Equals(state.Event.Value.Activator, activator)
-                )
-                    return false;
-
-                // Ensure the pointer isn't already captured by a DIFFERENT node (active session)
-                if (
-                    state.Event.HasValue
-                    && state.Event.Value.Activator is FuPointer p
-                    && _globalCapturedPointers.Contains(p.Id)
-                )
-                    return false;
-
-                var session = new InteractionSession(behaviour, gesture, node);
-                _activeSessions.Add(session);
-
-                if (state.Event.HasValue)
-                    behaviour.OnStart(node, state.Event.Value);
-
-                if (state.Phase == GesturePhase.Began)
-                {
-                    ResolveConflicts(session);
-                }
-
-                if (state.IsTerminal)
-                {
-                    ProcessGestureResult(session, state, _activeSessions.Count - 1);
-                }
-
-                return true;
+                case GestureStatus.Start:
+                    gesture.Behaviour.OnStart(gesture.Host, evt);
+                    break;
+                case GestureStatus.Update:
+                    gesture.Behaviour.OnUpdate(gesture.Host, evt);
+                    break;
+                case GestureStatus.Finish:
+                    gesture.Behaviour.OnFinish(gesture.Host, evt);
+                    break;
+                case GestureStatus.Cancel:
+                    gesture.Behaviour.OnCancel(gesture.Host, evt);
+                    break;
             }
-            return false;
         }
 
-        private void CancelAll()
+        private void CancelAll(FuInputState inputState)
         {
-            foreach (var session in _activeSessions)
+            foreach (var gesture in _activeGestures)
             {
-                session.Behaviour.OnCancel(session.Host);
-                session.Gesture.Reset();
+                DispatchToBehaviour(gesture, GestureStatus.Cancel, inputState);
+                gesture.Reset();
             }
-            _activeSessions.Clear();
-            _globalCapturedPointers.Clear();
+            _activeGestures.Clear();
         }
 
-        private IFuNode? HitTestDeepest(IFuNode root, FuPointer pointer)
+        private IEnumerable<IFuNode> HitTestNodes(IFuNode root, FuPointer pointer)
         {
             if (!root.HitTest(pointer))
-                return null;
-
+                yield break;
             foreach (var child in root.Children.Reverse())
             {
                 if (child is IFuNode childNode)
                 {
-                    var result = HitTestDeepest(childNode, pointer);
-                    if (result != null)
-                        return result;
+                    foreach (var node in HitTestNodes(childNode, pointer))
+                        yield return node;
                 }
             }
-
-            return root;
+            yield return root;
         }
 
         public void Dispose()
         {
-            CancelAll();
             _subscriptions.Dispose();
+            _gestureDispatch.OnCompleted();
         }
     }
 }

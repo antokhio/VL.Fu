@@ -13,62 +13,75 @@ namespace VL.Fu.Interaction.Behaviours
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public class Clickable : BehaviourBase, IFuBehaviour
     {
-        public bool IsTransient => false;
+        public override bool IsTransient => false;
+
+        // We default to Click Priority
+        public override int Priority =>
+            _priority.Value == GesturePriority.None ? GesturePriority.Click : _priority.Value;
 
         private readonly ChannelProperty<Unit> _clickedChannel = new(Unit.Default);
         private readonly ChannelProperty<bool> _isPressedChannel = new(false);
-        private readonly ClickGesture _gesture;
         private int _previousRevision = 0;
 
         [Fragment]
         public Clickable(NodeContext nodeContext)
             : base(nodeContext)
         {
-            _gesture = new ClickGesture(nodeContext);
-            Gestures = new[] { _gesture };
+            Gestures = [new LeftClickGesture(this), new TapGesture(this)];
 
-            // Initialize revision to match starting state to prevent start-up bang
             _previousRevision = _clickedChannel.Revision;
         }
 
         [Fragment(Order = PinOrder.Action)]
         public void SetClickedChannel(IChannel<Unit>? channel)
         {
-            _clickedChannel.SetChannel(channel);
-            _previousRevision = _clickedChannel.Revision;
+            _clickedChannel.SetChannel(
+                channel,
+                (
+                    nextChannel =>
+                    {
+                        _previousRevision = _clickedChannel.Revision;
+                    }
+                )
+            );
         }
 
         [Fragment(Order = PinOrder.Action)]
         public void SetIsPressedChannel(IChannel<bool>? channel) =>
             _isPressedChannel.SetChannel(channel);
 
-        public override void OnStart(IFuNode host, FuGestureEvent ev) =>
-            _isPressedChannel.EnsureValue(true);
+        // -- Lifecycle Hooks --
 
-        public override void OnUpdate(IFuNode host, FuGestureEvent ev) =>
-            _isPressedChannel.EnsureValue(true);
-
-        public override void OnStop(IFuNode host, FuGestureEvent ev, bool isSuccess)
+        public override void OnStart(IFuNode host, FuGestureEvent ev)
         {
-            _isPressedChannel.EnsureValue(false); // Always release press
-
-            if (isSuccess)
-            {
-                // No more checking ev.State! The Service guaranteed this is a Success.
-                _clickedChannel.OnNext(Unit.Default);
-            }
+            _isPressedChannel.EnsureValue(true);
         }
 
-        public override void OnCancel(IFuNode host) => _isPressedChannel.EnsureValue(false);
+        public override void OnUpdate(IFuNode host, FuGestureEvent ev)
+        {
+            _isPressedChannel.EnsureValue(true);
+        }
+
+        public override void OnFinish(IFuNode host, FuGestureEvent ev)
+        {
+            _isPressedChannel.EnsureValue(false);
+            _clickedChannel.OnNext(Unit.Default);
+        }
+
+        public override void OnCancel(IFuNode host, FuGestureEvent ev)
+        {
+            _isPressedChannel.EnsureValue(false);
+        }
 
         [Fragment]
-        public void Update(out bool isClick, out bool isPressed)
+        public void Update(out bool isClick)
         {
-            isPressed = _isPressedChannel.Value;
-
             var currentRevision = _clickedChannel.Revision;
             isClick = _previousRevision != currentRevision;
             _previousRevision = currentRevision;
         }
+
+        [Fragment]
+        public bool IsPressed => _isPressedChannel.Value;
     }
 }
