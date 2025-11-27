@@ -121,7 +121,6 @@ namespace VL.Fu.Core.Services
             }
 
             // --- 3. Conflict Resolution Phase ---
-            // Flatten all gesture-activator pairs to group by pointer ID
             var pairs = candidatesList.SelectMany(g =>
                 g.Activators.Select(p => new { Gesture = g, PointerId = p.Id })
             );
@@ -130,23 +129,32 @@ namespace VL.Fu.Core.Services
 
             foreach (var group in groups)
             {
-                // Winner is highest priority Active gesture for this pointer
+                // Winner Logic:
+                // 1. Must be Active (Start/Update)
+                // 2. Must NOT be Transient (Transient gestures don't block others)
+                // 3. Highest Priority wins
                 var winners = group
                     .Select(x => x.Gesture)
-                    .Where(g => g.Status == GestureStatus.Start || g.Status == GestureStatus.Update)
+                    .Where(g =>
+                        (g.Status == GestureStatus.Start || g.Status == GestureStatus.Update)
+                        && !g.Behaviour.IsTransient
+                    )
                     .OrderByDescending(g => g.Priority)
                     .Distinct()
                     .ToList();
 
                 if (winners.Any())
                 {
-                    var primaryWinner = winners.First(); // Respects deep-first order implicitly via candidatesList stability?
-                    // Note: 'candidatesList' order logic applies if priority is equal.
+                    var primaryWinner = winners.First();
 
                     foreach (var item in group)
                     {
                         var gesture = item.Gesture;
                         if (gesture == primaryWinner)
+                            continue;
+
+                        // IMPORTANT: Transient gestures are never cancelled by conflict resolution.
+                        if (gesture.Behaviour.IsTransient)
                             continue;
 
                         if (
@@ -209,7 +217,6 @@ namespace VL.Fu.Core.Services
         {
             if (gesture.Host == null)
                 return;
-            // Use first activator as primary for event arguments
             var primary = gesture.Activators.FirstOrDefault();
             var evt = new FuGestureEvent(gesture, primary, input);
 
