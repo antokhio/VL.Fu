@@ -1,4 +1,6 @@
-﻿namespace VL.Fu.Core.HitTest
+﻿using VL.Fu.Core.Selection;
+
+namespace VL.Fu.Core.HitTest
 {
     public interface IAreaTestProvider
     {

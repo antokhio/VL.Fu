@@ -9,9 +9,7 @@ namespace VL.Fu.Interaction.Gestures
     public class DragGesture : GestureBase
     {
         public override int Priority => GesturePriority.Drag;
-
-        // Threshold primarily tuned for Normalized space (default).
-        private const float DragThreshold = 0.05f;
+        public float Threshold { get; set; } = 0.05f;
 
         private Vector2 _startPos;
 
@@ -78,11 +76,9 @@ namespace VL.Fu.Interaction.Gestures
                 if (Status == GestureStatus.Possible)
                 {
                     var dist = (primary.Position - _startPos).Length();
-                    if (dist > DragThreshold)
+                    if (dist > Threshold) // Use configurable threshold
                     {
                         Status = GestureStatus.Start;
-                        // Note: We don't track lastPos here anymore.
-                        // The behaviour will pick up the current position at OnStart.
                     }
                 }
                 else if (Status == GestureStatus.Start || Status == GestureStatus.Update)

@@ -6,6 +6,8 @@ using VL.Fu.Core.Context;
 using VL.Fu.Core.Extensions;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.Interaction;
+using VL.Fu.Core.Selection;
+using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Core.Services
 {
@@ -50,11 +52,59 @@ namespace VL.Fu.Core.Services
             var gesturePreCalculatedCandidates = new Dictionary<IFuGesture, List<FuPointer>>();
             var pointerHitCount = new Dictionary<int, int>();
 
+            // Track which providers we have already processed to avoid duplicate recursion
+            var seenProviders = new HashSet<ISelectionProvider>();
+
+            // Helper to register a node's gestures for evaluation
+            void RegisterNodeGestures(IFuNode node, FuPointer? hitPointer)
+            {
+                if (node == null)
+                    return;
+
+                foreach (var behaviour in node.Behaviours)
+                {
+                    if (!behaviour.Enabled)
+                        continue;
+
+                    // Check if this behavior is a Selection Provider
+                    // If we hit a provider, we include its selected nodes in the candidate list.
+                    // This ensures KeyGestures on selected nodes are found even if not directly hovered.
+                    if (behaviour is ISelectionProvider provider && seenProviders.Add(provider))
+                    {
+                        foreach (var selectedNode in provider.SelectedNodes)
+                        {
+                            // Recursively register selected nodes.
+                            // We pass 'null' for pointer because these are found via state, not hit test.
+                            RegisterNodeGestures(selectedNode, null);
+                        }
+                    }
+
+                    foreach (var gesture in behaviour.Gestures)
+                    {
+                        gesture.Host = node;
+
+                        if (seenCandidates.Add(gesture))
+                            candidatesList.Add(gesture);
+
+                        if (!gesturePreCalculatedCandidates.TryGetValue(gesture, out var list))
+                        {
+                            list = new List<FuPointer>();
+                            gesturePreCalculatedCandidates[gesture] = list;
+                        }
+
+                        // Only add the pointer if this registration came from a direct Hit Test
+                        if (hitPointer.HasValue)
+                            list.Add(hitPointer.Value);
+                    }
+                }
+            }
+
             if (inputState.IsFocused)
             {
+                // A. Hit Test Discovery
                 foreach (var pointer in inputState.Pointers.Values)
                 {
-                    if (pointer.State == Lib.IO.Notifications.TouchNotificationKind.TouchUp)
+                    if (pointer.State == TouchNotificationKind.TouchUp)
                         continue;
 
                     foreach (var node in HitTestNodes(root, pointer))
@@ -63,34 +113,24 @@ namespace VL.Fu.Core.Services
                             pointerHitCount[pointer.Id] = 0;
                         pointerHitCount[pointer.Id]++;
 
-                        foreach (var behaviour in node?.Behaviours)
-                        {
-                            if (!behaviour.Enabled)
-                                continue;
-                            foreach (var gesture in behaviour.Gestures)
-                            {
-                                gesture.Host = node;
+                        RegisterNodeGestures(node, pointer);
+                    }
+                }
 
-                                if (seenCandidates.Add(gesture))
-                                    candidatesList.Add(gesture);
-
-                                if (
-                                    !gesturePreCalculatedCandidates.TryGetValue(
-                                        gesture,
-                                        out var list
-                                    )
-                                )
-                                {
-                                    list = new List<FuPointer>();
-                                    gesturePreCalculatedCandidates[gesture] = list;
-                                }
-                                list.Add(pointer);
-                            }
-                        }
+                // B. Root Provider Discovery
+                // Ensure we check the Root for a SelectionProvider even if it wasn't explicitly hit
+                // (though usually root covers bounds, this handles edge cases or non-hit-testable roots).
+                var rootProvider = root.Behaviours.OfType<ISelectionProvider>().FirstOrDefault();
+                if (rootProvider != null && seenProviders.Add(rootProvider))
+                {
+                    foreach (var selectedNode in rootProvider.SelectedNodes)
+                    {
+                        RegisterNodeGestures(selectedNode, null);
                     }
                 }
             }
 
+            // Include currently active gestures (e.g. ongoing Drags)
             foreach (var active in _activeGestures)
             {
                 if (seenCandidates.Add(active))

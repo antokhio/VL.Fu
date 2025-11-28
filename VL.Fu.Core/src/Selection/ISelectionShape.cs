@@ -1,6 +1,6 @@
 ﻿using Stride.Core.Mathematics;
 
-namespace VL.Fu.Core.HitTest
+namespace VL.Fu.Core.Selection
 {
     /// <summary>
     /// Defines the geometry of a selection area (e.g. Marquee, Lasso, Brush).

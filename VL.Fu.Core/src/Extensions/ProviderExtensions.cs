@@ -11,6 +11,16 @@ namespace VL.Fu.Core.Extensions
     /// </summary>
     public static class ProviderExtensions
     {
+        public static bool TryGetInteractionService(
+            this IContextProvider provider,
+            out IInteractionService interactionService
+        )
+        {
+            interactionService = provider?.GetService<IInteractionService>();
+
+            return interactionService != null;
+        }
+
         public static bool TryGetNotificationsService(
             this IContextProvider provider,
             out INotificationsService? notificationsService
