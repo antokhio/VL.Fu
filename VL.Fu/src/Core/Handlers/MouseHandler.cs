@@ -99,7 +99,8 @@ namespace VL.Fu.Core.Handlers
 
                         return mouse;
                     }
-                );
+                )
+                .DistinctUntilChanged();
 
             var resetEvent = Observable
                 .Merge(onReset, touchActiveHandler.OnTouchActive)

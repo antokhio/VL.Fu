@@ -16,7 +16,8 @@ namespace VL.Fu.Core
             Spread<IFuBehaviour>.Empty
         );
 
-        public IReadOnlyList<IFuBehaviour> Behaviours { get; private set; }
+        public IReadOnlyList<IFuBehaviour> Behaviours { get; private set; } =
+            ImmutableList<IFuBehaviour>.Empty;
 
         [Fragment]
         protected Interactable(NodeContext nodeContext)

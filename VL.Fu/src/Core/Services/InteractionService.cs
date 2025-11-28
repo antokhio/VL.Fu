@@ -63,7 +63,7 @@ namespace VL.Fu.Core.Services
                             pointerHitCount[pointer.Id] = 0;
                         pointerHitCount[pointer.Id]++;
 
-                        foreach (var behaviour in node.Behaviours)
+                        foreach (var behaviour in node?.Behaviours)
                         {
                             if (!behaviour.Enabled)
                                 continue;

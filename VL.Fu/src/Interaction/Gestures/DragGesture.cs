@@ -10,21 +10,17 @@ namespace VL.Fu.Interaction.Gestures
     {
         public override int Priority => GesturePriority.Drag;
 
-        public Vector2 Delta { get; private set; }
-
         // Threshold primarily tuned for Normalized space (default).
-        // If working in Pixel space, this might need to be adjusted or injected.
         private const float DragThreshold = 0.05f;
 
         private Vector2 _startPos;
-        private Vector2 _lastPos;
 
         public DragGesture(IFuBehaviour behaviour)
             : base(behaviour) { }
 
         public override void Evaluate(FuInputState inputState, IEnumerable<FuPointer> candidates)
         {
-            // 1. Capture Pointers (Multi-touch support to block fall-through)
+            // 1. Capture Pointers
             foreach (var pointer in candidates)
             {
                 if (pointer.State == TouchNotificationKind.TouchDown)
@@ -33,12 +29,9 @@ namespace VL.Fu.Interaction.Gestures
                     {
                         _activators.Add(pointer);
 
-                        // Initialize tracking if this is the first/primary pointer
                         if (_activators.Count == 1)
                         {
                             _startPos = pointer.Position;
-                            _lastPos = pointer.Position;
-                            Delta = Vector2.Zero;
                             Status = GestureStatus.Possible;
                         }
                     }
@@ -55,26 +48,25 @@ namespace VL.Fu.Interaction.Gestures
 
                     if (currPointer.State == TouchNotificationKind.TouchUp)
                     {
-                        // If Primary pointer released
                         if (i == 0)
                         {
                             if (Status == GestureStatus.Start || Status == GestureStatus.Update)
                                 Status = GestureStatus.Finish;
                             else
-                                Status = GestureStatus.Cancel; // Released before threshold
+                                Status = GestureStatus.Cancel;
                         }
                         _activators.RemoveAt(i);
                     }
                 }
                 else
                 {
-                    _activators.RemoveAt(i); // Pointer lost
+                    _activators.RemoveAt(i);
                     if (i == 0)
                         Status = GestureStatus.Cancel;
                 }
             }
 
-            // 3. Logic (Driven by Primary Pointer)
+            // 3. Logic
             if (
                 _activators.Count > 0
                 && Status != GestureStatus.Finish
@@ -88,27 +80,18 @@ namespace VL.Fu.Interaction.Gestures
                     var dist = (primary.Position - _startPos).Length();
                     if (dist > DragThreshold)
                     {
-                        // Crossed Threshold -> Transition to Start
                         Status = GestureStatus.Start;
-
-                        // Reset lastPos to current to avoid a "jump" equal to the threshold distance.
-                        // Delta will be calculated starting from the NEXT movement.
-                        _lastPos = primary.Position;
-                        Delta = Vector2.Zero;
+                        // Note: We don't track lastPos here anymore.
+                        // The behaviour will pick up the current position at OnStart.
                     }
                 }
                 else if (Status == GestureStatus.Start || Status == GestureStatus.Update)
                 {
                     Status = GestureStatus.Update;
-
-                    // Calculate delta for this frame
-                    Delta = primary.Position - _lastPos;
-                    _lastPos = primary.Position;
                 }
             }
             else if (Status != GestureStatus.Finish && Status != GestureStatus.Cancel)
             {
-                // No pointers left and didn't finish/cancel in this frame
                 Status = GestureStatus.Idle;
             }
         }
@@ -116,9 +99,7 @@ namespace VL.Fu.Interaction.Gestures
         public override void Reset()
         {
             base.Reset();
-            Delta = Vector2.Zero;
             _startPos = Vector2.Zero;
-            _lastPos = Vector2.Zero;
         }
     }
 }

@@ -30,7 +30,10 @@ namespace VL.Fu.Core.Input
             Id = Constants.MousePointerId,
         };
 
-        public FuPointer WithMouseState(FuMouse mouseState, TouchNotificationKind pointerState) =>
+        public FuPointer WithNewMouseState(
+            FuMouse mouseState,
+            TouchNotificationKind pointerState
+        ) =>
             this with
             {
                 Position = mouseState.Position,
@@ -38,8 +41,24 @@ namespace VL.Fu.Core.Input
                 IsRight = mouseState.IsRight,
                 IsMiddel = mouseState.IsMiddle,
                 State = pointerState,
-                Delta = pointerState == TouchNotificationKind.TouchDown ? Delta : Vector2.Zero,
+                Delta = Vector2.Zero,
+                TimeStamp = DateTimeOffset.UtcNow,
             };
+
+        public FuPointer WithMouseState(FuMouse mouseState, TouchNotificationKind pointerState)
+        {
+            var newDelta = mouseState.Position - this.Position;
+
+            return this with
+            {
+                Position = mouseState.Position,
+                IsLeft = mouseState.IsLeft,
+                IsRight = mouseState.IsRight,
+                IsMiddel = mouseState.IsMiddle,
+                State = pointerState,
+                Delta = newDelta,
+            };
+        }
 
         public FuPointer WithState(TouchNotificationKind newState) =>
             this with
@@ -47,12 +66,16 @@ namespace VL.Fu.Core.Input
                 State = newState,
             };
 
-        public FuPointer WithPosition(Vector2 position) =>
-            this with
+        public FuPointer WithPosition(Vector2 position)
+        {
+            var newDelta = position - this.Position;
+
+            return this with
             {
                 Position = position,
-                Delta = position - this.Position,
+                Delta = newDelta,
             };
+        }
 
         public bool IsMousePointer() => Id == Constants.MousePointerId;
     }

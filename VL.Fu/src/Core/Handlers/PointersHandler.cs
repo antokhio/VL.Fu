@@ -87,7 +87,7 @@ namespace VL.Fu.Core.Handlers
                             {
                                 return pointers.SetItem(
                                     pointer.Id,
-                                    pointer.WithMouseState(
+                                    pointer.WithNewMouseState(
                                         ev.State,
                                         TouchNotificationKind.TouchDown
                                     )
@@ -126,7 +126,6 @@ namespace VL.Fu.Core.Handlers
                                 return pointers;
                             }
 
-                            // CRITICAL FIX: Determine initial state from buttons.
                             // Previously, this forced 'TouchDown', causing an instant click on first move.
                             // Now we check if any button is actually pressed.
                             var isAnyButtonDown =
@@ -139,7 +138,7 @@ namespace VL.Fu.Core.Handlers
                                 ? TouchNotificationKind.TouchDown
                                 : TouchNotificationKind.TouchMove;
 
-                            pointer = FuPointer.DefaultMousePointer.WithMouseState(
+                            pointer = FuPointer.DefaultMousePointer.WithNewMouseState(
                                 ev.State,
                                 initialKind
                             );
