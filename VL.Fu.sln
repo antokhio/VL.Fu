@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VL.Fu", "VL.Fu\src\VL.Fu.cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VL.Fu.Core", "VL.Fu.Core\src\VL.Fu.Core.csproj", "{DFE5BB4C-FB41-4711-B521-8DB3C0E016B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VL.Fu.WinForms", "VL.Fu.WinForms\src\VL.Fu.WinForms.csproj", "{782F52FD-EC95-05A4-ECF9-C43EFC9955DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{DFE5BB4C-FB41-4711-B521-8DB3C0E016B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DFE5BB4C-FB41-4711-B521-8DB3C0E016B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DFE5BB4C-FB41-4711-B521-8DB3C0E016B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{782F52FD-EC95-05A4-ECF9-C43EFC9955DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{782F52FD-EC95-05A4-ECF9-C43EFC9955DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{782F52FD-EC95-05A4-ECF9-C43EFC9955DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{782F52FD-EC95-05A4-ECF9-C43EFC9955DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

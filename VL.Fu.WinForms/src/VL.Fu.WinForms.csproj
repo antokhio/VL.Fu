@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <BaseOutputPath>..\lib\</BaseOutputPath>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="VL.Core" Version="2025.7.1-0101-ge364e43d33" />
+    <PackageReference Include="VL.Core.Skia" Version="2025.7.1-0101-ge364e43d33" />
+    <PackageReference Include="VL.CoreLib" Version="2025.7.1-0101-ge364e43d33" />
+  </ItemGroup>
+</Project>

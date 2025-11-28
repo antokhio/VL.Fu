@@ -2254,4 +2254,5 @@
   <PlatformDependency Id="VVKY2dQHSuwQa9bHTsag5V" Location="./lib/Debug/net8.0/VL.Fu.dll" IsForward="true" />
   <NugetDependency Id="ALZEHqz0CdsNyotdgPK1wV" Location="VL.Fu.Core" IsForward="true" Version="0.0.0" />
   <NugetDependency Id="U4vWHHjzO0HNpuNNKF0nfX" Location="VL.Skia" Version="2025.7.1-0101-ge364e43d33" />
+  <NugetDependency Id="I5rLEhR7q13Pi8Et80X7xy" Location="VL.Fu.WinForms" IsForward="true" Version="0.0.0" />
 </Document>

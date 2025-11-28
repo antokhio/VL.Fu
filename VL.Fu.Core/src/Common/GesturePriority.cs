@@ -8,6 +8,7 @@
     public static class GesturePriority
     {
         public const int Highest = 1000;
+        public const int Zoom = 900;
         public const int Drag = 800;
         public const int MarqueeSelection = 700;
         public const int Click = 500;
