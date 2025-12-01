@@ -6,7 +6,7 @@ using VL.Lib.Collections;
 namespace VL.Fu
 {
     [ProcessNode(Name = "FuNode", FragmentSelection = FragmentSelection.Explicit)]
-    public class FuNode : BehavioralBase, IFuNode
+    public class FuNode : InteractiveHost, IFuNode
     {
         [Fragment]
         public FuNode() { }
@@ -21,7 +21,10 @@ namespace VL.Fu
         [Fragment]
         public FuNodeSpectral() { }
 
-        public override void SetInput(Spread<IFuNode> input)
+        [Fragment(Order = PinOrder.Input)]
+        public override void SetInput(
+            [Pin(PinGroupKind = Model.PinGroupKind.None)] Spread<IFuNode> input
+        )
         {
             base.SetInput(input);
         }

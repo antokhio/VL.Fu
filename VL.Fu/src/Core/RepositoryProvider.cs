@@ -12,26 +12,25 @@ namespace VL.Fu.Core
             IRepositoryService,
             IRepositoryProvider
     {
-        protected static readonly ServiceRepository _repository = new();
-
         /// <summary>
         /// Registers a service with this provider's context. This method is virtual
         /// so that derived classes can extend the registration behavior.
         /// </summary>
         protected virtual void Register(IRepositoryService service)
         {
-            _repository.RegisterService(InstanceId, service);
+            // Use the public singleton instance to register the service.
+            ServiceRepository.Instance.RegisterService(this.InstanceId, service);
         }
 
         public T? GetService<T>()
             where T : class, IRepositoryService
         {
-            return _repository.GetService<T>(InstanceId);
+            return ServiceRepository.Instance.GetService<T>(this.InstanceId);
         }
 
         public virtual void Dispose()
         {
-            _repository.UnregisterServices(InstanceId);
+            ServiceRepository.Instance.UnregisterServices(this.InstanceId);
         }
     }
 }

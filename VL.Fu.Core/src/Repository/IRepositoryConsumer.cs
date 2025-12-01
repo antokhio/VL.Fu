@@ -11,5 +11,10 @@
         /// </summary>
         /// <param name="contextId">The instance ID of the parent RepositoryBase (e.g., Fu).</param>
         void SetContextId(int contextId);
+
+        /// <summary>
+        /// Get's repository context ID for this consumer.
+        /// </summary>
+        int ContextId { get; }
     }
 }

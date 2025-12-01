@@ -3,18 +3,19 @@
 namespace VL.Fu.Core.Repository
 {
     /// <summary>
-    /// A thread-safe repository for managing and locating services scoped to specific instance contexts.
+    /// A thread-safe, singleton repository for managing and locating services scoped to specific instance contexts.
     /// </summary>
-    /// <remarks>
-    /// Created by: antokhio
-    /// Date: 2025-11-05
-    /// </remarks>
     public class ServiceRepository
     {
+        public static readonly ServiceRepository Instance = new();
+
         private readonly ConcurrentDictionary<
             int,
             ConcurrentDictionary<Type, IRepositoryService>
         > _servicesByContext = new();
+
+        // Private constructor to ensure it's only created once via the static Instance field.
+        private ServiceRepository() { }
 
         public void RegisterService(int contextId, IRepositoryService service)
         {
@@ -22,7 +23,18 @@ namespace VL.Fu.Core.Repository
                 contextId,
                 _ => new ConcurrentDictionary<Type, IRepositoryService>()
             );
-            contextServices[service.GetType()] = service;
+
+            var serviceType = service.GetType();
+            contextServices[serviceType] = service;
+
+            var interfaces = serviceType
+                .GetInterfaces()
+                .Where(i => typeof(IRepositoryService).IsAssignableFrom(i));
+
+            foreach (var interfaceType in interfaces)
+            {
+                contextServices[interfaceType] = service;
+            }
         }
 
         public T? GetService<T>(int contextId)
@@ -42,7 +54,7 @@ namespace VL.Fu.Core.Repository
         {
             if (_servicesByContext.TryRemove(contextId, out var contextServices))
             {
-                foreach (var service in contextServices.Values)
+                foreach (var service in contextServices.Values.Distinct())
                 {
                     service.Dispose();
                 }

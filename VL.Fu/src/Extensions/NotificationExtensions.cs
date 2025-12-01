@@ -24,7 +24,10 @@ namespace VL.Fu.Extensions
                 return space switch
                 {
                     CommonSpace.Normalized => np.Position.ToNormalizedSpace(clientArea),
-                    CommonSpace.DIP => np.Position.ToCenteredDIPSpace(clientArea, dipFactor),
+                    CommonSpace.DIP => np.Position.ToCenteredDIPSpace(
+                        clientArea.ToInt(),
+                        dipFactor
+                    ),
                     CommonSpace.DIPTopLeft => np.Position.ToDIPTopLeftSpace(dipFactor),
                     CommonSpace.PixelTopLeft => np.Position.ToPixelTopLeftSpace(pixelFactor),
                     _ => throw new InvalidOperationException("Space not found"),
