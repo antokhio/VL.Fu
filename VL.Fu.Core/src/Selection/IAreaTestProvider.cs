@@ -1,10 +1,7 @@
-﻿using VL.Fu.Core.HitTest;
+﻿using VL.Fu.Core.Selection;
 
-namespace VL.Fu.Core
+namespace VL.Fu.Core.HitTest
 {
-    /// <summary>
-    /// Interface for objects that can report if they are inside a selection.
-    /// </summary>
     public interface IAreaTestProvider
     {
         /// <summary>

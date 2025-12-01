@@ -4,6 +4,7 @@ using VL.Fu.Core.Common;
 using VL.Fu.Core.HitTest;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.Property;
+using VL.Fu.Core.Selection;
 
 namespace VL.Fu.Core
 {

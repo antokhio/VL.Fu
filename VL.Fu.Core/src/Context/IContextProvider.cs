@@ -5,5 +5,8 @@ namespace VL.Fu.Core.Context
     public interface IContextProvider
         : IRegion<IContextProviderInlay>,
             IServiceRegistry,
-            IDisposable { }
+            IDisposable
+    {
+        IFuNode? Root { get; }
+    }
 }

@@ -3,6 +3,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using Stride.Core.Mathematics;
 using VL.Fu.Core.Common;
 using VL.Fu.Core.Extensions;
 using VL.Fu.Core.Input;
@@ -86,7 +87,7 @@ namespace VL.Fu.Core.Handlers
                             {
                                 return pointers.SetItem(
                                     pointer.Id,
-                                    pointer.WithMouseState(
+                                    pointer.WithNewMouseState(
                                         ev.State,
                                         TouchNotificationKind.TouchDown
                                     )
@@ -112,9 +113,34 @@ namespace VL.Fu.Core.Handlers
                         }
                         else
                         {
-                            pointer = FuPointer.DefaultMousePointer.WithMouseState(
+                            // Filter out completely uninitialized ghost input (0,0 with no buttons)
+                            // This prevents a "Hover" at (0,0) on startup if the mouse isn't actually there.
+                            if (
+                                ev.State.Position == Vector2.Zero
+                                && ev.State.Wheel == Int2.Zero
+                                && !ev.State.IsLeft
+                                && !ev.State.IsRight
+                                && !ev.State.IsMiddle
+                            )
+                            {
+                                return pointers;
+                            }
+
+                            // Previously, this forced 'TouchDown', causing an instant click on first move.
+                            // Now we check if any button is actually pressed.
+                            var isAnyButtonDown =
+                                ev.State.IsLeft
+                                || ev.State.IsRight
+                                || ev.State.IsMiddle
+                                || ev.State.IsXButton1
+                                || ev.State.IsXButton2;
+                            var initialKind = isAnyButtonDown
+                                ? TouchNotificationKind.TouchDown
+                                : TouchNotificationKind.TouchMove;
+
+                            pointer = FuPointer.DefaultMousePointer.WithNewMouseState(
                                 ev.State,
-                                TouchNotificationKind.TouchDown
+                                initialKind
                             );
 
                             return pointers.SetItem(pointer.Id, pointer);
@@ -133,6 +159,7 @@ namespace VL.Fu.Core.Handlers
                     }
                 });
 
+            // Touch Logic (Unchanged)
             var touchNotifications = notifications.OfType<TouchNotification>();
 
             var touchEvents = Observable.Merge(
@@ -179,10 +206,8 @@ namespace VL.Fu.Core.Handlers
 
                         if (notification is NotificationWithPosition notificationWithPosition)
                         {
-                            // Projected position
                             var position = notificationWithPosition.ToCurrentSpace(viewport);
 
-                            // Existing pointer
                             if (pointers.TryGetValue(notification.Id, out var pointer))
                             {
                                 return pointers.SetItem(
@@ -190,11 +215,8 @@ namespace VL.Fu.Core.Handlers
                                     pointer.WithPosition(position).WithState(notification.Kind)
                                 );
                             }
-                            // New pointer
                             else
                             {
-                                // Pointer does not exist and notification is move
-                                // Create touchdown pointer
                                 if (notification.Kind is TouchNotificationKind.TouchMove)
                                 {
                                     return pointers.SetItem(

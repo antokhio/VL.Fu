@@ -21,9 +21,11 @@ namespace VL.Fu
         {
             var viewPortService = new ViewportService(this);
             var notificationsSerivce = new NotificationsService(this, viewPortService);
+            var interactionService = new InteractionService(this, notificationsSerivce);
 
             RegisterService<IViewportService>(viewPortService);
             RegisterService<INotificationsService>(notificationsSerivce);
+            RegisterService<IInteractionService>(interactionService);
         }
 
         [Fragment(Order = PinOrder.Input)]

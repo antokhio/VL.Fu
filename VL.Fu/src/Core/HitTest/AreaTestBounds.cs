@@ -1,4 +1,6 @@
-﻿namespace VL.Fu.Core.HitTest
+﻿using VL.Fu.Core.Selection;
+
+namespace VL.Fu.Core.HitTest
 {
     /// <summary>
     /// Default strategy: Area test checks if the node's bounding box is inside the selection shape.

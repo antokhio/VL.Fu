@@ -20,6 +20,8 @@
 
         public const int Action = -20;
 
+        public const int Priority = 45;
+
         public const int Enabled = 50;
     }
 }

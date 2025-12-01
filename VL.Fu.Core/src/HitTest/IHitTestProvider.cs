@@ -2,9 +2,6 @@
 
 namespace VL.Fu.Core.HitTest
 {
-    /// <summary>
-    /// Provides an interface for testing if a pointer is currently over an object.
-    /// </summary>
     public interface IHitTestProvider
     {
         /// <summary>
