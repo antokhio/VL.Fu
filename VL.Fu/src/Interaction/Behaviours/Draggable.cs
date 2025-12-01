@@ -1,9 +1,7 @@
 ﻿using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
-using VL.Fu.Core;
-using VL.Fu.Core.Input;
-using VL.Fu.Core.Interaction;
+using VL.Fu.Interaction.Gestures;
 
 namespace VL.Fu.Interaction.Behaviours
 {
@@ -14,12 +12,15 @@ namespace VL.Fu.Interaction.Behaviours
         public Draggable(NodeContext nodeContext)
             : base(nodeContext) { }
 
-        protected override void CalculateNewOffset(FuPointer p)
+        protected override void CalculateNewOffset(DragGesture gesture)
         {
-            if (p.Delta != Vector2.Zero)
+            // Access delta from the primary activator
+            var delta = gesture.Activators[0].Delta;
+
+            if (delta != Vector2.Zero)
             {
                 var current = _offsetChannel.Value;
-                var next = current + p.Delta;
+                var next = current + delta;
 
                 if (_bounds.Value.HasValue)
                 {
@@ -45,12 +46,14 @@ namespace VL.Fu.Interaction.Behaviours
         public DraggableX(NodeContext nodeContext)
             : base(nodeContext) { }
 
-        protected override void CalculateNewOffset(FuPointer p)
+        protected override void CalculateNewOffset(DragGesture gesture)
         {
-            if (p.Delta.X != 0)
+            var deltaX = gesture.Activators[0].Delta.X;
+
+            if (deltaX != 0)
             {
                 var current = _offsetChannel.Value;
-                var next = current + p.Delta.X;
+                var next = current + deltaX;
 
                 if (_bounds.Value.HasValue)
                 {
@@ -72,12 +75,14 @@ namespace VL.Fu.Interaction.Behaviours
         public DraggableY(NodeContext nodeContext)
             : base(nodeContext) { }
 
-        protected override void CalculateNewOffset(FuPointer p)
+        protected override void CalculateNewOffset(DragGesture gesture)
         {
-            if (p.Delta.Y != 0)
+            var deltaY = gesture.Activators[0].Delta.Y;
+
+            if (deltaY != 0)
             {
                 var current = _offsetChannel.Value;
-                var next = current + p.Delta.Y;
+                var next = current + deltaY;
 
                 if (_bounds.Value.HasValue)
                 {
@@ -102,17 +107,18 @@ namespace VL.Fu.Interaction.Behaviours
         public DraggablePolar(NodeContext nodeContext)
             : base(nodeContext) { }
 
-        public override void OnStart(IFuNode host, FuGestureEvent ev)
+        protected override void OnDragStart(DragGesture gesture)
         {
-            base.OnStart(host, ev);
+            // Logic moved from OnStart
+            var host = gesture.Host;
+            if (host == null)
+                return;
 
             // 1. Determine a reasonable lever radius based on the host size.
-            // This fixes the "super small output" issue in Normalized space.
-            float virtualRadius = 100f; // Default for Pixel space / Missing bounds
+            float virtualRadius = 100f;
             if (host.Bounds.HasValue)
             {
                 var b = host.Bounds.Value;
-                // Average of width/height, divided by 2 for radius
                 var sizeAvg = (b.Width + b.Height) / 2.0f;
                 if (sizeAvg > 0.0001f)
                 {
@@ -120,47 +126,42 @@ namespace VL.Fu.Interaction.Behaviours
                 }
                 else
                 {
-                    // Fallback if bounds are collapsed (e.g. zero size)
-                    // If we are in normalized space (inputs are small), use small radius
-                    // We can heuristic this by checking the pointer position magnitude?
-                    // Or just default to 0.25 for safety if bounds are missing.
-                    if (ev.Activator is FuPointer p && Math.Abs(p.Position.X) <= 2.0f)
+                    // Fallback using gesture properties instead of raw pointer
+                    if (Math.Abs(gesture.StartPosition.X) <= 2.0f)
                         virtualRadius = 0.25f;
                 }
             }
 
-            // 2. Initialize the virtual lever based on current Angle value
             var currentCycles = _offsetChannel.Value;
             var rad = currentCycles * MathUtil.TwoPi;
 
             _virtualLever = new Vector2((float)Math.Cos(rad), (float)Math.Sin(rad)) * virtualRadius;
-
-            // 3. Use VL's Angle logic directly or via helper
-            // Using local calculation to ensure independence if library isn't referenced exactly as expected
             _lastPhase = GetAngleInCycles(_virtualLever);
         }
 
-        protected override void CalculateNewOffset(FuPointer p)
+        protected override void CalculateNewOffset(DragGesture gesture)
         {
-            if (p.Delta == Vector2.Zero)
+            var delta = gesture.Activators[0].Delta;
+
+            if (delta == Vector2.Zero)
                 return;
 
             // Move internal point
-            _virtualLever += p.Delta;
+            _virtualLever += delta;
 
             if (_virtualLever.LengthSquared() < 0.00001f)
                 return;
 
             var currentPhase = GetAngleInCycles(_virtualLever);
-            var delta = currentPhase - _lastPhase;
+            var phaseDelta = currentPhase - _lastPhase;
 
-            // Handle wrapping (-0.5 to 0.5 transition)
-            if (delta > 0.5f)
-                delta -= 1.0f;
-            else if (delta < -0.5f)
-                delta += 1.0f;
+            // Handle wrapping
+            if (phaseDelta > 0.5f)
+                phaseDelta -= 1.0f;
+            else if (phaseDelta < -0.5f)
+                phaseDelta += 1.0f;
 
-            var next = _offsetChannel.Value + delta;
+            var next = _offsetChannel.Value + phaseDelta;
             _lastPhase = currentPhase;
 
             if (_bounds.Value.HasValue)
@@ -174,7 +175,6 @@ namespace VL.Fu.Interaction.Behaviours
             _offsetChannel.OnNext(next);
         }
 
-        // Identical to VL.CoreLib Vector2Nodes.Angle logic
         private static float GetAngleInCycles(Vector2 v)
         {
             const double CRadiansToCycles = 1.0 / (2.0 * Math.PI);

@@ -24,7 +24,15 @@ namespace VL.Fu.Interaction.Behaviours
         public Hoverable(NodeContext nodeContext)
             : base(nodeContext)
         {
-            Gestures = [new PointerOverGesture(this)];
+            Gestures =
+            [
+                new PointerOverGesture(
+                    this,
+                    onStart: g => _isHoveredChannel.EnsureValue(true),
+                    onUpdate: g => _isHoveredChannel.EnsureValue(true),
+                    onFinish: g => _isHoveredChannel.EnsureValue(false)
+                ),
+            ];
         }
 
         [Fragment(Order = PinOrder.Action)]
@@ -32,21 +40,8 @@ namespace VL.Fu.Interaction.Behaviours
             _isHoveredChannel.SetChannel(isHoveredChannel);
 
         // -- Lifecycle Hooks --
-
-        public override void OnStart(IFuNode host, FuGestureEvent ev)
-        {
-            _isHoveredChannel.EnsureValue(true);
-        }
-
-        public override void OnUpdate(IFuNode host, FuGestureEvent ev)
-        {
-            _isHoveredChannel.EnsureValue(true);
-        }
-
-        public override void OnFinish(IFuNode host, FuGestureEvent ev)
-        {
-            _isHoveredChannel.EnsureValue(false);
-        }
+        // We only override OnCancel to handle external cancellations (e.g. whole system disabled)
+        // Logic for Start/Update/Finish is handled by the gesture callbacks.
 
         public override void OnCancel(IFuNode host, FuGestureEvent ev)
         {

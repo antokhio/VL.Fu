@@ -27,7 +27,21 @@ namespace VL.Fu.Interaction.Behaviours
         public Clickable(NodeContext nodeContext)
             : base(nodeContext)
         {
-            Gestures = [new LeftClickGesture(this), new TapGesture(this)];
+            // Shared handlers
+            void OnStart(GestureBase g) => _isPressedChannel.EnsureValue(true);
+            void OnUpdate(GestureBase g) => _isPressedChannel.EnsureValue(true);
+            void OnFinish(GestureBase g)
+            {
+                _isPressedChannel.EnsureValue(false);
+                _clickedChannel.OnNext(Unit.Default);
+            }
+            void OnCancel(GestureBase g) => _isPressedChannel.EnsureValue(false);
+
+            Gestures =
+            [
+                new LeftClickGesture(this, OnStart, OnUpdate, OnFinish, OnCancel),
+                new TapGesture(this, OnStart, OnUpdate, OnFinish, OnCancel),
+            ];
 
             _previousRevision = _clickedChannel.Revision;
         }
@@ -52,22 +66,8 @@ namespace VL.Fu.Interaction.Behaviours
 
         // -- Lifecycle Hooks --
 
-        public override void OnStart(IFuNode host, FuGestureEvent ev)
-        {
-            _isPressedChannel.EnsureValue(true);
-        }
-
-        public override void OnUpdate(IFuNode host, FuGestureEvent ev)
-        {
-            _isPressedChannel.EnsureValue(true);
-        }
-
-        public override void OnFinish(IFuNode host, FuGestureEvent ev)
-        {
-            _isPressedChannel.EnsureValue(false);
-            _clickedChannel.OnNext(Unit.Default);
-        }
-
+        // OnCancel handles external cancellation (from InteractionService conflict resolution)
+        // We rely on the Gestures to handle internal cancellation (moving mouse off element)
         public override void OnCancel(IFuNode host, FuGestureEvent ev)
         {
             _isPressedChannel.EnsureValue(false);

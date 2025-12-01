@@ -28,14 +28,44 @@ namespace VL.Fu.Interaction.Behaviours
             new Optional<Range<T>>()
         );
         protected readonly DragGesture _gesture;
+
         private FuPointer? _lastProcessedPointer;
 
         protected DraggableBase(NodeContext nodeContext)
             : base(nodeContext)
         {
-            _gesture = new DragGesture(this);
+            _gesture = new DragGesture(
+                this,
+                onStart: g =>
+                {
+                    _isDraggingChannel.OnNext(true);
+                    _lastProcessedPointer = null;
+                    OnDragStart(g);
+                },
+                onUpdate: g =>
+                {
+                    _isDraggingChannel.EnsureValue(true);
+
+                    // We still use the pointer to identify unique updates (frames)
+                    // and to access Delta efficiently.
+                    if (g.Activators.Count > 0)
+                    {
+                        var p = g.Activators[0];
+                        if (_lastProcessedPointer.HasValue && p == _lastProcessedPointer.Value)
+                            return;
+
+                        _lastProcessedPointer = p;
+                        CalculateNewOffset(g);
+                    }
+                },
+                onFinish: g => _isDraggingChannel.OnNext(false)
+            );
+
             Gestures = [_gesture];
         }
+
+        // Optional hook for subclasses (used by Polar)
+        protected virtual void OnDragStart(DragGesture gesture) { }
 
         [Fragment(Order = PinOrder.Action)]
         public void SetOffsetChannel(IChannel<T>? offsetChannel) =>
@@ -48,36 +78,9 @@ namespace VL.Fu.Interaction.Behaviours
         [Fragment(Order = PinOrder.Action)]
         public void SetBounds(Optional<Range<T>> bounds) => _bounds.TrySetValue(bounds);
 
-        public override void OnStart(IFuNode host, FuGestureEvent ev)
-        {
-            _isDraggingChannel.EnsureValue(true);
-            _lastProcessedPointer = null;
-        }
-
-        public override void OnUpdate(IFuNode host, FuGestureEvent ev)
-        {
-            _isDraggingChannel.EnsureValue(true);
-
-            if (ev.Activator is FuPointer p)
-            {
-                // Check if we already processed pointer, since event aggregation might
-                // fire twice on same pointer
-                if (_lastProcessedPointer.HasValue && p == _lastProcessedPointer.Value)
-                {
-                    return;
-                }
-
-                _lastProcessedPointer = p;
-                CalculateNewOffset(p);
-            }
-        }
-
-        public override void OnFinish(IFuNode host, FuGestureEvent ev) =>
-            _isDraggingChannel.EnsureValue(false);
-
         public override void OnCancel(IFuNode host, FuGestureEvent ev) =>
             _isDraggingChannel.EnsureValue(false);
 
-        protected abstract void CalculateNewOffset(FuPointer p);
+        protected abstract void CalculateNewOffset(DragGesture gesture);
     }
 }

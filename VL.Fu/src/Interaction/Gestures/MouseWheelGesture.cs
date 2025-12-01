@@ -1,4 +1,6 @@
-﻿using VL.Fu.Core.Common;
+﻿using System.Collections.Immutable;
+using Stride.Core.Mathematics;
+using VL.Fu.Core.Common;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.Interaction;
 
@@ -8,8 +10,26 @@ namespace VL.Fu.Interaction.Gestures
     {
         public override int Priority => GesturePriority.Zoom;
 
-        public MouseWheelGesture(IFuBehaviour behaviour)
-            : base(behaviour) { }
+        public Int2 WheelDelta { get; private set; }
+        public IReadOnlySet<FuKey> CurrentModifiers { get; private set; } =
+            ImmutableHashSet<FuKey>.Empty;
+
+        private readonly Action<MouseWheelGesture>? _onStart;
+        private readonly Action<MouseWheelGesture>? _onUpdate;
+        private readonly Action<MouseWheelGesture>? _onFinish;
+
+        public MouseWheelGesture(
+            IFuBehaviour behaviour,
+            Action<MouseWheelGesture>? onStart = null,
+            Action<MouseWheelGesture>? onUpdate = null,
+            Action<MouseWheelGesture>? onFinish = null
+        )
+            : base(behaviour)
+        {
+            _onStart = onStart;
+            _onUpdate = onUpdate;
+            _onFinish = onFinish;
+        }
 
         public override void Evaluate(FuInputState inputState, IEnumerable<FuPointer> candidates)
         {
@@ -31,7 +51,10 @@ namespace VL.Fu.Interaction.Gestures
             {
                 _activators.Clear();
                 if (Status == GestureStatus.Start || Status == GestureStatus.Update)
+                {
                     Status = GestureStatus.Finish;
+                    _onFinish?.Invoke(this);
+                }
                 else
                     Status = GestureStatus.Idle;
                 return;
@@ -43,23 +66,33 @@ namespace VL.Fu.Interaction.Gestures
 
             if (hasDelta)
             {
-                // Update the activator with fresh state (WheelDelta is in the Mouse struct, not Pointer)
-                // But logic usually reads inputState.Mouse directly in behavior.
+                // Capture state for the callback
+                WheelDelta = inputState.Mouse.WheelDelta;
+                CurrentModifiers = inputState.Modifiers;
 
                 if (
                     Status == GestureStatus.Idle
                     || Status == GestureStatus.Finish
                     || Status == GestureStatus.Cancel
                 )
+                {
                     Status = GestureStatus.Start;
+                    _onStart?.Invoke(this);
+                }
                 else
+                {
                     Status = GestureStatus.Update;
+                    _onUpdate?.Invoke(this);
+                }
             }
             else
             {
                 // No movement this frame
                 if (Status == GestureStatus.Start || Status == GestureStatus.Update)
+                {
                     Status = GestureStatus.Finish;
+                    _onFinish?.Invoke(this);
+                }
                 else
                     Status = GestureStatus.Idle;
             }

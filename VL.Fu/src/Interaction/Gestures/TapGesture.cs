@@ -1,4 +1,5 @@
-﻿using VL.Fu.Core.Common;
+﻿using Stride.Core.Mathematics;
+using VL.Fu.Core.Common;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.Interaction;
 using VL.Lib.IO.Notifications;
@@ -9,8 +10,27 @@ namespace VL.Fu.Interaction.Gestures
     {
         public override int Priority => GesturePriority.Click;
 
-        public TapGesture(IFuBehaviour behaviour)
-            : base(behaviour) { }
+        public Vector2 CurrentPosition { get; private set; }
+
+        private readonly Action<TapGesture>? _onStart;
+        private readonly Action<TapGesture>? _onUpdate;
+        private readonly Action<TapGesture>? _onFinish;
+        private readonly Action<TapGesture>? _onCancel;
+
+        public TapGesture(
+            IFuBehaviour behaviour,
+            Action<TapGesture>? onStart = null,
+            Action<TapGesture>? onUpdate = null,
+            Action<TapGesture>? onFinish = null,
+            Action<TapGesture>? onCancel = null
+        )
+            : base(behaviour)
+        {
+            _onStart = onStart;
+            _onUpdate = onUpdate;
+            _onFinish = onFinish;
+            _onCancel = onCancel;
+        }
 
         public override void Evaluate(FuInputState inputState, IEnumerable<FuPointer> candidates)
         {
@@ -42,10 +62,17 @@ namespace VL.Fu.Interaction.Gestures
                         // If it's secondary, we just release it.
                         if (i == 0)
                         {
+                            CurrentPosition = currPointer.Position;
                             if (Host != null && Host.HitTest(currPointer))
+                            {
                                 Status = GestureStatus.Finish;
+                                _onFinish?.Invoke(this);
+                            }
                             else
+                            {
                                 Status = GestureStatus.Cancel; // Primary released outside
+                                _onCancel?.Invoke(this);
+                            }
                         }
 
                         // Stop tracking this specific pointer
@@ -62,6 +89,8 @@ namespace VL.Fu.Interaction.Gestures
             // 3. Determine Global Status based on Primary Pointer
             if (_activators.Count > 0)
             {
+                CurrentPosition = _activators[0].Position;
+
                 // If we just started or are still holding
                 if (
                     Status == GestureStatus.Idle
@@ -70,10 +99,12 @@ namespace VL.Fu.Interaction.Gestures
                 )
                 {
                     Status = GestureStatus.Start;
+                    _onStart?.Invoke(this);
                 }
                 else
                 {
                     Status = GestureStatus.Update;
+                    _onUpdate?.Invoke(this);
                 }
             }
             else

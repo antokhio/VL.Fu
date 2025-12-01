@@ -60,6 +60,14 @@
                 <Pin Id="JCaMOBvMJqLOz3RTYgZzaQ" Name="Output" Kind="OutputPin" />
                 <Pin Id="JF33LRhd4MzOpYlHNBwxhc" Name="Node Context" Kind="InputPin" IsHidden="true" />
               </Node>
+              <Node Bounds="225,211,41,19" Id="STy3RqphjwXPPJALBOXgA2">
+                <p:NodeReference LastCategoryFullName="Main" LastDependency="tester.vl">
+                  <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                  <Choice Kind="ProcessAppFlag" Name="Pinch" />
+                </p:NodeReference>
+                <Pin Id="HF6uitvPaKYM4i5Y6mGVno" Name="Output" Kind="OutputPin" />
+                <Pin Id="Ix5cFheksbzOvYK27HFIG3" Name="Node Context" Kind="InputPin" IsHidden="true" />
+              </Node>
             </Patch>
           </Node>
           <Node Bounds="118,690,145,19" Id="DoLcjVSE3maNbo6OpKS9Jn">
@@ -2325,7 +2333,7 @@
         <Link Id="A5IfJCh3u8xQbloQb4HxYS" Ids="EzmZAdq2PFEOGebwI5xFaT,HevHqNc0Xi2PUAj1XKxik4" />
         <Link Id="HgbmD4b5fVVO3yQ4ySkzmt" Ids="O9D4Nlv7pHzPqg8Lr8TQCG,CWiNkK491KuOuVaJcuhRUx" />
         <Link Id="HnaQr7j3zfiLLC9cVGCxNW" Ids="Ncbvvq5bJSNLs6X2w7phYQ,TaXzvdgHYWrO6Rf2CcVBUt" />
-        <Link Id="TU4Un8ylZ4YNWHgC9grY50" Ids="JCaMOBvMJqLOz3RTYgZzaQ,QEHnrkxiFBzNSo4WrfZB1Z" />
+        <Link Id="IdHElXo5gbnNQLrrt6DoFY" Ids="HF6uitvPaKYM4i5Y6mGVno,QEHnrkxiFBzNSo4WrfZB1Z" />
       </Patch>
     </Node>
   </Patch>

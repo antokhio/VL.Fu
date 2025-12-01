@@ -11,10 +11,26 @@ namespace VL.Fu.Interaction.Gestures
         public override int Priority => GesturePriority.Drag;
         public float Threshold { get; set; } = 0.05f;
 
-        private Vector2 _startPos;
+        public Vector2 StartPosition { get; private set; }
+        public Vector2 CurrentPosition { get; private set; }
 
-        public DragGesture(IFuBehaviour behaviour)
-            : base(behaviour) { }
+        // Callbacks
+        private readonly Action<DragGesture>? _onStart;
+        private readonly Action<DragGesture>? _onUpdate;
+        private readonly Action<DragGesture>? _onFinish;
+
+        public DragGesture(
+            IFuBehaviour behaviour,
+            Action<DragGesture>? onStart = null,
+            Action<DragGesture>? onUpdate = null,
+            Action<DragGesture>? onFinish = null
+        )
+            : base(behaviour)
+        {
+            _onStart = onStart;
+            _onUpdate = onUpdate;
+            _onFinish = onFinish;
+        }
 
         public override void Evaluate(FuInputState inputState, IEnumerable<FuPointer> candidates)
         {
@@ -29,7 +45,8 @@ namespace VL.Fu.Interaction.Gestures
 
                         if (_activators.Count == 1)
                         {
-                            _startPos = pointer.Position;
+                            StartPosition = pointer.Position;
+                            CurrentPosition = pointer.Position;
                             Status = GestureStatus.Possible;
                         }
                     }
@@ -48,10 +65,18 @@ namespace VL.Fu.Interaction.Gestures
                     {
                         if (i == 0)
                         {
+                            // Update final position before finishing
+                            CurrentPosition = currPointer.Position;
+
                             if (Status == GestureStatus.Start || Status == GestureStatus.Update)
+                            {
                                 Status = GestureStatus.Finish;
+                                _onFinish?.Invoke(this);
+                            }
                             else
+                            {
                                 Status = GestureStatus.Cancel;
+                            }
                         }
                         _activators.RemoveAt(i);
                     }
@@ -72,18 +97,21 @@ namespace VL.Fu.Interaction.Gestures
             )
             {
                 var primary = _activators[0];
+                CurrentPosition = primary.Position;
 
                 if (Status == GestureStatus.Possible)
                 {
-                    var dist = (primary.Position - _startPos).Length();
-                    if (dist > Threshold) // Use configurable threshold
+                    var dist = (primary.Position - StartPosition).Length();
+                    if (dist > Threshold)
                     {
                         Status = GestureStatus.Start;
+                        _onStart?.Invoke(this);
                     }
                 }
                 else if (Status == GestureStatus.Start || Status == GestureStatus.Update)
                 {
                     Status = GestureStatus.Update;
+                    _onUpdate?.Invoke(this);
                 }
             }
             else if (Status != GestureStatus.Finish && Status != GestureStatus.Cancel)
@@ -95,7 +123,8 @@ namespace VL.Fu.Interaction.Gestures
         public override void Reset()
         {
             base.Reset();
-            _startPos = Vector2.Zero;
+            StartPosition = Vector2.Zero;
+            CurrentPosition = Vector2.Zero;
         }
     }
 }
