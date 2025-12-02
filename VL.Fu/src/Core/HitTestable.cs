@@ -26,12 +26,12 @@ namespace VL.Fu.Core
         [Fragment(Order = PinOrder.HitTest)]
         public void SetHitTest(
             [Pin(Visibility = Model.PinVisibility.Optional)] IHitTest? hitTest
-        ) => _hitTest.TrySetValue(hitTest ?? Helpers.HitTest.HitTestBounds);
+        ) => _hitTest.SetValue(hitTest ?? Helpers.HitTest.HitTestBounds);
 
         [Fragment(Order = PinOrder.AreaTest)]
         public void SetAreaTest(
             [Pin(Visibility = Model.PinVisibility.Optional)] IAreaTest? areaTest
-        ) => _areaTest.TrySetValue(areaTest ?? Helpers.AreaTest.AreaTestBounds);
+        ) => _areaTest.SetValue(areaTest ?? Helpers.AreaTest.AreaTestBounds);
 
         public bool HitTest(FuPointer pointer)
         {

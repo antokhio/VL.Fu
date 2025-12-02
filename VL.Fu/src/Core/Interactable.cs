@@ -25,7 +25,7 @@ namespace VL.Fu.Core
 
         [Fragment]
         public void SetBehaviours(Spread<IFuBehaviour> behaviours) =>
-            _behaviours.TrySetValue(
+            _behaviours.SetValue(
                 behaviours,
                 (curr, next) =>
                 {

@@ -157,28 +157,67 @@ namespace VL.Fu.Core.Extensions
 
         /// <summary>
         /// Determines the logical bounding box for a given space, using the viewport as context.
+        /// This calculates the Full Coordinate System Bounds, not the Visible Bounds.
         /// </summary>
         private static RectangleF GetLogicalBounds(CommonSpace space, FuViewport viewport)
         {
-            // For all spaces except Normalized, their logical bounds are simply the viewport's current bounds in that space.
-            if (space != CommonSpace.Normalized)
+            float w,
+                h;
+            bool centered = false;
+
+            // Avoid divide by zero
+            float clientX = Math.Max(viewport.ClientArea.X, 1f);
+            float clientY = Math.Max(viewport.ClientArea.Y, 1f);
+            float dipFactor = Math.Max(viewport.DIPFactor, 1f);
+            float pixelFactor = Math.Max(viewport.PixelFactor, 1f);
+
+            switch (space)
             {
-                return viewport.ViewportBounds;
+                case CommonSpace.Normalized:
+                    float aspect = clientX / clientY;
+                    if (aspect > 1)
+                    {
+                        w = 2 * aspect;
+                        h = 2;
+                    }
+                    else
+                    {
+                        w = 2;
+                        h = 2 / aspect;
+                    }
+                    centered = true;
+                    break;
+
+                case CommonSpace.DIP:
+                    w = clientX / dipFactor;
+                    h = clientY / dipFactor;
+                    centered = true;
+                    break;
+
+                case CommonSpace.DIPTopLeft:
+                    w = clientX / dipFactor;
+                    h = clientY / dipFactor;
+                    centered = false;
+                    break;
+
+                case CommonSpace.PixelTopLeft:
+                    w = clientX / pixelFactor;
+                    h = clientY / pixelFactor;
+                    centered = false;
+                    break;
+
+                default:
+                    // Fallback to the current viewport's coordinate system if matched,
+                    // otherwise assume it maps to current viewport view.
+                    // Note: ViewportBounds represents the VISIBLE area, which may be zoomed.
+                    // If we are dealing with an unknown space, we might not have a choice.
+                    return viewport.ViewportBounds;
             }
 
-            // For Normalized space, the bounds are [-1, 1] on the shorter axis, and aspect-corrected on the longer one.
-            var bounds = viewport.ViewportBounds;
-            var aspectRatio = MathUtil.NearEqual(bounds.Height, 0)
-                ? 1
-                : bounds.Width / bounds.Height;
-
-            if (aspectRatio > 1) // Wider than tall
-            {
-                return new RectangleF(-aspectRatio, -1, 2 * aspectRatio, 2);
-            }
-
-            // Taller than wide
-            return new RectangleF(-1, -1 / aspectRatio, 2, 2 / aspectRatio);
+            if (centered)
+                return new RectangleF(-w / 2f, -h / 2f, w, h);
+            else
+                return new RectangleF(0f, 0f, w, h);
         }
 
         /// <summary>

@@ -11,7 +11,7 @@ namespace VL.Fu.Core.Services
 {
     public class ViewportService : InstancedId, IViewportService
     {
-        public FuViewport Viewport { get; private set; }
+        public FuViewport Viewport { get; private set; } = default;
         public IObservable<FuViewport> ViewportStream { get; }
 
         private readonly Subject<INotification> _notifications = new();
@@ -21,7 +21,10 @@ namespace VL.Fu.Core.Services
         {
             var clientAreaStream = _notifications
                 .OfType<NotificationWithClientArea>()
-                .Select(n => n.ClientArea)
+                .Select(n =>
+                {
+                    return n.ClientArea;
+                })
                 .DistinctUntilChanged();
 
             var viewportNotificationStream = _notifications
@@ -33,7 +36,7 @@ namespace VL.Fu.Core.Services
             var viewportScalingStream = viewportNotificationStream.Select(n => n.Scaling);
 
             // Combine all configuration streams
-            ViewportStream = Observable
+            var composedStream = Observable
                 .CombineLatest(
                     // Factors
                     configuration.PixelFactor.StartWith(configuration.PixelFactor.Value),
@@ -58,6 +61,10 @@ namespace VL.Fu.Core.Services
                         )
                 )
                 .DistinctUntilChanged();
+
+            // Important: Use Replay(1).RefCount() so that late subscribers (like ResponsiveProperty)
+            // receive the current state immediately, instead of resetting to StartWith defaults.
+            ViewportStream = composedStream.Replay(1).RefCount();
 
             // Produce state update
             _subscriptions.Add(

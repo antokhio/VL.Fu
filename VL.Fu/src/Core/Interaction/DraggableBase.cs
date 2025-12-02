@@ -76,7 +76,7 @@ namespace VL.Fu.Interaction.Behaviours
             _isDraggingChannel.SetChannel(isDraggingChannel);
 
         [Fragment(Order = PinOrder.Action)]
-        public void SetBounds(Optional<Range<T>> bounds) => _bounds.TrySetValue(bounds);
+        public void SetBounds(Optional<Range<T>> bounds) => _bounds.SetValue(bounds);
 
         public override void OnCancel(IFuNode host, FuGestureEvent ev) =>
             _isDraggingChannel.EnsureValue(false);
