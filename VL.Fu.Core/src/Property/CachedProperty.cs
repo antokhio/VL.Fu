@@ -25,7 +25,7 @@
         /// <param name="newValue">The new value to set.</param>
         /// <param name="onValueChange">An optional action to execute if the value is changed. The action receives the old and new values.</param>
         /// <returns><c>true</c> if the value was changed; otherwise, <c>false</c>.</returns>
-        public bool TrySetValue(T newValue, Action<T, T>? onValueChange = null)
+        public bool SetValue(T newValue, Action<T, T>? onValueChange = null)
         {
             // Use EqualityComparer<T>.Default to handle both structs (value types)
             // and classes (reference types) correctly.

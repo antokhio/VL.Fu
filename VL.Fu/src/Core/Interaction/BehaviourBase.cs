@@ -32,13 +32,13 @@ namespace VL.Fu.Core.Interaction
         [Fragment(Order = PinOrder.Priority)]
         public virtual void SetPriority(int priority = GesturePriority.None)
         {
-            _priority.TrySetValue(priority);
+            _priority.SetValue(priority);
         }
 
         [Fragment(Order = PinOrder.Enabled)]
         public void SetEnabled(bool enabled = true)
         {
-            _enabled.TrySetValue(enabled);
+            _enabled.SetValue(enabled);
         }
 
         [Fragment(Order = PinOrder.Output)]

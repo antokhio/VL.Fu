@@ -15,8 +15,8 @@ namespace VL.Fu.Core.Interaction
         public KeyGesture(IFuBehaviour behaviour, Keys key, Keys modifiers = Keys.None)
             : base(behaviour)
         {
-            _key.TrySetValue(key);
-            _modifiers.TrySetValue(modifiers);
+            _key.SetValue(key);
+            _modifiers.SetValue(modifiers);
         }
 
         protected bool CheckConditions(FuInputState inputState)

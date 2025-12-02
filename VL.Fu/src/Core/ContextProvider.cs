@@ -1,6 +1,7 @@
 ﻿using VL.Core;
 using VL.Core.Import;
 using VL.Core.PublicAPI;
+using VL.Fu.Core.Common;
 using VL.Fu.Core.Context;
 
 namespace VL.Fu.Core.Root
@@ -27,7 +28,7 @@ namespace VL.Fu.Core.Root
             _nodeContext = nodeContext;
             _storeValues = [this];
 
-            ConfigureStore(ContextProviderHelper.RootContextProviderName);
+            ConfigureStore(Constants.RootContextProviderName);
         }
 
         protected void ConfigureStore(string contextName)

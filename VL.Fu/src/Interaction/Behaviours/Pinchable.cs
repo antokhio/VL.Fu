@@ -49,7 +49,7 @@ namespace VL.Fu.Interaction.Behaviours
         }
 
         [Fragment(Order = PinOrder.Action)]
-        public void SetMinMaxScale(Vector2 minMax) => _minMaxScale.TrySetValue(minMax);
+        public void SetMinMaxScale(Vector2 minMax) => _minMaxScale.SetValue(minMax);
 
         public override void OnStart(IFuNode host, FuGestureEvent ev)
         {
