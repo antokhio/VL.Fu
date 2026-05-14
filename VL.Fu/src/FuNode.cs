@@ -31,12 +31,13 @@ namespace VL.Fu.Core
         }
     }
 
+    [Region(SupportedBorderControlPoints = ControlPointType.None)]
     [ProcessNode(
         Name = "FuNode (Spectral)",
         HasStateOutput = true,
         FragmentSelection = FragmentSelection.Explicit
     )]
-    public class FuNodeSpectral : FuNode
+    public class FuNodeSpectral : FuNode, IRegion<IFuNodeInlay>
     {
         [Fragment]
         public FuNodeSpectral(NodeContext nodeContext)
