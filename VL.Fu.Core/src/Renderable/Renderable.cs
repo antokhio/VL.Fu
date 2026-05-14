@@ -11,13 +11,13 @@ namespace VL.Fu.Core
     /// It renders its own content (via the Layer pin) and then recursively renders its children.
     /// </summary>
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
-    public abstract class Renderable : TreeNode, IRendering
+    public abstract class Renderable : Stylable, IRendering
     {
         protected ILayer? _layer;
 
         // Expose the bounds of the local layer.
         // Note: This does not currently include the bounds of the children.
-        public RectangleF? Bounds => _layer?.Bounds;
+        public RectangleF? Bounds => Layout;
 
         protected Renderable(NodeContext nodeContext)
             : base(nodeContext) { }
