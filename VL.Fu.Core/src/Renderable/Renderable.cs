@@ -10,7 +10,7 @@ namespace VL.Fu.Core
     /// It renders its own content (via the Layer pin) and then recursively renders its children.
     /// </summary>
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
-    public abstract class Renderable : Stylable, IRendering
+    public abstract class Renderable : Measurable, IRendering
     {
         protected ILayer? _layer;
 

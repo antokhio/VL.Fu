@@ -754,11 +754,13 @@
                   <Pin Id="J8wCVrCsVy3LDVXk86xXXE" Name="Children" Kind="InputPin" />
                   <Pin Id="BtaPGxVU6LrQJsPGLBmOTv" Name="Hit Test" Kind="InputPin" IsHidden="true" />
                   <Pin Id="FCacZRiKoHMPjhtmeIT7vi" Name="Area Test" Kind="InputPin" IsHidden="true" />
-                  <Pin Id="Run0koGutjpL4lCSQSzsoH" Name="Layer" Kind="InputPin" />
                   <Pin Id="UmEUzk46tnrOnCHFZArR3z" Name="Style" Kind="InputPin" />
+                  <Pin Id="UGbOhIj1MqnO2FksSHWObl" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="TKqsoW6g2XAL1z9nxHxy84" Name="Measure Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="D0qXklm2jVWNUUdz1w9PP9" Name="Behaviours" Kind="InputPin" />
                   <Pin Id="Jx1eUgs69q0MWLM6kgnFPU" Name="Output" Kind="StateOutputPin" />
                   <Pin Id="MgjAb3eUqatP0pYSWaoBB3" Name="Update" Kind="InputPin" />
+                  <Pin Id="Run0koGutjpL4lCSQSzsoH" Name="Layer" Kind="InputPin" />
                 </Node>
                 <ControlPoint Id="QLUGXM6Mf67PM5FaqnPzfU" Bounds="349,610" />
                 <Node Bounds="370,310,61,19" Id="EeAr79uhgNrN9x2cNMXTfK">
@@ -806,11 +808,13 @@
                   <Pin Id="DdJ33icC4LJPKFECWjGBNx" Name="Children" Kind="InputPin" />
                   <Pin Id="A0WWIArQJ9uLICem9umgy8" Name="Hit Test" Kind="InputPin" IsHidden="true" />
                   <Pin Id="LXv0MWhHkjrOk6Tiye2fGr" Name="Area Test" Kind="InputPin" IsHidden="true" />
-                  <Pin Id="I1zWdSsY47iQatPAHGyBPb" Name="Layer" Kind="InputPin" />
                   <Pin Id="AupsBHUtK1SO4pdxO9Ndmr" Name="Style" Kind="InputPin" />
+                  <Pin Id="P9OiOX6jxSGNBY358laJCD" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="QVluLM5SuePOF7IQFzH3ZP" Name="Measure Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="VEAi88afMcgOep7ctgYILG" Name="Behaviours" Kind="InputPin" />
                   <Pin Id="R2itGKGERADLkUJUFYVZll" Name="Output" Kind="StateOutputPin" />
                   <Pin Id="NfHYnanEoYPPVYMPoXCYYA" Name="Update" Kind="InputPin" />
+                  <Pin Id="I1zWdSsY47iQatPAHGyBPb" Name="Layer" Kind="InputPin" />
                 </Node>
                 <Node Bounds="193,170,61,19" Id="PP74AR6f2xQQSMy3doHMem">
                   <p:NodeReference LastCategoryFullName="Graphics.Skia.Layers" LastDependency="VL.Skia.vl">
@@ -1143,11 +1147,13 @@
                   <Pin Id="NqMsBWSyGljLo61Xxj2oJW" Name="Children" Kind="InputPin" />
                   <Pin Id="TpYnaCXcF9fQTRexBwiVtk" Name="Hit Test" Kind="InputPin" IsHidden="true" />
                   <Pin Id="Daa28RTjBVwMXHNRJlAA6G" Name="Area Test" Kind="InputPin" IsHidden="true" />
-                  <Pin Id="FTVxIwPxLFBMHiQRnTtfnp" Name="Layer" Kind="InputPin" />
                   <Pin Id="UDdKWLvFfYMLu52GvaQyz0" Name="Style" Kind="InputPin" />
+                  <Pin Id="DW9AEJxY4iDPdnQ74vH0dH" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="OXPr4NcurBxL6dZnLZw1zj" Name="Measure Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="Bnn6di9OOHCLzRV3BLSg6i" Name="Behaviours" Kind="InputPin" />
                   <Pin Id="ESUsAU8UghrMehDz70XrFA" Name="Output" Kind="StateOutputPin" />
                   <Pin Id="QBv2eRLR4YTMkspnhY07Fz" Name="Update" Kind="InputPin" />
+                  <Pin Id="FTVxIwPxLFBMHiQRnTtfnp" Name="Layer" Kind="InputPin" />
                 </Node>
                 <Node Bounds="1146,500,85,19" Id="PWEQfRsFez2QQFKtY4bnTr">
                   <p:NodeReference LastCategoryFullName="Graphics.Skia" LastDependency="VL.Skia.vl">
@@ -1295,8 +1301,9 @@
                   <Pin Id="EXBAx6ktLBBLmtfbH7n3Zn" Name="Children" Kind="InputPin" />
                   <Pin Id="RJk7RH3679ZQMQUzlIHgAC" Name="Hit Test" Kind="InputPin" IsHidden="true" />
                   <Pin Id="Spe6ulxCk9TMxQPYPu5GW2" Name="Area Test" Kind="InputPin" IsHidden="true" />
-                  <Pin Id="O9uw2MOW2RhOb6tifzDSYZ" Name="Layer" Kind="InputPin" />
                   <Pin Id="AlZMwORZ69NNKa2dyH5uLj" Name="Style" Kind="InputPin" />
+                  <Pin Id="EgEiaHTxc8AO9sCBFIRglT" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="SgVHiz8vYY3MF6hzvEVHYQ" Name="Measure Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="G6MONI4leyeMH4yvgUHLDO" Name="Behaviours" Kind="InputPin" />
                   <Pin Id="GA2gxBTph4kQSuH5mBTMwf" Name="Output" Kind="StateOutputPin" />
                   <Pin Id="JIOfybSxI5dO1HC5Lx0X85" Name="Update" Kind="InputPin" />
@@ -1378,11 +1385,13 @@
                   <Pin Id="CwCB0UZWJBHL5yMOZkpS2b" Name="Children" Kind="InputPin" />
                   <Pin Id="AJIsx78AFz8QHlWHx0iMu2" Name="Hit Test" Kind="InputPin" IsHidden="true" />
                   <Pin Id="HxREV0KGyqdQT3r3bEOb77" Name="Area Test" Kind="InputPin" IsHidden="true" />
-                  <Pin Id="VTdOsF3lZh7MChloquSkRy" Name="Layer" Kind="InputPin" />
                   <Pin Id="Oc25Q9oc2gqMPum8MnEaxF" Name="Style" Kind="InputPin" />
+                  <Pin Id="LpuX5vOS5E1PuWCtqAhIWM" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="MqYODJ4tsDjPTtqiahZoXy" Name="Measure Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="EdEiMRsjDj1MMl9SrnRF59" Name="Behaviours" Kind="InputPin" />
                   <Pin Id="MrC8Y6OU5F0PC0zAlodKgK" Name="Output" Kind="StateOutputPin" />
                   <Pin Id="BUrujZdNWQJN27SM7pXjCO" Name="Update" Kind="InputPin" />
+                  <Pin Id="VTdOsF3lZh7MChloquSkRy" Name="Layer" Kind="InputPin" />
                 </Node>
                 <ControlPoint Id="LjxW29Fk2N2MceLJXHrL1H" Bounds="1100,580" />
                 <Node Bounds="1121,400,85,19" Id="DCZPPDiBGydOyB7w2WjDvT">
@@ -1492,11 +1501,13 @@
                   <Pin Id="TFmUBpPB2q9OusVgBWdoJT" Name="Children" Kind="InputPin" />
                   <Pin Id="Qte5Y49cRCdP7w8t70ZYCN" Name="Hit Test" Kind="InputPin" IsHidden="true" />
                   <Pin Id="GdGaOKzaKe1NnHSLWp1MUp" Name="Area Test" Kind="InputPin" IsHidden="true" />
-                  <Pin Id="NkfuWuLAIwcNrZqGyT0KVL" Name="Layer" Kind="InputPin" />
                   <Pin Id="I4wYhIe6inBOBPcWqQ72no" Name="Style" Kind="InputPin" />
+                  <Pin Id="QA6gHOIaS7JMQuyKqjX2Fw" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="BwYj09Ys97NM6W2EkhTWPQ" Name="Measure Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="FENY58PVAiFORMbLnjAokU" Name="Behaviours" Kind="InputPin" />
                   <Pin Id="CUZ9uChL8L1Lft9ebxrP02" Name="Output" Kind="StateOutputPin" />
                   <Pin Id="GF8zPy7jch9MHL35IxgU05" Name="Update" Kind="InputPin" />
+                  <Pin Id="NkfuWuLAIwcNrZqGyT0KVL" Name="Layer" Kind="InputPin" />
                 </Node>
                 <Node Bounds="829,130,85,19" Id="KL7gAOisqv4P71OYghrYCy">
                   <p:NodeReference LastCategoryFullName="Graphics.Skia.Layers" LastDependency="VL.Skia.vl">
@@ -1767,29 +1778,13 @@
                   <Pin Id="IGbjxeHY7fsMdrYyFoBkj1" Name="Children 2" Kind="InputPin" />
                   <Pin Id="AqZy66bCCFkNq3bK3ijVGl" Name="Hit Test" Kind="InputPin" IsHidden="true" />
                   <Pin Id="GsUCWXloSR2PNqWF4nMhvJ" Name="Area Test" Kind="InputPin" IsHidden="true" />
-                  <Pin Id="RRnVTVzDipYQDhEKTGYFC1" Name="Layer" Kind="InputPin" />
                   <Pin Id="CMSM5M32FG4MVVWpjjsYGO" Name="Style" Kind="InputPin" />
+                  <Pin Id="NGw3hJuRMheMUCuCVL7uFS" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="HarG2sFy8S1OnQiJ0h22Gm" Name="Measure Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="L8f7IkWk7IpLg6MFwBiPEN" Name="Behaviours" Kind="InputPin" />
                   <Pin Id="UL4mzBdLLhMOG62Rl3xAu7" Name="Output" Kind="StateOutputPin" />
                   <Pin Id="S8gLKpK3yfwLLiXl6BiaTY" Name="Update" Kind="InputPin" />
                 </Node>
-                <Node Bounds="148,490,57,26" Id="VaAGECUz1IgNyNBAXaBjMy">
-                  <p:NodeReference LastCategoryFullName="Fu.Core.ILayoutable" LastDependency="VL.Fu.vl">
-                    <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-                    <FullNameCategoryReference ID="Fu.Core.ILayoutable" />
-                    <Choice Kind="OperationCallFlag" Name="IsDirty" />
-                  </p:NodeReference>
-                  <Pin Id="FjzAwHnVZ1kLPOaZoeTamt" Name="Input" Kind="StateInputPin" />
-                  <Pin Id="IXXckoSQwgkP3Yrfs67oAi" Name="Result" Kind="OutputPin" />
-                </Node>
-                <Pad Id="CSSDuUJaiWyOd7Wjow8KSR" Bounds="183,539,35,35" ShowValueBox="true" isIOBox="true" Value="False">
-                  <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
-                    <Choice Kind="ImmutableTypeFlag" Name="Boolean" />
-                  </p:TypeAnnotation>
-                  <p:ValueBoxSettings>
-                    <p:buttonmode p:Assembly="VL.UI.Forms" p:Type="VL.HDE.PatchEditor.Editors.ButtonModeEnum">Toggle</p:buttonmode>
-                  </p:ValueBoxSettings>
-                </Pad>
                 <ControlPoint Id="KBqxtLOSDbBNaRHP1wvFcl" Bounds="842,1090" />
                 <ControlPoint Id="FJKecxdWgDJNinwFqoosMb" Bounds="61,-49" />
                 <Node Bounds="439,560,57,26" Id="RrHAPDESFpuLFSAJp0yfZR">
@@ -1847,8 +1842,9 @@
                   <Pin Id="U03FOyjy3hJLRKJvX0sbiU" Name="Children" Kind="InputPin" />
                   <Pin Id="Er0wBzylpHXNOKUKJgokLQ" Name="Hit Test" Kind="InputPin" IsHidden="true" />
                   <Pin Id="NE587rZqddrMYSGnd720Kq" Name="Area Test" Kind="InputPin" IsHidden="true" />
-                  <Pin Id="QhIxLFZxoIIL42B5EjUOWC" Name="Layer" Kind="InputPin" />
                   <Pin Id="UO3Od5XOnCVMVD13Qs0hpu" Name="Style" Kind="InputPin" />
+                  <Pin Id="OBpZLMgEmU6PdNttEcaBGn" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="PTsPZDqFz4aOmKeePfRTyj" Name="Measure Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="RFQ3beFiPy0OIH4ZDR61BC" Name="Behaviours" Kind="InputPin" />
                   <Pin Id="Ql7YVA3qrVrO8G3QXcMxMl" Name="Output" Kind="StateOutputPin" />
                   <Pin Id="GMKS7L6uHbMPdKpBcQ2ehb" Name="Update" Kind="InputPin" />
@@ -1984,8 +1980,9 @@
                   <Pin Id="QjYfSpEpOmELnLXXJg4TVr" Name="Children" Kind="InputPin" />
                   <Pin Id="U0fWDRBgAvzMgDqOg7uWOw" Name="Hit Test" Kind="InputPin" IsHidden="true" />
                   <Pin Id="E25zFiPE56GLQhZNDhEFb0" Name="Area Test" Kind="InputPin" IsHidden="true" />
-                  <Pin Id="S7NX1BvJuVzOMFisDjr8QN" Name="Layer" Kind="InputPin" />
                   <Pin Id="SdjZIOcAaWFOekTvUTONZ3" Name="Style" Kind="InputPin" />
+                  <Pin Id="REXwOgQbfhfMCvvwSOUatG" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="I5EtU03WErOQJmqN45I7tZ" Name="Measure Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="LIPeL5fcopEOi1C2t6onJX" Name="Behaviours" Kind="InputPin" />
                   <Pin Id="QSA7qaVtQN2NghSRHjCM89" Name="Output" Kind="StateOutputPin" />
                   <Pin Id="PFkbyaq1CGaNSSXWW1ZB47" Name="Update" Kind="InputPin" />
@@ -2065,8 +2062,9 @@
                   <Pin Id="ClKuhTrR6NuOv7n4yQ0uyy" Name="Children" Kind="InputPin" />
                   <Pin Id="ETTG4anXZOPO4gCZD3jMoM" Name="Hit Test" Kind="InputPin" IsHidden="true" />
                   <Pin Id="SgooaYV5mClLnMIUucXYgr" Name="Area Test" Kind="InputPin" IsHidden="true" />
-                  <Pin Id="Je9FHghtOVUOymc6hs7xgI" Name="Layer" Kind="InputPin" />
                   <Pin Id="TPXTOfhfOHlQc2vlA6piUn" Name="Style" Kind="InputPin" />
+                  <Pin Id="F6UgKqPu2TaNnnirKa4M5g" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="RVNCtwFoz2dPSOavsW1PoS" Name="Measure Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="L7plmGYfe1yLRKXgloztYE" Name="Behaviours" Kind="InputPin" />
                   <Pin Id="QbjaH6Lph5NP4BdipRpWuy" Name="Update" Kind="ApplyPin" />
                   <Pin Id="LynFV1iFz7hOsgFVsEyBtM" Name="Output" Kind="StateOutputPin" />
@@ -2171,7 +2169,7 @@
                   <Pin Id="KXxZkvR5H66MBx8BNu7odD" Name="Offset" Kind="OutputPin" />
                   <Pin Id="NIhzTUnqNuQOY3tpdnPnCE" Name="Is Dragging" Kind="OutputPin" />
                 </Node>
-                <Node Bounds="942,640,66,19" Id="Gtw5BKFKfRqPb84hA4GJxX">
+                <Node Bounds="913,730,66,19" Id="Gtw5BKFKfRqPb84hA4GJxX">
                   <p:NodeReference LastCategoryFullName="Fu.Styles" LastDependency="VL.Fu.vl">
                     <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
                     <CategoryReference Kind="Category" Name="Styles" NeedsToBeDirectParent="true">
@@ -2184,6 +2182,103 @@
                   <Pin Id="IFe5H7Kvjj2QdrEzaNA30Y" Name="Value" Kind="InputPin" />
                   <Pin Id="GwkIjRQHb7uNRnY6lza1KP" Name="Output" Kind="OutputPin" />
                 </Node>
+                <Node Bounds="840,600,65,19" Id="UbzdKHLOxApOjTyBZIivds">
+                  <p:NodeReference LastCategoryFullName="Fu.Controls" LastDependency="VL.Fu.vl">
+                    <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                    <CategoryReference Kind="Category" Name="Controls" NeedsToBeDirectParent="true">
+                      <p:OuterCategoryReference Kind="Category" Name="Fu" NeedsToBeDirectParent="true" />
+                    </CategoryReference>
+                    <Choice Kind="ProcessAppFlag" Name="Text" />
+                  </p:NodeReference>
+                  <Pin Id="TGvE5GpSjJLLUHDI1oaizY" Name="Node Context" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="ARmj3kWXsEwLdqkVGfeDxI" Name="Text" Kind="InputPin" DefaultValue="Lorem Ipsum " />
+                  <Pin Id="Njtx1PARFHvNzUwCqd9co7" Name="Style" Kind="InputPin" />
+                  <Pin Id="FLZp6yz4dKwNL82PtC3xz9" Name="Paint" Kind="InputPin" />
+                  <Pin Id="Fmfk6ob5P0TMfaeNakMriX" Name="Output" Kind="OutputPin" />
+                  <Pin Id="GxJRQqtf6RiNnPj46o97Yi" Name="Behaviours" Kind="InputPin" />
+                </Node>
+                <Node Bounds="880,540,165,19" Id="FPVfwK5VH54OjnQbRQBYh0">
+                  <p:NodeReference LastCategoryFullName="Graphics.Skia.Text" LastDependency="VL.Skia.vl">
+                    <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                    <FullNameCategoryReference ID="Graphics.Skia.Text" />
+                    <Choice Kind="ProcessAppFlag" Name="FontAndParagraph" />
+                  </p:NodeReference>
+                  <Pin Id="FwD4WBngSA1QYLVrEV6TaV" Name="Node Context" Kind="InputPin" IsHidden="true" />
+                  <Pin Id="MP3TFphsbz4L2KSvpe4pUV" Name="Input" Kind="InputPin" />
+                  <Pin Id="GF39JLRfMfcNtXCW85MBE9" Name="Family Name" Kind="InputPin" DefaultValue="Artifakt Element" />
+                  <Pin Id="GLF3mcICFiFMycilVBoACI" Name="Style" Kind="InputPin" />
+                  <Pin Id="FFCxxGFgC1cMYJdkqHgSLr" Name="Size" Kind="InputPin" DefaultValue="0.28" />
+                  <Pin Id="NyRqALGBLAqLmsBElbreVy" Name="Color" Kind="InputPin" />
+                  <Pin Id="Jm4E1CWp2NuQbYWnFuAOla" Name="Line Height in em" Kind="InputPin" />
+                  <Pin Id="RfOVqbJrYAVNiYzKnQqIdj" Name="Horizontal Alignment" Kind="InputPin" />
+                  <Pin Id="DsTY0DL8eipPbkOqInyeMU" Name="Vertical Alignment" Kind="InputPin" />
+                  <Pin Id="FNPKZQkH4EqPlwIGQ0uNOp" Name="Show Helpers" Kind="InputPin" DefaultValue="True" />
+                  <Pin Id="ONW1JWhYtBHPLjj80CtdUT" Name="Output" Kind="OutputPin" />
+                </Node>
+                <Node Bounds="860,470,75,19" Id="KSoYygiHHoWN8oy8uEOgZ3">
+                  <p:NodeReference LastCategoryFullName="Fu.Styles" LastDependency="VL.Fu.vl">
+                    <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                    <CategoryReference Kind="Category" Name="Styles" NeedsToBeDirectParent="true">
+                      <p:OuterCategoryReference Kind="Category" Name="Fu" NeedsToBeDirectParent="true" />
+                    </CategoryReference>
+                    <Choice Kind="ProcessAppFlag" Name="SetMaxWidth" />
+                  </p:NodeReference>
+                  <Pin Id="TtvvWRDw3s3PwuqqT5AZpi" Name="Input" Kind="InputPin" />
+                  <Pin Id="ShgQwp798XXOa1MysdBunq" Name="Max Width" Kind="InputPin" DefaultValue="0.93" />
+                  <Pin Id="D0ag8nY1LVKPl8ihqlBKzc" Name="Output" Kind="OutputPin" />
+                </Node>
+                <Node Bounds="913,681,56,19" Id="Feh4y64a9FsNJpRgGqQjc3">
+                  <p:NodeReference LastCategoryFullName="Fu.Styles" LastDependency="VL.Fu.vl">
+                    <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                    <FullNameCategoryReference ID="Fu.Styles" />
+                    <Choice Kind="ProcessAppFlag" Name="SetWidth" />
+                  </p:NodeReference>
+                  <Pin Id="MKImGlrN6BBLfuwjrtOQwV" Name="Input" Kind="InputPin" />
+                  <Pin Id="LM41BXGVFv2MkTY5YGTuiD" Name="Width" Kind="InputPin" DefaultValue="2.39" />
+                  <Pin Id="DQ2Aypc1Mv7PNVFVmXVJ1J" Name="Output" Kind="OutputPin" />
+                </Node>
+                <Node Bounds="860,420,82,19" Id="GDdG2tV6uh5P2sYEgwq2XL">
+                  <p:NodeReference LastCategoryFullName="Fu.Styles" LastDependency="VL.Fu.vl">
+                    <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                    <Choice Kind="ProcessAppFlag" Name="SetHeightAuto" />
+                  </p:NodeReference>
+                  <Pin Id="JAoD4S0XGKBNrHteT5c8im" Name="Input" Kind="InputPin" />
+                  <Pin Id="UELxoGQOOLYNjE0I2jlga5" Name="Output" Kind="OutputPin" />
+                </Node>
+                <Node Bounds="953,641,60,19" Id="LZwA8vojCsSMTqezypQFkY">
+                  <p:NodeReference LastCategoryFullName="Fu.Styles" LastDependency="VL.Fu.vl">
+                    <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                    <CategoryReference Kind="Category" Name="Styles" NeedsToBeDirectParent="true">
+                      <p:OuterCategoryReference Kind="Category" Name="Fu" NeedsToBeDirectParent="true" />
+                    </CategoryReference>
+                    <Choice Kind="ProcessAppFlag" Name="SetHeight" />
+                  </p:NodeReference>
+                  <Pin Id="HuJ5pjDrYTXQJLdzqj1cbm" Name="Input" Kind="InputPin" />
+                  <Pin Id="Az3JsvJzHS1MvqwukdpqxS" Name="Height" Kind="InputPin" DefaultValue="2.17" />
+                  <Pin Id="MLsjvyWcZWKLMeNSaNgIVh" Name="Output" Kind="OutputPin" />
+                </Node>
+                <Pad Id="To6bg8So579PN85T2RkmGT" Comment="Text" Bounds="692,460,191,15" ShowValueBox="true" isIOBox="true" Value="Lorem Ipsum Dolam">
+                  <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
+                    <Choice Kind="TypeFlag" Name="String" />
+                  </p:TypeAnnotation>
+                </Pad>
+                <Node Bounds="744,1000,57,26" Id="FYcG4N997tmMAu0PizOHyh">
+                  <p:NodeReference LastCategoryFullName="Fu.Core.ILayoutable" LastDependency="VL.Fu.vl">
+                    <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                    <FullNameCategoryReference ID="Fu.Core.ILayoutable" />
+                    <Choice Kind="OperationCallFlag" Name="IsDirty" />
+                  </p:NodeReference>
+                  <Pin Id="RDH2gUxjOCWLKdYBWzzDSp" Name="Input" Kind="StateInputPin" />
+                  <Pin Id="AIO1G0DkqpmPMLNmFnsEjG" Name="Result" Kind="OutputPin" />
+                </Node>
+                <Pad Id="CPNXAAMpl0jPiJXOpKUYjH" Bounds="779,1049,35,35" ShowValueBox="true" isIOBox="true" Value="False">
+                  <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
+                    <Choice Kind="ImmutableTypeFlag" Name="Boolean" />
+                  </p:TypeAnnotation>
+                  <p:ValueBoxSettings>
+                    <p:buttonmode p:Assembly="VL.UI.Forms" p:Type="VL.HDE.PatchEditor.Editors.ButtonModeEnum">Toggle</p:buttonmode>
+                  </p:ValueBoxSettings>
+                </Pad>
               </Canvas>
               <Patch Id="RMl9eluCoetLaHYj6cjWzp" Name="Create" />
               <Patch Id="Oi7RwRf9zptPn7P9SPrqQd" Name="Update">
@@ -2198,8 +2293,6 @@
                 <Fragment Id="A4nCf8koYG6PefWItVTtOS" Patch="RMl9eluCoetLaHYj6cjWzp" Enabled="true" />
                 <Fragment Id="G2xlXiVnozvNEY1VTThiAP" Patch="Oi7RwRf9zptPn7P9SPrqQd" Enabled="true" />
               </ProcessDefinition>
-              <Link Id="J86ATiAXkDxNBUsX3UIWb5" Ids="UL4mzBdLLhMOG62Rl3xAu7,FjzAwHnVZ1kLPOaZoeTamt" />
-              <Link Id="OtNrLn1E35UNkh8jb1K9hz" Ids="IXXckoSQwgkP3Yrfs67oAi,CSSDuUJaiWyOd7Wjow8KSR" />
               <Link Id="PGPK1hV1SqQMuHHUTjmIah" Ids="KBqxtLOSDbBNaRHP1wvFcl,NaHu8iqUUE9LJrLgQqijYw" IsHidden="true" />
               <Link Id="SFMQs0yLnWIMBmPZYJ9hU4" Ids="Pj8HUH7zfZBPZ14VGS6ZSp,FJKecxdWgDJNinwFqoosMb" IsHidden="true" />
               <Link Id="UzSLDXwcETWOlmeGZ9XqQc" Ids="UL4mzBdLLhMOG62Rl3xAu7,NQRoAkPqaXmNolDoeTpHXX" />
@@ -2246,6 +2339,41 @@
               <Link Id="KFFIUwgj9OHM1LtcClGPZj" Ids="O3EclH79iS4M6FQP02OTZ5,L7plmGYfe1yLRKXgloztYE" />
               <Link Id="TorjztxLq65QYia5GoWIma" Ids="GwkIjRQHb7uNRnY6lza1KP,TPXTOfhfOHlQc2vlA6piUn" />
               <Link Id="Ajdk4KeMJL1NzGhkMiV9yF" Ids="KXxZkvR5H66MBx8BNu7odD,IFe5H7Kvjj2QdrEzaNA30Y" />
+              <Link Id="FhtRRfwKgJMMsCnUCqzODX" Ids="Fmfk6ob5P0TMfaeNakMriX,ClKuhTrR6NuOv7n4yQ0uyy" />
+              <Link Id="APRiN9fbYNDQDpBbbDRoRk" Ids="ONW1JWhYtBHPLjj80CtdUT,FLZp6yz4dKwNL82PtC3xz9" />
+              <Link Id="LD1X2nUciFJMYxOQI5HAYm" Ids="D0ag8nY1LVKPl8ihqlBKzc,Njtx1PARFHvNzUwCqd9co7" />
+              <Link Id="PVJVdtWFgWbPHq6YzUUFX4" Ids="DQ2Aypc1Mv7PNVFVmXVJ1J,QJ5zSXwDqO4NZSeHIVaxDA" />
+              <Link Id="EHtRH3LgWcVPYGzd6Y6PCQ" Ids="UELxoGQOOLYNjE0I2jlga5,TtvvWRDw3s3PwuqqT5AZpi" />
+              <Link Id="GGJ9UCWBQOPLwmKsTuf7Ul" Ids="MLsjvyWcZWKLMeNSaNgIVh,MKImGlrN6BBLfuwjrtOQwV" />
+              <Link Id="ISv6sfjuyS8NcIcO82ADTl" Ids="To6bg8So579PN85T2RkmGT,ARmj3kWXsEwLdqkVGfeDxI" />
+              <Link Id="O7tpdRGU3ZDMn3lHsBFXBC" Ids="AIO1G0DkqpmPMLNmFnsEjG,CPNXAAMpl0jPiJXOpKUYjH" />
+              <Link Id="JMQd6QnupO4QPtcGUjVLcy" Ids="LynFV1iFz7hOsgFVsEyBtM,RDH2gUxjOCWLKdYBWzzDSp" />
+            </Patch>
+          </Node>
+          <Node Bounds="761,353,84,95" Id="K1kVP5dzCUSNDMSS1f908a">
+            <p:NodeReference LastCategoryFullName="Fu.Core" LastDependency="VL.Fu.vl">
+              <Choice Kind="StatefulRegion" Name="Region (Stateful)" Fixed="true" />
+              <Choice Kind="ProcessAppFlag" Name="FuNode (Spectral)" />
+            </p:NodeReference>
+            <Pin Id="GjW51D8H3vpPhVT9L56CPX" Name="Node Context" Kind="InputPin" IsHidden="true" />
+            <Pin Id="M6LpaB3jLL3LA4YcVG2nzJ" Name="Children" Kind="InputPin" />
+            <Pin Id="DhZyIeUljvEPBZH9qd1PVn" Name="Hit Test" Kind="InputPin" IsHidden="true" />
+            <Pin Id="EuOmc8FsB5HOUWk7RQCzl3" Name="Area Test" Kind="InputPin" IsHidden="true" />
+            <Pin Id="M0hJMuL26XRQIX9HbUzSnw" Name="Style" Kind="InputPin" />
+            <Pin Id="Tu6u7DEWgw4QUpWV7WqNju" Name="Measure Func" Kind="InputPin" IsHidden="true" />
+            <Pin Id="HtT4UjbuYlQPVN95HqcFRQ" Name="Measure Context" Kind="InputPin" IsHidden="true" />
+            <Pin Id="JFEzzSXr1vBPeHzBIKEI5K" Name="Behaviours" Kind="InputPin" />
+            <Pin Id="UXRO60cycjnMF4d8jO5M5b" Name="Update" Kind="ApplyPin" />
+            <Pin Id="MzEPLnmu1AfO98Rgl5YG9A" Name="Output" Kind="StateOutputPin" />
+            <Patch Id="SkFKMQCyGXKPworSYlACpH" ManuallySortedPins="true">
+              <Patch Id="VqQTv7ZRME4OKxnr32M3wa" Name="Create" ManuallySortedPins="true" />
+              <Patch Id="RpxnalMc32XNsFYUBFJhhh" Name="Evaluate" ManuallySortedPins="true">
+                <Pin Id="TX1QhTUCmGmLCI9C6DfaMj" Name="Node" Kind="InputPin" />
+                <Pin Id="Du7MkMg39fLOBbn8vKz6xZ" Name="Layer" Kind="OutputPin" />
+              </Patch>
+              <Patch Id="Lpx4MyxC1G9NoTZ9enIHfw" Name="Dispose" ManuallySortedPins="true" />
+              <ControlPoint Id="AvHR5sfJJ2jOvOfQVY3yCr" Bounds="765,361" />
+              <ControlPoint Id="VKbaozFFCrHMlcdgN3wPP5" Bounds="765,441" />
             </Patch>
           </Node>
         </Canvas>
@@ -2349,6 +2477,8 @@
         <Link Id="GtM4pw4d73sO6JV3IqmNyS" Ids="AU8Cc3xo1OkNqznrRM3Ypi,L4v25nbucVmO72abuIFvon" />
         <Link Id="PrUJ6Z8oSjfNj7j9QJkW7Y" Ids="JDGACTJO2JAMhegRXT5SDz,QEHnrkxiFBzNSo4WrfZB1Z" />
         <Link Id="TEuGTPAM4s5OkivHhxNkUG" Ids="D9Ccif6WW3LM6kovHWWLc4,Ez2hrx9LcqWLC0GIsIC0Ur" />
+        <Link Id="UPro0wvlj1kOvLXvN9fcu8" Ids="TX1QhTUCmGmLCI9C6DfaMj,AvHR5sfJJ2jOvOfQVY3yCr" IsHidden="true" />
+        <Link Id="AVF1AMvFhYpM1ufZrE5ze3" Ids="VKbaozFFCrHMlcdgN3wPP5,Du7MkMg39fLOBbn8vKz6xZ" IsHidden="true" />
       </Patch>
     </Node>
   </Patch>

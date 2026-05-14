@@ -92,7 +92,8 @@ namespace VL.Fu.Core
         {
             unsafe
             {
-                _handle = (YGNode*)IntPtr.Zero;
+                _handle->FinalizeNode();
+                _handle = null;
             }
 
             base.Dispose();

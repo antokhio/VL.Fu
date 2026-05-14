@@ -2,7 +2,7 @@
 
 namespace VL.Fu.Core
 {
-    public interface IFuNode : ITreeNode, ILayer, IInteractable, ILayoutable { }
+    public interface IFuNode : ITreeNode, ILayer, IInteractable, ILayoutable, IMeasurable { }
 
     public interface IFuNodeInlay
     {
