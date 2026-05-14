@@ -1,6 +1,7 @@
 ﻿using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
+using VL.Fu.Core.Property;
 using VL.Fu.Interaction.Gestures;
 
 namespace VL.Fu.Interaction.Behaviours

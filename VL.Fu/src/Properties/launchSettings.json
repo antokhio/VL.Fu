@@ -5,7 +5,7 @@
     },
     "antokhio/dev": {
       "commandName": "Executable",
-      "executablePath": "C:\\Program Files\\vvvv\\vvvv_gamma_7.1-0101-ge364e43d33-win-x64\\vvvv.exe",
+      "executablePath": "C:\\Program Files\\vvvv\\vvvv_gamma_7.1-win-x64\\vvvv.exe",
       "commandLineArgs": "--package-repositories D:\\VVVV\\VL.Fu; ^\r\n--editable-packages VL.Fu;VL.Fu.Core;VL.Fu.WinForms;"
     }
   }

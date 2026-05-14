@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Document xmlns:p="property" xmlns:r="reflection" Id="UF2LACGI02GPbJZ8Uh56e6" LanguageVersion="2025.7.1-0101-ge364e43d33" Version="0.128">
-  <NugetDependency Id="D6bbt5yVMtYP1HCin38KKS" Location="VL.CoreLib" Version="2025.7.1-0101-ge364e43d33" />
+<Document xmlns:p="property" xmlns:r="reflection" Id="UF2LACGI02GPbJZ8Uh56e6" LanguageVersion="2025.7.2-0032-g4ea78fbb04" Version="0.128">
+  <NugetDependency Id="D6bbt5yVMtYP1HCin38KKS" Location="VL.CoreLib" Version="2025.7.2-0032-g4ea78fbb04" />
   <Patch Id="QvcUNNPZ7bNOiRG51KQ1Na">
     <Canvas Id="Oulk0vyNb5xP5pHZSvCzdL" DefaultCategory="Main" BordersChecked="false" CanvasType="FullCategory" />
     <!--
@@ -990,7 +990,7 @@
                   <Pin Id="Bego7WTBwq1MmhGHcdWZZ1" Name="Anchor" Kind="InputPin" DefaultValue="Center" />
                   <Pin Id="FPKYado4Le3QFB4rb1CiIl" Name="Output" Kind="StateOutputPin" />
                 </Node>
-                <Pad Id="IVOfx1QgU9PNt5zUMuT8VF" Comment="Size" Bounds="225,50,35,28" ShowValueBox="true" isIOBox="true" Value="0.36, 0.33">
+                <Pad Id="IVOfx1QgU9PNt5zUMuT8VF" Comment="Size" Bounds="225,50,35,28" ShowValueBox="true" isIOBox="true" Value="0.48, 0.33">
                   <p:TypeAnnotation LastCategoryFullName="2D" LastDependency="VL.CoreLib.vl">
                     <Choice Kind="TypeFlag" Name="Vector2" />
                   </p:TypeAnnotation>
@@ -1081,7 +1081,7 @@
                   <Pin Id="UJBGkArrvA0OsO7rTSlQm7" Name="Output" Kind="OutputPin" />
                   <Pin Id="HF3udk4pbcgPVrCZT3VTFV" Name="Is Hovered" Kind="OutputPin" />
                 </Node>
-                <Pad Id="CKU0aNeaVY0PKDp5BLUqFT" Comment="Is Hovered" Bounds="706,100,35,35" ShowValueBox="true" isIOBox="true" />
+                <Pad Id="CKU0aNeaVY0PKDp5BLUqFT" Comment="Is Hovered" Bounds="685,120,35,35" ShowValueBox="true" isIOBox="true" />
                 <Pad Id="DMKNxJFic1mLratKoc78pM" Comment="Is Hoverea" Bounds="420,-170,35,35" ShowValueBox="true" isIOBox="true" />
                 <Node Bounds="258,-140,85,19" Id="TQOg2wwAH0RNWhphyg16C7">
                   <p:NodeReference LastCategoryFullName="Fu.Interaction.Behaviours" LastDependency="VL.Fu.vl">
@@ -2525,14 +2525,14 @@
         <Link Id="HKp0euVnbUnPHLO26he3EG" Ids="Fm6rXXcNjc7OuLi6I3hyug,Bf6kEqbHjWtMOmPxkTjey2" />
         <Link Id="GtM4pw4d73sO6JV3IqmNyS" Ids="AU8Cc3xo1OkNqznrRM3Ypi,L4v25nbucVmO72abuIFvon" />
         <Link Id="FMCcAzh2fofPC9LY1d8MA6" Ids="JEqEJZ7NmysOWAJeWoD72r,A4WP11TxyHFQCc6CQrleti" />
-        <Link Id="N1riyJVgiMjOz3itDdfKvc" Ids="JLFepe0GsEULCZMsBQOfxY,QEHnrkxiFBzNSo4WrfZB1Z" />
         <Link Id="NHz664syRu3OeX0lPX1LkU" Ids="SSAZqO8NJSwQX6FAmWV27B,HKgtmvV7JKcOPxhRWGhr3o" />
         <Link Id="JzUqt50rWcYNdhawFTXH7V" Ids="PGSUPQ6n7ViLEC8hVcUNsQ,TH7NEzGmoeZOxuJaFHzuR5" />
         <Link Id="AgvI4riNAYaLSwZKNTdgAK" Ids="TWAvQfTg0n5MObrtrOFEid,NESmWJamiMHL5TdyJQJBte" />
+        <Link Id="FBZOOcDXILAMMbWa06xXqM" Ids="A17sS8aeIe2PpIhomOakvP,QEHnrkxiFBzNSo4WrfZB1Z" />
       </Patch>
     </Node>
   </Patch>
   <NugetDependency Id="UI9079M3yR4NM2eAijKBP4" Location="VL.Fu" Version="0.0.0" />
-  <NugetDependency Id="I55KX0RWIraOJCWAneKTDl" Location="VL.Skia" Version="2025.7.1-0101-ge364e43d33" />
-  <NugetDependency Id="Jydt999F7fXODqVxhKbHXP" Location="VL.Serialization.MessagePack" Version="2025.7.1-0101-ge364e43d33" />
+  <NugetDependency Id="I55KX0RWIraOJCWAneKTDl" Location="VL.Skia" Version="2025.7.2-0032-g4ea78fbb04" />
+  <NugetDependency Id="Jydt999F7fXODqVxhKbHXP" Location="VL.Serialization.MessagePack" Version="2025.7.2-0032-g4ea78fbb04" />
 </Document>

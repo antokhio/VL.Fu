@@ -21,7 +21,9 @@ namespace VL.Fu.Interaction.Behaviours
 
         private readonly ChannelProperty<Unit> _clickedChannel = new(Unit.Default);
         private readonly ChannelProperty<bool> _isPressedChannel = new(false);
-        private int _previousRevision = 0;
+
+        private IDisposable _subscription;
+        private bool _isClick = false;
 
         [Fragment]
         public Clickable(NodeContext nodeContext)
@@ -43,21 +45,23 @@ namespace VL.Fu.Interaction.Behaviours
                 new TapGesture(this, OnStart, OnUpdate, OnFinish, OnCancel),
             ];
 
-            _previousRevision = _clickedChannel.Revision;
+            _subscription = _clickedChannel.Subscribe(_ => _isClick = true);
         }
 
         [Fragment(Order = PinOrder.Action)]
-        public void SetClickedChannel(IChannel<Unit>? channel)
+        public void SetClickedChannel(IChannel<Unit> channel)
         {
-            _clickedChannel.SetChannel(
-                channel,
-                (
-                    nextChannel =>
-                    {
-                        _previousRevision = _clickedChannel.Revision;
-                    }
-                )
-            );
+            _clickedChannel.SetChannel(channel);
+
+            //_clickedChannel.SetChannel(
+            //    channel,
+            //    (
+            //        nextChannel =>
+            //        {
+            //            _previousRevision = _clickedChannel.Revision;
+            //        }
+            //    )
+            //);
         }
 
         [Fragment(Order = PinOrder.Action)]
@@ -76,9 +80,9 @@ namespace VL.Fu.Interaction.Behaviours
         [Fragment]
         public void Update(out bool isClick)
         {
-            var currentRevision = _clickedChannel.Revision;
-            isClick = _previousRevision != currentRevision;
-            _previousRevision = currentRevision;
+            isClick = _isClick;
+
+            _isClick = false;
         }
 
         [Fragment]
