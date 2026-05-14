@@ -1,12 +1,14 @@
 ﻿using VL.Core;
 using VL.Core.Import;
+using VL.Core.PublicAPI;
 using VL.Fu.Core.Common;
 using VL.Lib.Collections;
 
 namespace VL.Fu.Core
 {
+    [Region(SupportedBorderControlPoints = ControlPointType.None)]
     [ProcessNode(HasStateOutput = true, FragmentSelection = FragmentSelection.Explicit)]
-    public class FuNode : Interactable, IFuNode
+    public class FuNode : FuRegion, IFuNode, IRegion<IFuNodeInlay>
     {
         [Fragment]
         public FuNode(NodeContext nodeContext)

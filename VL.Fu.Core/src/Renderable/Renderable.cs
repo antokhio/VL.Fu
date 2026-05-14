@@ -1,7 +1,6 @@
 ﻿using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
-using VL.Fu.Core.Common;
 using VL.Skia;
 
 namespace VL.Fu.Core
@@ -25,8 +24,7 @@ namespace VL.Fu.Core
         /// <summary>
         /// Assigns the visual content for this specific node.
         /// </summary>
-        [Fragment(Order = PinOrder.Layer)]
-        public void SetLayer(ILayer? layer)
+        public virtual void SetLayer(ILayer? layer)
         {
             _layer = layer;
         }

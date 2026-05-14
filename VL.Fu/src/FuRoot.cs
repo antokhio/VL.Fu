@@ -15,7 +15,7 @@ namespace VL.Fu
     {
         public RectangleF? Bounds => Root?.Bounds;
 
-        private IViewportService _viewportService;
+        private ViewportService _viewportService;
 
         // TODO: Remove from here
         private float _pointScaleFactor = 100.0f;
