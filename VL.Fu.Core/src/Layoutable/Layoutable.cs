@@ -87,5 +87,15 @@ namespace VL.Fu.Core
 
             Layout = _layout with { X = left, Y = top, Width = width, Height = height };
         }
+
+        public override void Dispose()
+        {
+            unsafe
+            {
+                _handle = (YGNode*)IntPtr.Zero;
+            }
+
+            base.Dispose();
+        }
     }
 }
