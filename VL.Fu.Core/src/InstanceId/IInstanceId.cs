@@ -1,4 +1,4 @@
-﻿namespace VL.Fu.Core.InstanceId
+﻿namespace VL.Fu.Core
 {
     public interface IInstanceId
     {

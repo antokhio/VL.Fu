@@ -15,10 +15,11 @@ namespace VL.Fu.Core
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public abstract class HitTestable : Renderable, IHitTestProvider, IAreaTestProvider
     {
-        protected readonly CachedProperty<IHitTest> _hitTest = new(Helpers.HitTest.HitTestBounds);
-        protected readonly CachedProperty<IAreaTest> _areaTest = new(
-            Helpers.AreaTest.AreaTestBounds
-        );
+        protected static readonly IHitTest DefaultHitTestBounds = new HitTestBounds();
+        protected static readonly IAreaTest DefaultAreaTestBounds = new AreaTestBounds();
+
+        protected readonly CachedProperty<IHitTest> _hitTest = new(DefaultHitTestBounds);
+        protected readonly CachedProperty<IAreaTest> _areaTest = new(DefaultAreaTestBounds);
 
         protected HitTestable(NodeContext nodeContext)
             : base(nodeContext) { }
@@ -26,12 +27,12 @@ namespace VL.Fu.Core
         [Fragment(Order = PinOrder.HitTest)]
         public void SetHitTest(
             [Pin(Visibility = Model.PinVisibility.Optional)] IHitTest? hitTest
-        ) => _hitTest.SetValue(hitTest ?? Helpers.HitTest.HitTestBounds);
+        ) => _hitTest.SetValue(hitTest ?? DefaultHitTestBounds);
 
         [Fragment(Order = PinOrder.AreaTest)]
         public void SetAreaTest(
             [Pin(Visibility = Model.PinVisibility.Optional)] IAreaTest? areaTest
-        ) => _areaTest.SetValue(areaTest ?? Helpers.AreaTest.AreaTestBounds);
+        ) => _areaTest.SetValue(areaTest ?? DefaultAreaTestBounds);
 
         public bool HitTest(FuPointer pointer)
         {

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Document xmlns:p="property" xmlns:r="reflection" Id="MXmLqXRy8bmPdLcOoQlxyq" LanguageVersion="2025.7.1-0101-ge364e43d33" Version="0.128">
-  <NugetDependency Id="ORI9TXvQXMwQKwbKOYDpaS" Location="VL.CoreLib" Version="2025.7.1-0101-ge364e43d33" />
+<Document xmlns:p="property" xmlns:r="reflection" Id="MXmLqXRy8bmPdLcOoQlxyq" LanguageVersion="2025.7.1" Version="0.128">
+  <NugetDependency Id="ORI9TXvQXMwQKwbKOYDpaS" Location="VL.CoreLib" Version="2025.7.1" />
   <Patch Id="A61oQbyZT1wNxcmZr2pwfa">
     <Canvas Id="Cmbxsih4dJSLjwpRDD9z5i" DefaultCategory="Fu" CanvasType="FullCategory">
       <!--
@@ -126,10 +126,9 @@
           <Canvas Id="LpzMTOIML93OvX4wnbjAIy" CanvasType="Group">
             <ControlPoint Id="SKXPrmMuybjNEFESPtkBQi" Bounds="789,111" />
             <ControlPoint Id="BbfahcaVf2CNbndqZ2HZQ0" Bounds="475,110" />
-            <Node Bounds="473,161,115,26" Id="VJu96bYhEt3NbgTl0cmdYR">
-              <p:NodeReference LastCategoryFullName="Fu.Core.Context.IContextProvider" LastDependency="VL.Fu.Core.vl">
+            <Node Bounds="473,161,115,19" Id="VJu96bYhEt3NbgTl0cmdYR">
+              <p:NodeReference LastCategoryFullName="Fu.Core.IContextProvider" LastDependency="VL.Fu.Core.vl">
                 <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-                <FullNameCategoryReference ID="Fu.Core.Context.IContextProvider" />
                 <Choice Kind="OperationCallFlag" Name="TryGetPointersStream" />
               </p:NodeReference>
               <Pin Id="HLCpzkeWXUiLC2vMtJl7tt" Name="Input" Kind="StateInputPin" />
@@ -298,10 +297,9 @@
               <Pin Id="UiLFFLOb4IXPDP36XjpAmr" Name="Input 3" Kind="InputPin" />
             </Node>
             <ControlPoint Id="M0dXGVdCwJ9O70wPjkwJsz" Bounds="632,109" />
-            <Node Bounds="630,160,118,26" Id="It2cmwYvYvCLuAGnVHcta3">
-              <p:NodeReference LastCategoryFullName="Fu.Core.Context.IContextProvider" LastDependency="VL.Fu.Core.vl">
+            <Node Bounds="630,160,118,19" Id="It2cmwYvYvCLuAGnVHcta3">
+              <p:NodeReference LastCategoryFullName="Fu.Core.IContextProvider" LastDependency="VL.Fu.Core.vl">
                 <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-                <FullNameCategoryReference ID="Fu.Core.Context.IContextProvider" />
                 <Choice Kind="OperationCallFlag" Name="TryGetViewportStream" />
               </p:NodeReference>
               <Pin Id="VOUWhWbWQfGNFMjtFunHxt" Name="Input" Kind="StateInputPin" />
@@ -365,10 +363,9 @@
           <Canvas Id="EauduCZombZNPilgM2WVMY" CanvasType="Group">
             <ControlPoint Id="ChICuaqrdZ6OxJhxNL6D3y" Bounds="167,140" />
             <ControlPoint Id="AuCAu6z6CXTMPM4vLW6isX" Bounds="279,501" />
-            <Node Bounds="165,211,118,26" Id="VKCcf3hRulqNuj3ICMOEX1">
-              <p:NodeReference LastCategoryFullName="Fu.Core.Context.IContextProvider" LastDependency="VL.Fu.Core.vl">
+            <Node Bounds="165,211,118,19" Id="VKCcf3hRulqNuj3ICMOEX1">
+              <p:NodeReference LastCategoryFullName="Fu.Core.IContextProvider" LastDependency="VL.Fu.Core.vl">
                 <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-                <FullNameCategoryReference ID="Fu.Core.Context.IContextProvider" />
                 <Choice Kind="OperationCallFlag" Name="TryGetViewportStream" />
               </p:NodeReference>
               <Pin Id="PX33qU7JKyXNidJYuEurru" Name="Input" Kind="StateInputPin" />
@@ -438,10 +435,9 @@
               <Pin Id="EmwD9mLrOfwLGbJ9ZOX3AE" Name="Input 3" Kind="InputPin" />
             </Node>
             <ControlPoint Id="TxepxN1FuyvNZ0RuRk4luA" Bounds="331,140" />
-            <Node Bounds="329,210,107,26" Id="PeMWLQ9dGKVQGYr0mOWcBy">
-              <p:NodeReference LastCategoryFullName="Fu.Core.Context.IContextProvider" LastDependency="VL.Fu.Core.vl">
+            <Node Bounds="329,210,107,19" Id="PeMWLQ9dGKVQGYr0mOWcBy">
+              <p:NodeReference LastCategoryFullName="Fu.Core.IContextProvider" LastDependency="VL.Fu.Core.vl">
                 <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-                <FullNameCategoryReference ID="Fu.Core.Context.IContextProvider" />
                 <Choice Kind="OperationCallFlag" Name="TryGetMouseStream" />
               </p:NodeReference>
               <Pin Id="Ta472pQKhuXOm3acyUpa9G" Name="Input" Kind="StateInputPin" />
@@ -1788,10 +1784,9 @@
         <Patch Id="NdFVS8UnxtXOOC1cxl0AbV">
           <Canvas Id="OQ3jtenOKM7PrlTzfz7Bn9" CanvasType="Group">
             <ControlPoint Id="JKVkQ1I7ufELrSJQhx443X" Bounds="265,90" />
-            <Node Bounds="263,161,118,26" Id="M9PdMIqdjzuO2ExeoA79CJ">
-              <p:NodeReference LastCategoryFullName="Fu.Core.Context.IContextProvider" LastDependency="VL.Fu.Core.vl">
+            <Node Bounds="263,161,118,19" Id="M9PdMIqdjzuO2ExeoA79CJ">
+              <p:NodeReference LastCategoryFullName="Fu.Core.IContextProvider" LastDependency="VL.Fu.Core.vl">
                 <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-                <FullNameCategoryReference ID="Fu.Core.Context.IContextProvider" />
                 <Choice Kind="OperationCallFlag" Name="TryGetViewportStream" />
               </p:NodeReference>
               <Pin Id="CppgBBeolcuLgPQwj6FaWo" Name="Input" Kind="StateInputPin" />
@@ -1809,10 +1804,9 @@
               <Pin Id="ST8S8HOUAQFMJZKut8s8qK" Name="Input 3" Kind="InputPin" />
             </Node>
             <ControlPoint Id="QLSS7W01Bj3Ohn8Eg3kVk5" Bounds="441,91" />
-            <Node Bounds="439,161,99,26" Id="CQUkkqZsikUQFBuqWXcRbe">
-              <p:NodeReference LastCategoryFullName="Fu.Core.Context.IContextProvider" LastDependency="VL.Fu.Core.vl">
+            <Node Bounds="439,161,99,19" Id="CQUkkqZsikUQFBuqWXcRbe">
+              <p:NodeReference LastCategoryFullName="Fu.Core.IContextProvider" LastDependency="VL.Fu.Core.vl">
                 <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-                <FullNameCategoryReference ID="Fu.Core.Context.IContextProvider" />
                 <Choice Kind="OperationCallFlag" Name="TryGetKeysStream" />
               </p:NodeReference>
               <Pin Id="IdOhPCwMGW4OK0Gjf0U16G" Name="Input" Kind="StateInputPin" />
@@ -3015,6 +3009,6 @@
   </Patch>
   <PlatformDependency Id="VVKY2dQHSuwQa9bHTsag5V" Location="./lib/Debug/net8.0/VL.Fu.dll" IsForward="true" />
   <NugetDependency Id="ALZEHqz0CdsNyotdgPK1wV" Location="VL.Fu.Core" IsForward="true" Version="0.0.0" />
-  <NugetDependency Id="U4vWHHjzO0HNpuNNKF0nfX" Location="VL.Skia" Version="2025.7.1-0101-ge364e43d33" />
+  <NugetDependency Id="U4vWHHjzO0HNpuNNKF0nfX" Location="VL.Skia" Version="2025.7.1" />
   <NugetDependency Id="I5rLEhR7q13Pi8Et80X7xy" Location="VL.Fu.WinForms" IsForward="true" Version="0.0.0" />
 </Document>

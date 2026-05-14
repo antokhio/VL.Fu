@@ -6,8 +6,10 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <BaseOutputPath>..\lib\</BaseOutputPath>
     <NoWarn>1591</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="antokhio.YogaSharp" Version="1.1.3" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="VL.Core" Version="$(VLVersion)" />
     <PackageReference Include="VL.Core.Skia" Version="$(VLVersion)" />

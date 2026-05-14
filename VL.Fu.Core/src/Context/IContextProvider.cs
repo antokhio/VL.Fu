@@ -1,6 +1,6 @@
 ﻿using VL.Core.PublicAPI;
 
-namespace VL.Fu.Core.Context
+namespace VL.Fu.Core
 {
     public interface IContextProvider
         : IRegion<IContextProviderInlay>,

@@ -2,7 +2,6 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using VL.Fu.Core.Context;
 using VL.Fu.Core.Extensions;
 using VL.Fu.Core.Input;
 using VL.Fu.Core.Interaction;

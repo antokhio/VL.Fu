@@ -1,5 +1,4 @@
 ﻿using VL.Fu.Core.Input;
-using VL.Fu.Core.InstanceId;
 
 namespace VL.Fu.Core.Interaction
 {

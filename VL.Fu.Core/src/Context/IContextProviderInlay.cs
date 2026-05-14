@@ -1,4 +1,4 @@
-﻿namespace VL.Fu.Core.Context
+﻿namespace VL.Fu.Core
 {
     public interface IContextProviderInlay
     {

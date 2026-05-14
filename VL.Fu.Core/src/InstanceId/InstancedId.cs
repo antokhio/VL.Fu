@@ -1,6 +1,4 @@
-﻿using VL.Fu.Core.InstanceId;
-
-namespace VL.Fu.Core
+﻿namespace VL.Fu.Core
 {
     public abstract class InstancedId : IInstanceId
     {

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Document xmlns:p="property" xmlns:r="reflection" Id="UF2LACGI02GPbJZ8Uh56e6" LanguageVersion="2025.7.2-0032-g4ea78fbb04" Version="0.128">
-  <NugetDependency Id="D6bbt5yVMtYP1HCin38KKS" Location="VL.CoreLib" Version="2025.7.2-0032-g4ea78fbb04" />
+<Document xmlns:p="property" xmlns:r="reflection" Id="UF2LACGI02GPbJZ8Uh56e6" LanguageVersion="2025.7.1" Version="0.128">
+  <NugetDependency Id="D6bbt5yVMtYP1HCin38KKS" Location="VL.CoreLib" Version="2025.7.1" />
   <Patch Id="QvcUNNPZ7bNOiRG51KQ1Na">
     <Canvas Id="Oulk0vyNb5xP5pHZSvCzdL" DefaultCategory="Main" BordersChecked="false" CanvasType="FullCategory" />
     <!--
@@ -203,7 +203,7 @@
               <Choice Kind="ProcessAppFlag" Name="Renderer" />
             </p:NodeReference>
             <Pin Id="IVbrFJf7QaJPVs3SdUa2Ho" Name="Node Context" Kind="InputPin" IsHidden="true" />
-            <Pin Id="Kp8ZILSzXFGMYXHeFRdbxj" Name="Bounds" Kind="InputPin" DefaultValue="-2550, 39, 2576, 1416" IsHidden="true" />
+            <Pin Id="Kp8ZILSzXFGMYXHeFRdbxj" Name="Bounds" Kind="InputPin" DefaultValue="-8, -8, 2576, 1416" IsHidden="true" />
             <Pin Id="H9Xj4xNWpRHMSABaZBqEgM" Name="Save Bounds" Kind="InputPin" IsHidden="true" />
             <Pin Id="Nk2u9sZqCVmQK5serwJ2Qf" Name="Bound to Document" Kind="InputPin" IsHidden="true" />
             <Pin Id="IhRCX3z1ql8MggryzB3Nwk" Name="Dialog If Document Changed" Kind="InputPin" IsHidden="true" />
@@ -252,10 +252,9 @@
             <Pin Id="NKIjLEzvpyJNmEN0h8ahdv" Name="Input" Kind="InputPin" />
             <Pin Id="AA5mnt4Unj3MbwZLdnfqt6" Name="Output" Kind="OutputPin" />
           </Node>
-          <Node Bounds="1530,780,135,26" Id="JMy4qpecO0ZOcrXidNUy8K">
-            <p:NodeReference LastCategoryFullName="Fu.Core.Context.IContextProvider" LastDependency="VL.Fu.vl">
+          <Node Bounds="1530,780,135,19" Id="JMy4qpecO0ZOcrXidNUy8K">
+            <p:NodeReference LastCategoryFullName="Fu.Core.IContextProvider" LastDependency="VL.Fu.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-              <FullNameCategoryReference ID="Fu.Core.Context.IContextProvider" />
               <Choice Kind="OperationCallFlag" Name="TryGetNotificationsService" />
             </p:NodeReference>
             <Pin Id="RY9lw8R4ku8PukTOCqqcnj" Name="Input" Kind="StateInputPin" />
@@ -702,10 +701,10 @@
                 <Pin Id="DJy1X78GSS2MyqmBnyFnuk" Name="Result" Kind="OutputPin" />
                 <Pin Id="CAZJyuHJWvnQNgOkNBRX1D" Name="Not Assigned" Kind="OutputPin" />
               </Node>
-              <Node Bounds="1656,1400,72,26" Id="DM1R1plGDWiMMdynPKL5Op">
-                <p:NodeReference LastCategoryFullName="Fu.Core.Context.IServiceRegistry" LastDependency="VL.Fu.vl">
+              <Node Bounds="1656,1400,72,19" Id="DM1R1plGDWiMMdynPKL5Op">
+                <p:NodeReference LastCategoryFullName="Fu.Core.IServiceRegistry" LastDependency="VL.Fu.vl">
                   <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-                  <FullNameCategoryReference ID="Fu.Core.Context.IServiceRegistry" />
+                  <CategoryReference Kind="MutableInterfaceType" Name="IServiceRegistry" NeedsToBeDirectParent="true" />
                   <Choice Kind="OperationCallFlag" Name="GetService" />
                 </p:NodeReference>
                 <Pin Id="CI9w4kFrBPlPyQTtbVIayA" Name="Input" Kind="StateInputPin" />
@@ -803,10 +802,9 @@
               </Node>
             </Patch>
           </Node>
-          <Node Bounds="-41,1650,118,26" Id="U50uaGoc5pOMj5g9YULS25">
-            <p:NodeReference LastCategoryFullName="Fu.Core.Context.IContextProvider" LastDependency="VL.Fu.vl">
+          <Node Bounds="-41,1650,118,19" Id="U50uaGoc5pOMj5g9YULS25">
+            <p:NodeReference LastCategoryFullName="Fu.Core.IContextProvider" LastDependency="VL.Fu.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-              <FullNameCategoryReference ID="Fu.Core.Context.IContextProvider" />
               <Choice Kind="OperationCallFlag" Name="TryGetViewportService" />
             </p:NodeReference>
             <Pin Id="BDXw7xssL6ROdVLbMLckAS" Name="Input" Kind="StateInputPin" />
@@ -2533,6 +2531,6 @@
     </Node>
   </Patch>
   <NugetDependency Id="UI9079M3yR4NM2eAijKBP4" Location="VL.Fu" Version="0.0.0" />
-  <NugetDependency Id="I55KX0RWIraOJCWAneKTDl" Location="VL.Skia" Version="2025.7.2-0032-g4ea78fbb04" />
-  <NugetDependency Id="Jydt999F7fXODqVxhKbHXP" Location="VL.Serialization.MessagePack" Version="2025.7.2-0032-g4ea78fbb04" />
+  <NugetDependency Id="I55KX0RWIraOJCWAneKTDl" Location="VL.Skia" Version="2025.7.1" />
+  <NugetDependency Id="Jydt999F7fXODqVxhKbHXP" Location="VL.Serialization.MessagePack" Version="2025.7.1" />
 </Document>
