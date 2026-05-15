@@ -1,4 +1,5 @@
-﻿using Stride.Core.Mathematics;
+﻿using SkiaSharp;
+using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
 using VL.Skia;
@@ -18,6 +19,13 @@ namespace VL.Fu.Core
         // Note: This does not currently include the bounds of the children.
         public RectangleF? Bounds => Layout;
 
+        private SKMatrix _transformation = SKMatrix.Identity;
+
+        public void SetTransformation(SKMatrix? transformation)
+        {
+            _transformation = transformation ?? SKMatrix.Identity;
+        }
+
         protected Renderable(NodeContext nodeContext)
             : base(nodeContext) { }
 
@@ -35,17 +43,30 @@ namespace VL.Fu.Core
         /// </summary>
         public virtual void Render(CallerInfo caller)
         {
+            var us = caller.PushTransformation(_transformation);
+            us.Canvas.SetMatrix(us.Transformation);
             // Draw self
-            _layer?.Render(caller);
+            _layer?.Render(us);
 
             // Draw hierarchy
             foreach (var child in Children)
             {
                 if (child is ILayer layer)
                 {
-                    layer.Render(caller);
+                    layer.Render(us);
                 }
             }
+
+            caller.Canvas.SetMatrix(caller.Transformation);
+        }
+    }
+
+    internal static class CallerInfoExtensions
+    {
+        public static CallerInfo PushTransformation(this CallerInfo callerInfo, SKMatrix relative)
+        {
+            SKMatrix target = callerInfo.Transformation;
+            return callerInfo with { Transformation = target.PreConcat(relative) };
         }
     }
 }
