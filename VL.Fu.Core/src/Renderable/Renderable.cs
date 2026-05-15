@@ -37,6 +37,13 @@ namespace VL.Fu.Core
             _layer = layer;
         }
 
+        private Optional<float> _opacity;
+
+        public void SetOpacity(Optional<float> opacity)
+        {
+            _opacity = opacity;
+        }
+
         /// <summary>
         /// Executes the rendering pass.
         /// Renders the local layer first, followed by all children.
@@ -45,6 +52,22 @@ namespace VL.Fu.Core
         {
             var us = caller.PushTransformation(_transformation);
             us.Canvas.SetMatrix(us.Transformation);
+
+            if (_opacity.HasValue)
+            {
+                // If opacity is set, we need to save a layer with the specified opacity.
+                using var paint = new SKPaint
+                {
+                    Color = new SKColor(255, 255, 255, (byte)(_opacity.Value * 255)),
+                };
+                us.Canvas.SaveLayer(paint);
+            }
+            else
+            {
+                // Otherwise, just save the canvas state.
+                us.Canvas.Save();
+            }
+
             // Draw self
             _layer?.Render(us);
 
@@ -58,6 +81,7 @@ namespace VL.Fu.Core
             }
 
             caller.Canvas.SetMatrix(caller.Transformation);
+            //   caller.Canvas.Restore();
         }
     }
 

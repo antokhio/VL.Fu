@@ -2185,7 +2185,7 @@
                     <Choice Kind="ProcessAppFlag" Name="SetHeight" />
                   </p:NodeReference>
                   <Pin Id="IweZNwbNVccQIFZVgFQYiy" Name="Input" Kind="InputPin" />
-                  <Pin Id="AKzzBf37VSYPZ6K6E16szS" Name="Height" Kind="InputPin" DefaultValue="12" />
+                  <Pin Id="AKzzBf37VSYPZ6K6E16szS" Name="Height" Kind="InputPin" DefaultValue="11.87" />
                   <Pin Id="VfartlbEx9OQRqXOAkA5bE" Name="Output" Kind="OutputPin" />
                 </Node>
                 <Node Bounds="853,261,209,225" Id="P3yetw6sOSxLrYwNOK4lmU">
@@ -2308,6 +2308,16 @@
                     <Choice Kind="TypeFlag" Name="Vector2" />
                   </p:TypeAnnotation>
                 </Pad>
+                <Node Bounds="908,1281,64,26" Id="SDLFKEbnc9VPS4A6aFsVj2">
+                  <p:NodeReference LastCategoryFullName="Fu.Core.Renderable" LastDependency="VL.Fu.vl">
+                    <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                    <FullNameCategoryReference ID="Fu.Core.Renderable" />
+                    <Choice Kind="OperationCallFlag" Name="SetOpacity" />
+                  </p:NodeReference>
+                  <Pin Id="VMnheUbxHOdQQ6oFqgY42b" Name="Input" Kind="StateInputPin" />
+                  <Pin Id="UhaCjX11rY8OI7X0GHWiOk" Name="Opacity" Kind="InputPin" DefaultValue="0.91" />
+                  <Pin Id="A2ifaRxYhjgLTq8z9mlkwA" Name="Output" Kind="StateOutputPin" />
+                </Node>
               </Canvas>
               <Patch Id="RMl9eluCoetLaHYj6cjWzp" Name="Create" />
               <Patch Id="Oi7RwRf9zptPn7P9SPrqQd" Name="Update">
@@ -2386,6 +2396,7 @@
               <Link Id="RTXz3GeQw8hO3hpApz8M6b" Ids="RZftYjlqV1BNrD7nNv2cMJ,VhlQpFXijTpPcp8QBjCGlN" />
               <Link Id="F1O51Ign7ssMz6pVX39azA" Ids="JQHVWuKNbeYOJObibdh843,UXKvBKgF7tiPr6q5N2kzbq" />
               <Link Id="EF670T3ZMFTMaluiKLkVaK" Ids="IfYLq1Nhk8EMZIJHcFVt3A,APdjq6qpaX9OvluuTuMszP" />
+              <Link Id="ErUshtMptjJPc4lwbJrHZX" Ids="ITvn1Nu7iO3M6SMLrd8eK5,VMnheUbxHOdQQ6oFqgY42b" />
             </Patch>
           </Node>
         </Canvas>
