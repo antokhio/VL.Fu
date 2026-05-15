@@ -81,7 +81,7 @@ namespace VL.Fu.Core
             }
 
             caller.Canvas.SetMatrix(caller.Transformation);
-            caller.Canvas.Restore();
+            us.Canvas.Restore();
         }
     }
 
