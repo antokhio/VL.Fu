@@ -12,9 +12,17 @@ namespace VL.Fu.Interaction.Behaviours
     /// <summary>
     /// Drag based, X-axis constrained swiper.
     /// Drives <see cref="DraggableBase{T}.Offset"/> from pointer drags and snaps to the
-    /// nearest stop when the drag finishes. Animation between the current
-    /// <see cref="Offset"/> and the snapped <see cref="CurrentPosition"/> is intentionally
-    /// not handled here – consumers are expected to damp <see cref="Offset"/> towards
+    /// nearest stop when the drag finishes.
+    ///
+    /// Stops are item positions expressed in the same coordinate space as the container's
+    /// content (e.g. item centers in container space). <see cref="Center"/> is the point in
+    /// that same space where the snapped item should be aligned (typically the viewport
+    /// center). The offset that aligns stop <c>s</c> to <see cref="Center"/> is therefore
+    /// <c>Center - s</c>, and that value is what <see cref="CurrentPosition"/> exposes.
+    ///
+    /// Animation between the current <see cref="DraggableBase{T}.Offset"/> and the snapped
+    /// <see cref="CurrentPosition"/> is intentionally not handled here – consumers are
+    /// expected to damp <see cref="DraggableBase{T}.Offset"/> towards
     /// <see cref="CurrentPosition"/> in their own update loop, optionally using the
     /// signed <see cref="Distance"/> output.
     /// </summary>
@@ -26,6 +34,7 @@ namespace VL.Fu.Interaction.Behaviours
         private readonly ChannelProperty<float> _distanceChannel = new(0f);
 
         private readonly CachedProperty<IReadOnlyList<float>> _stops = new(Array.Empty<float>());
+        private readonly CachedProperty<float> _center = new(0f);
 
         private IChannel<Unit>? _nextChannel;
         private IChannel<Unit>? _previousChannel;
@@ -75,16 +84,30 @@ namespace VL.Fu.Interaction.Behaviours
         [Fragment(Order = PinOrder.Action)]
         public void SetStops(IReadOnlyList<float>? stops)
         {
+            // Stops are expected to be immutable; reference equality is sufficient here.
             var newStops = stops ?? Array.Empty<float>();
-            if (_stops.SetValue(newStops))
-            {
-                // Re-clamp the current index against the new stop count and refresh outputs.
-                var clamped = ClampIndex(_currentIndexChannel.Value);
-                if (clamped != _currentIndexChannel.Value)
-                    _currentIndexChannel.OnNext(clamped);
-                else
-                    UpdateCurrentPosition();
-            }
+            if (ReferenceEquals(_stops.Value, newStops))
+                return;
+
+            _stops.SetValue(newStops);
+
+            var clamped = ClampIndex(_currentIndexChannel.Value);
+            if (clamped != _currentIndexChannel.Value)
+                _currentIndexChannel.OnNext(clamped);
+            else
+                UpdateCurrentPosition();
+        }
+
+        /// <summary>
+        /// World-space coordinate (in the same space as <see cref="SetStops"/>) where the
+        /// snapped item should be aligned. Typically the viewport / container center along X.
+        /// Defaults to 0.
+        /// </summary>
+        [Fragment(Order = PinOrder.Action)]
+        public void SetCenter(float center = 0f)
+        {
+            if (_center.SetValue(center))
+                UpdateCurrentPosition();
         }
 
         [Fragment(Order = PinOrder.Action)]
@@ -184,6 +207,13 @@ namespace VL.Fu.Interaction.Behaviours
             return Math.Clamp(index, 0, stops.Count - 1);
         }
 
+        private float TargetOffsetFor(int index)
+        {
+            // Offset that aligns stops[index] (item position in container space)
+            // to Center (alignment point in container space).
+            return _center.Value - _stops.Value[index];
+        }
+
         private void SnapToClosest()
         {
             var stops = _stops.Value;
@@ -192,11 +222,11 @@ namespace VL.Fu.Interaction.Behaviours
 
             var offset = _offsetChannel.Value;
             int bestIndex = 0;
-            float bestDistance = Math.Abs(stops[0] - offset);
+            float bestDistance = Math.Abs(TargetOffsetFor(0) - offset);
 
             for (int i = 1; i < stops.Count; i++)
             {
-                var d = Math.Abs(stops[i] - offset);
+                var d = Math.Abs(TargetOffsetFor(i) - offset);
                 if (d < bestDistance)
                 {
                     bestDistance = d;
@@ -223,7 +253,7 @@ namespace VL.Fu.Interaction.Behaviours
             else
             {
                 var index = ClampIndex(_currentIndexChannel.Value);
-                position = stops[index];
+                position = TargetOffsetFor(index);
             }
 
             if (!EqualityComparer<float>.Default.Equals(_currentPositionChannel.Value, position))
