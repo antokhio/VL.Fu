@@ -111,57 +111,57 @@ namespace VL.Fu.Interaction.Behaviours
         }
 
         [Fragment(Order = PinOrder.Action)]
-        public void SetCurrentIndexChannel(IChannel<int>? channel) =>
-            _currentIndexChannel.SetChannel(channel);
+        public void SetCurrentIndexChannel(IChannel<int>? currentIndexChannel) =>
+            _currentIndexChannel.SetChannel(currentIndexChannel);
 
         [Fragment(Order = PinOrder.Action)]
-        public void SetCurrentPositionChannel(IChannel<float>? channel) =>
-            _currentPositionChannel.SetChannel(channel);
+        public void SetCurrentPositionChannel(IChannel<float>? currentPositionChannel) =>
+            _currentPositionChannel.SetChannel(currentPositionChannel);
 
         [Fragment(Order = PinOrder.Action)]
-        public void SetDistanceChannel(IChannel<float>? channel) =>
-            _distanceChannel.SetChannel(channel);
+        public void SetDistanceChannel(IChannel<float>? distanceChannel) =>
+            _distanceChannel.SetChannel(distanceChannel);
 
         [Fragment(Order = PinOrder.Action)]
-        public void SetNextChannel(IChannel<Unit>? channel)
+        public void SetNextChannel(IChannel<Unit>? nextChannel)
         {
-            if (ReferenceEquals(_nextChannel, channel))
+            if (ReferenceEquals(_nextChannel, nextChannel))
                 return;
 
             _nextSubscription?.Dispose();
             _nextSubscription = null;
-            _nextChannel = channel;
+            _nextChannel = nextChannel;
 
-            if (channel != null)
-                _nextSubscription = channel.Subscribe(_ => Next());
+            if (nextChannel != null)
+                _nextSubscription = nextChannel.Subscribe(_ => Next());
         }
 
         [Fragment(Order = PinOrder.Action)]
-        public void SetPreviousChannel(IChannel<Unit>? channel)
+        public void SetPreviousChannel(IChannel<Unit>? previousChannel)
         {
-            if (ReferenceEquals(_previousChannel, channel))
+            if (ReferenceEquals(_previousChannel, previousChannel))
                 return;
 
             _previousSubscription?.Dispose();
             _previousSubscription = null;
-            _previousChannel = channel;
+            _previousChannel = previousChannel;
 
-            if (channel != null)
-                _previousSubscription = channel.Subscribe(_ => Previous());
+            if (previousChannel != null)
+                _previousSubscription = previousChannel.Subscribe(_ => Previous());
         }
 
         [Fragment(Order = PinOrder.Action)]
-        public void SetGoToChannel(IChannel<int>? channel)
+        public void SetGoToChannel(IChannel<int>? goToChannel)
         {
-            if (ReferenceEquals(_goToChannel, channel))
+            if (ReferenceEquals(_goToChannel, goToChannel))
                 return;
 
             _goToSubscription?.Dispose();
             _goToSubscription = null;
-            _goToChannel = channel;
+            _goToChannel = goToChannel;
 
-            if (channel != null)
-                _goToSubscription = channel.Subscribe(GoTo);
+            if (goToChannel != null)
+                _goToSubscription = goToChannel.Subscribe(GoTo);
         }
 
         public void Next() => GoTo(_currentIndexChannel.Value + 1);
