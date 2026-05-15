@@ -173,25 +173,15 @@ namespace VL.Fu.Core
 
     public static class TextMeasurableExtensions
     {
-        // Note: I added the layout constraints (width, widthMode, height, heightMode)
-        // because they are strictly required to perform the text-wrapping calculations.
         public static YGSize MeasureText(
-            this object? context,
+            string text,
+            SKPaint paint,
             float width,
             YGMeasureMode widthMode,
             float height,
             YGMeasureMode heightMode
         )
         {
-            // 1. Unbox and validate the context
-            if (context is not TextMeasureContext measureContext)
-            {
-                return new YGSize { Width = 0, Height = 0 };
-            }
-
-            string text = measureContext.Text ?? string.Empty;
-            SKPaint paint = measureContext.Paint;
-
             if (string.IsNullOrEmpty(text) || paint == null)
             {
                 return new YGSize { Width = 0, Height = 0 };

@@ -2192,9 +2192,9 @@
                   </p:NodeReference>
                   <Pin Id="TGvE5GpSjJLLUHDI1oaizY" Name="Node Context" Kind="InputPin" IsHidden="true" />
                   <Pin Id="ARmj3kWXsEwLdqkVGfeDxI" Name="Text" Kind="InputPin" DefaultValue="Lorem Ipsum " />
-                  <Pin Id="Njtx1PARFHvNzUwCqd9co7" Name="Style" Kind="InputPin" />
                   <Pin Id="FLZp6yz4dKwNL82PtC3xz9" Name="Paint" Kind="InputPin" />
                   <Pin Id="Fmfk6ob5P0TMfaeNakMriX" Name="Output" Kind="OutputPin" />
+                  <Pin Id="Njtx1PARFHvNzUwCqd9co7" Name="Style" Kind="InputPin" />
                   <Pin Id="GxJRQqtf6RiNnPj46o97Yi" Name="Behaviours" Kind="InputPin" />
                 </Node>
                 <Node Bounds="880,540,165,19" Id="FPVfwK5VH54OjnQbRQBYh0">

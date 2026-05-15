@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="antokhio.YogaSharp" Version="1.1.3" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
     <PackageReference Include="VL.Core" Version="$(VLVersion)" />
     <PackageReference Include="VL.Core.Skia" Version="$(VLVersion)" />
     <PackageReference Include="VL.CoreLib" Version="$(VLVersion)" />
