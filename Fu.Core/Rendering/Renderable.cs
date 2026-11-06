@@ -1,4 +1,5 @@
 ﻿using Fu.Core.Interaction;
+using SkiaSharp;
 using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
@@ -18,7 +19,25 @@ namespace Fu.Core.Rendering
         protected Renderable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) { }
 
-        public RectangleF? Bounds => throw new NotImplementedException();
+        private RectangleF? _bounds;
+
+        /// <summary>
+        /// The node's rectangle in its parent's space, or in the caller's space for a root, like every VL.Skia layer.
+        /// It follows <see cref="Fu.Core.Layout.ILayoutable.Transformation"/>, so a rotated node reports the box around it.
+        /// Null until the node was laid out, since its place is unknown before that.
+        /// </summary>
+        public RectangleF? Bounds => _bounds;
+
+        protected override void OnLocalTransformationChanged()
+        {
+            base.OnLocalTransformationChanged();
+
+            if (!HasLayout)
+                return;
+
+            var layout = Layout;
+            _bounds = LocalTransformation.MapRect(SKRect.Create(layout.Width, layout.Height)).ToRectangleF_();
+        }
 
         public void Render(CallerInfo caller)
         {

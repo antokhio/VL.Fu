@@ -24,14 +24,14 @@ Implemented in [YogaConfig.cs](../../Fu.Core/Layout/YogaConfig.cs) and [Layoutab
 * `YogaConfig` is an immutable record with `YogaConfig.Default`:
 
   ```csharp
-  public sealed record YogaConfig(float PointScaleFactor = 0f, YGErrata Errata = YGErrata.None, bool WebFlexBasis = false)
+  public sealed record YogaConfig(float PointScaleFactor = 0f, YGErrata Errata = YGErrata.None, bool WebFlexBasis = true)
   {
       public static YogaConfig Default { get; } = new();
   }
   ```
 
   * `PointScaleFactor = 0` by default: no rounding, which is required because one unit is far bigger than a pixel.
-  * `UseWebDefaults` is **not** part of the record. Yoga hits a fatal assert when a node's config is replaced by one with a different `UseWebDefaults`, so it is a Fu-wide constant.
+  * `UseWebDefaults` is **not** part of the record. Yoga hits a fatal assert when a node's config is replaced by one with a different `UseWebDefaults`, so it is a Fu-wide constant, currently `true`: `flexDirection` defaults to `row`, `flexShrink` to 1 and `alignContent` to `stretch`, as on the web.
 * **Inherited like a CSS property:** `ILayoutable.Config` / `SetConfig(YogaConfig?)` on any node; `null` inherits.
   * Effective config = own config, otherwise the parent's effective config, otherwise `YogaConfig.Default`.
   * Recomputed in `OnParentChanged` (attach, move, detach) and pushed down to children without their own config; a child with its own config stops the walk for its subtree.
@@ -99,16 +99,21 @@ ScrollViewport (Overflow = Hidden, fixed Width/Height)
   ```
 
 * World transforms are never stored. Each node pushes `local` onto the `CallerInfo` (`caller.PushTransformation(local)`), as `TransformUpstream` does.
-* `Bounds`:
+* `LocalTransformation` (protected `SKMatrix` on `Layoutable`) caches `local`. It is rebuilt in `SetTransformation`, when `ReadLayout` sees a new `Layout` (before `OnLayoutChanged`), and once on the first layout pass. Each rebuild calls `protected virtual OnLocalTransformationChanged()`, where derived classes cache what they compute from it (bounds now, the inverse for notifications later).
+* `Bounds` (on `Renderable`) is a cached field, so reading it every frame costs nothing. It is `null` until the node was laid out (`HasLayout`), since VL treats `null` as unknown and `Group` unions skip it:
 
   ```csharp
-  public RectangleF? Bounds
+  private RectangleF? _bounds;
+  public RectangleF? Bounds => _bounds;
+
+  protected override void OnLocalTransformationChanged()
   {
-      get
-      {
-          var r = LocalTransformation.MapRect(new SKRect(0, 0, Layout.Width, Layout.Height));
-          return new RectangleF(r.Left, r.Top, r.Width, r.Height);
-      }
+      base.OnLocalTransformationChanged();
+      if (!HasLayout)
+          return;
+
+      var layout = Layout;
+      _bounds = LocalTransformation.MapRect(SKRect.Create(layout.Width, layout.Height)).ToRectangleF_();
   }
   ```
 

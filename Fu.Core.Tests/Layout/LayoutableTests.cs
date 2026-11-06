@@ -170,6 +170,7 @@ namespace Fu.Core.Tests.Layout
             root.Native->SetHeight(100);
             root.Native->SetPadding(YGEdge.All, 10);
             b.Native->SetWidth(80);
+            c.Native->SetFlexDirection(YGFlexDirection.Column);
             c.Native->SetFlexGrow(1);
             c.Native->SetPadding(YGEdge.All, 5);
             d.Native->SetHeight(20);
@@ -206,6 +207,7 @@ namespace Fu.Core.Tests.Layout
             root.Native->SetHeight(100);
             b.Native->SetWidth(100);
             c.Native->SetWidth(50);
+            c.Native->SetFlexDirection(YGFlexDirection.Column);
             d.Native->SetHeight(10);
             root.CalculateLayout();
 

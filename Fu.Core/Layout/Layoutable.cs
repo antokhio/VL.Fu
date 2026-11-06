@@ -1,5 +1,7 @@
-﻿using Fu.Core.Style;
+﻿using Fu.Core.Extensions;
+using Fu.Core.Style;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
@@ -15,6 +17,11 @@ namespace Fu.Core.Layout
         /// It is empty until the root of the tree ran <see cref="CalculateLayout"/>.
         /// </summary>
         RectangleF Layout { get; }
+
+        /// <summary>
+        /// Moves, rotates or scales this node around its top-left corner without affecting the layout,
+        /// so siblings keep their places. Only X, Y and perspective are used; Z is ignored.
+        /// </summary>
         Matrix Transformation { get; }
         void SetTransformation(Matrix transformation);
 
@@ -54,10 +61,31 @@ namespace Fu.Core.Layout
         private RectangleF _layout = RectangleF.Empty;
         public RectangleF Layout => _layout;
 
+        private bool _hasLayout;
+
+        /// <summary>
+        /// Whether the root of this node's tree laid it out at least once.
+        /// Until then <see cref="Layout"/> is empty and says nothing about where the node is.
+        /// </summary>
+        protected bool HasLayout => _hasLayout;
+
         private Matrix _transformation = Matrix.Identity;
         public Matrix Transformation => _transformation;
 
-        public void SetTransformation(Matrix transformation) => _transformation = transformation;
+        public void SetTransformation(Matrix transformation)
+        {
+            _transformation = transformation;
+            UpdateLocalTransformation();
+        }
+
+        private SKMatrix _localTransformation = SKMatrix.Identity;
+
+        /// <summary>
+        /// Maps this node's own space, with (0, 0) at its top-left corner, into its parent's space:
+        /// first <see cref="Transformation"/>, then the move to the <see cref="Layout"/> position.
+        /// Kept up to date whenever either of them changes, so reading it is free.
+        /// </summary>
+        protected SKMatrix LocalTransformation => _localTransformation;
 
         public YogaConfig? Config => _config;
 
@@ -107,8 +135,16 @@ namespace Fu.Core.Layout
         /// <summary>
         /// Called after <see cref="Layout"/> changed, during <see cref="CalculateLayout"/> on the root.
         /// Parents are updated before their children, so a child sees its parent's new layout already.
+        /// <see cref="LocalTransformation"/> already includes the new position.
         /// </summary>
         protected virtual void OnLayoutChanged(RectangleF oldLayout, RectangleF newLayout) { }
+
+        /// <summary>
+        /// Called after <see cref="LocalTransformation"/> was rebuilt: when <see cref="Transformation"/> was set,
+        /// when <see cref="Layout"/> changed, and once when the node is laid out for the first time.
+        /// The place to update anything derived from it, so it is not recomputed every frame.
+        /// </summary>
+        protected virtual void OnLocalTransformationChanged() { }
 
         /// <summary>
         /// A node that was attached, moved or detached picks up the config of its new surroundings,
@@ -198,12 +234,27 @@ namespace Fu.Core.Layout
                 _handle->GetComputedHeight()
             );
 
-            if (IsSameLayout(layout, _layout))
+            var changed = !IsSameLayout(layout, _layout);
+            if (!changed && _hasLayout)
                 return;
 
+            // The first read also counts when Yoga left the node at its initial empty layout, since it becomes known now.
             var old = _layout;
             _layout = layout;
-            OnLayoutChanged(old, layout);
+            _hasLayout = true;
+            UpdateLocalTransformation();
+
+            if (changed)
+                OnLayoutChanged(old, layout);
+        }
+
+        private void UpdateLocalTransformation()
+        {
+            _localTransformation = SKMatrix
+                .CreateTranslation(_layout.X, _layout.Y)
+                .PreConcat(_transformation.ToSKMatrix());
+
+            OnLocalTransformationChanged();
         }
 
         /// <summary>

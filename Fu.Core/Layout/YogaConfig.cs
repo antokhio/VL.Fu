@@ -23,7 +23,7 @@ namespace Fu.Core.Layout
     public sealed record YogaConfig(
         float PointScaleFactor = 0f,
         YGErrata Errata = YGErrata.None,
-        bool WebFlexBasis = false
+        bool WebFlexBasis = true
     )
     {
         /// <summary>
@@ -39,7 +39,7 @@ namespace Fu.Core.Layout
     /// </summary>
     internal static unsafe class YogaConfigCache
     {
-        private const bool UseWebDefaults = false;
+        private const bool UseWebDefaults = true;
 
         private sealed class Entry
         {
@@ -50,7 +50,11 @@ namespace Fu.Core.Layout
         private static readonly object s_lock = new();
         private static readonly Dictionary<YogaConfig, Entry> s_entries = new()
         {
-            [YogaConfig.Default] = new Entry { Handle = (nint)Create(YogaConfig.Default), References = 1 },
+            [YogaConfig.Default] = new Entry
+            {
+                Handle = (nint)Create(YogaConfig.Default),
+                References = 1,
+            },
         };
 
         /// <summary>

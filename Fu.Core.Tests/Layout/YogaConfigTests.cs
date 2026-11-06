@@ -39,7 +39,7 @@ namespace Fu.Core.Tests.Layout
             Assert.AreSame(YogaConfig.Default, a.EffectiveConfig);
             Assert.IsTrue(a.Native->GetConfig() == b.Native->GetConfig());
             Assert.AreEqual(0f, a.NativeScale);
-            Assert.IsFalse(a.Native->GetConfig()->GetUseWebDefaults());
+            Assert.IsTrue(a.Native->GetConfig()->GetUseWebDefaults());
         }
 
         [TestMethod]
