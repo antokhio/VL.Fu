@@ -12,8 +12,4 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Fu.Core.Tests" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Config\" />
-  </ItemGroup>
 </Project>

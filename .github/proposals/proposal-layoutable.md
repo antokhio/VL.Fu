@@ -129,6 +129,9 @@ ScrollViewport (Overflow = Hidden, fixed Width/Height)
           m.TransX, m.TransY, 0, m.Persp2);
   ```
 
+  Implemented as `internal static class MatrixExtensions` in `Fu.Core\Extensions` (tested). Stride's `a * b` equals Skia's `a.PostConcat(b)`.
+  Rectangles reuse `VL.Skia.Conversions` (`ToSKRect_` / `ToRectangleF_`) instead of new helpers.
+
 ---
 
 ## 4. Layout Calculation (`Layoutable<TSelf>`)
@@ -185,17 +188,20 @@ private unsafe void ReadLayout()
         _handle->GetComputedWidth(),
         _handle->GetComputedHeight());
 
-    if (layout == _layout)
+    if (IsSameLayout(layout, _layout)) // exact, NaN-safe, component-wise
         return;
 
+    var old = _layout;
     _layout = layout;
-    OnLayoutChanged(layout);
+    OnLayoutChanged(old, layout);
 }
 
-protected virtual void OnLayoutChanged(RectangleF layout) { }
+protected virtual void OnLayoutChanged(RectangleF oldLayout, RectangleF newLayout) { }
 ```
 
-The "position changes without `HasNewLayout`" case gets a unit test before relying on the pruning.
+* `Layout` has no setter; only `ReadLayout` writes it.
+* `OnLayoutChanged` follows `OnParentChanged` / `OnChildrenChanged` and receives both values. Parents are updated before their children.
+* Covered by tests: a child moved by a resized sibling while keeping its cached size is re-read; only nodes whose rectangle changed are reported; an unchanged pass reports nothing; a non-root call warns and does nothing.
 
 ### 4.3 Trigger on the root
 

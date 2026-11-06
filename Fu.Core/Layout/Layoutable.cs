@@ -1,8 +1,8 @@
 ﻿using Fu.Core.Style;
+using Microsoft.Extensions.Logging;
 using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
-using VL.Lib.Collections;
 using VL.Model;
 using YogaSharp;
 
@@ -10,6 +10,10 @@ namespace Fu.Core.Layout
 {
     public interface ILayoutable
     {
+        /// <summary>
+        /// The rectangle Yoga computed for this node, relative to its parent's top-left corner.
+        /// It is empty until the root of the tree ran <see cref="CalculateLayout"/>.
+        /// </summary>
         RectangleF Layout { get; }
         Matrix Transformation { get; }
         void SetTransformation(Matrix transformation);
@@ -25,6 +29,17 @@ namespace Fu.Core.Layout
         /// Pass null to inherit again.
         /// </summary>
         void SetConfig(YogaConfig? config);
+
+        /// <summary>
+        /// Lays out the whole tree below this node and updates <see cref="Layout"/> on every node that changed.
+        /// Only a root can do this; on a node with a parent it logs a warning and does nothing.
+        /// A NaN size leaves that axis unconstrained, so the root takes the size of its content.
+        /// </summary>
+        void CalculateLayout(
+            float availableWidth = float.NaN,
+            float availableHeight = float.NaN,
+            YGDirection direction = YGDirection.LTR
+        );
     }
 
     public abstract class Layoutable<TSelf> : Stylable<TSelf>, ILayoutable
@@ -37,11 +52,7 @@ namespace Fu.Core.Layout
         protected unsafe YGNode* Handle => _handle;
 
         private RectangleF _layout = RectangleF.Empty;
-        public RectangleF Layout
-        {
-            get => _layout;
-            protected set => _layout = value;
-        }
+        public RectangleF Layout => _layout;
 
         private Matrix _transformation = Matrix.Identity;
         public Matrix Transformation => _transformation;
@@ -67,6 +78,37 @@ namespace Fu.Core.Layout
 
         protected Layoutable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) { }
+
+        public unsafe void CalculateLayout(
+            float availableWidth = float.NaN,
+            float availableHeight = float.NaN,
+            YGDirection direction = YGDirection.LTR
+        )
+        {
+            if (_handle is null)
+                return;
+
+            if (Parent is not null)
+            {
+                // Yoga would lay this subtree out as if it were a root and overwrite the results of the real root.
+                Log(
+                    LogLevel.Warning,
+                    "Only a root element can calculate layout. This element has a parent, so its root calculates it."
+                );
+                return;
+            }
+
+            _handle->CalculateLayout(availableWidth, availableHeight, direction);
+
+            if (_handle->GetHasNewLayout())
+                ApplyLayout();
+        }
+
+        /// <summary>
+        /// Called after <see cref="Layout"/> changed, during <see cref="CalculateLayout"/> on the root.
+        /// Parents are updated before their children, so a child sees its parent's new layout already.
+        /// </summary>
+        protected virtual void OnLayoutChanged(RectangleF oldLayout, RectangleF newLayout) { }
 
         /// <summary>
         /// A node that was attached, moved or detached picks up the config of its new surroundings,
@@ -122,6 +164,54 @@ namespace Fu.Core.Layout
                 YogaConfigCache.Release(_effectiveConfig);
             }
         }
+
+        /// <summary>
+        /// Reads the results of a Yoga pass top-down, visiting only subtrees that Yoga laid out again.
+        /// A child Yoga did not flag is still read, since Yoga moves a child that kept its cached size without flagging it.
+        /// Its own children are relative to it and therefore unaffected.
+        /// </summary>
+        private unsafe void ApplyLayout()
+        {
+            ReadLayout();
+            _handle->SetHasNewLayout(false);
+
+            var children = Children;
+            for (var i = 0; i < children.Count; i++)
+            {
+                var child = children[i];
+                if (child._handle is null)
+                    continue;
+
+                if (child._handle->GetHasNewLayout())
+                    child.ApplyLayout();
+                else
+                    child.ReadLayout();
+            }
+        }
+
+        private unsafe void ReadLayout()
+        {
+            var layout = new RectangleF(
+                _handle->GetComputedLeft(),
+                _handle->GetComputedTop(),
+                _handle->GetComputedWidth(),
+                _handle->GetComputedHeight()
+            );
+
+            if (IsSameLayout(layout, _layout))
+                return;
+
+            var old = _layout;
+            _layout = layout;
+            OnLayoutChanged(old, layout);
+        }
+
+        /// <summary>
+        /// Compares exactly and NaN-safely, without any tolerance.
+        /// Small changes still count, so a node never keeps a stale layout.
+        /// </summary>
+        private static bool IsSameLayout(RectangleF a, RectangleF b) =>
+            a.X.Equals(b.X) && a.Y.Equals(b.Y) && a.Width.Equals(b.Width) && a.Height.Equals(b.Height);
 
         /// <summary>
         /// Switches the Yoga node to the effective config and pushes the change down to the children.
