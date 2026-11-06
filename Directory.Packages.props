@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="VL.Core" Version="2025.7.4" />
+    <PackageVersion Include="antokhio.YogaSharp" Version="1.2.0" />
+  </ItemGroup>
+</Project>
