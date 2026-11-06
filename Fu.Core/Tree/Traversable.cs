@@ -26,7 +26,7 @@ namespace Fu.Core.Tree
         where T : class, ITraversable<T>
     {
         new T? Parent { get; }
-        new Spread<T> Children { get; }
+        new IReadOnlyList<T> Children { get; }
 
         /// <summary>
         /// Moves this node under <paramref name="parent"/>, appending it as the last child.
@@ -38,7 +38,7 @@ namespace Fu.Core.Tree
         /// Replaces the children of this node. Parent links are kept consistent:
         /// removed children get detached, and children that belonged to another node are taken from it.
         /// </summary>
-        void SetChildren(Spread<T> children);
+        void SetChildren(IReadOnlyList<T>? children);
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ namespace Fu.Core.Tree
 
         public TSelf? Parent => _parent;
 
-        public Spread<TSelf> Children => _children;
+        public IReadOnlyList<TSelf> Children => _children;
 
         ITraversable? ITraversable.Parent => _parent;
 
@@ -77,7 +77,7 @@ namespace Fu.Core.Tree
 
             if (parent is null)
             {
-                _parent!.SetChildren(Without(_parent._children, Self));
+                _parent!.SetChildrenCore(Without(_parent._children, Self));
             }
             else if (ReferenceEquals(parent, this) || Self.IsAncestorOf(parent))
             {
@@ -90,13 +90,21 @@ namespace Fu.Core.Tree
             {
                 var builder = parent._children.ToBuilder();
                 builder.Add(Self);
-                parent.SetChildren(builder.ToSpread());
+                parent.SetChildrenCore(builder.ToSpread());
             }
         }
 
-        public void SetChildren(Spread<TSelf> children)
+        /// <summary>
+        /// Accepts any list. A <see cref="Spread{T}"/> (what VL passes in) is stored as is;
+        /// any other list is copied once, so later changes to it don't affect the tree.
+        /// </summary>
+        public void SetChildren(IReadOnlyList<TSelf>? children)
         {
-            var next = children ?? Spread<TSelf>.Empty;
+            SetChildrenCore(ToSpread(children));
+        }
+
+        private void SetChildrenCore(Spread<TSelf> next)
+        {
             var previous = _children;
 
             if (SameNodes(previous, next))
@@ -141,16 +149,41 @@ namespace Fu.Core.Tree
         /// <summary>
         /// Invoked on the node whose <see cref="Children"/> just changed.
         /// By the time this runs, the parent links of all affected children are already updated.
+        /// This is the single place every change ends up in (including a child being taken by another parent),
+        /// so mirror the children into other structures here rather than by overriding <see cref="SetChildren"/>.
         /// </summary>
         protected virtual void OnChildrenChanged(
-            Spread<TSelf> oldChildren,
-            Spread<TSelf> newChildren
+            IReadOnlyList<TSelf> oldChildren,
+            IReadOnlyList<TSelf> newChildren
         ) { }
+
+        /// <summary>
+        /// Leaves the parent and releases the children, so no other node keeps referring to a disposed one.
+        /// The children themselves are not disposed: they belong to whoever created them.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                SetParent(null);
+                SetChildrenCore(Spread<TSelf>.Empty);
+            }
+
+            base.Dispose(disposing);
+        }
 
         public IEnumerator<TSelf> GetEnumerator() =>
             ((IEnumerable<TSelf>)_children).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private static Spread<TSelf> ToSpread(IReadOnlyList<TSelf>? children) =>
+            children switch
+            {
+                null => Spread<TSelf>.Empty,
+                Spread<TSelf> spread => spread,
+                _ => children.ToSpread(),
+            };
 
         private static bool SameNodes(Spread<TSelf> a, Spread<TSelf> b)
         {
@@ -269,7 +302,7 @@ namespace Fu.Core.Tree
         public static IEnumerable<T> Descendants<T>(this T node)
             where T : class, ITraversable<T>
         {
-            var stack = new Stack<(Spread<T> List, int Index)>();
+            var stack = new Stack<(IReadOnlyList<T> List, int Index)>();
             stack.Push((node.Children, 0));
 
             while (stack.Count > 0)

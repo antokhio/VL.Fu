@@ -33,7 +33,7 @@ namespace Fu.Core.Tests.Tree
             protected override void OnParentChanged(Node? oldParent, Node? newParent)
                 => Events.Add($"{Name}.parent {oldParent?.Name ?? "-"}>{newParent?.Name ?? "-"}");
 
-            protected override void OnChildrenChanged(Spread<Node> oldChildren, Spread<Node> newChildren)
+            protected override void OnChildrenChanged(IReadOnlyList<Node> oldChildren, IReadOnlyList<Node> newChildren)
                 => Events.Add($"{Name}.children [{Names(oldChildren)}]>[{Names(newChildren)}]");
 
             public override string ToString() => Name;
@@ -64,6 +64,55 @@ namespace Fu.Core.Tests.Tree
             Assert.AreSame(a, b.Parent);
             Assert.AreSame(a, c.Parent);
             Assert.IsNull(a.Parent);
+        }
+
+        [TestMethod]
+        public void SetChildren_Spread_IsStoredWithoutCopy()
+        {
+            Node a = new("a"), b = new("b"), c = new("c");
+            var children = S(b, c);
+
+            a.SetChildren(children);
+
+            Assert.AreSame(children, a.Children);
+        }
+
+        [TestMethod]
+        public void SetChildren_OtherList_IsCopiedIntoSpread()
+        {
+            Node a = new("a"), b = new("b"), c = new("c"), d = new("d");
+            var children = new List<Node> { b, c };
+
+            a.SetChildren(children);
+            children.Add(d);
+
+            Assert.IsInstanceOfType<Spread<Node>>(a.Children);
+            Assert.AreEqual("b,c", Names(a.Children));
+            Assert.IsNull(d.Parent);
+        }
+
+        [TestMethod]
+        public void SetChildren_Array_LinksChildren()
+        {
+            Node a = new("a"), b = new("b"), c = new("c");
+
+            a.SetChildren(new[] { c, b });
+
+            Assert.AreEqual("c,b", Names(a.Children));
+            Assert.AreSame(a, b.Parent);
+        }
+
+        [TestMethod]
+        public void SetChildren_SameNodesInDifferentListType_DoesNotRaiseHooks()
+        {
+            var events = new List<string>();
+            Node a = new("a", events), b = new("b", events), c = new("c", events);
+            a.SetChildren(S(b, c));
+            events.Clear();
+
+            a.SetChildren(new List<Node> { b, c });
+
+            Assert.AreEqual(0, events.Count);
         }
 
         [TestMethod]
