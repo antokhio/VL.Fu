@@ -13,7 +13,7 @@ namespace Fu.Core.Rendering
     /// Closes the element chain: every node in a Fu tree is a <see cref="Renderable"/>,
     /// so <see cref="Tree.Traversable{TSelf}.Parent"/> and <see cref="Tree.Traversable{TSelf}.Children"/> are typed as such.
     /// </summary>
-    public abstract class Renderable : Behaviour<Renderable>, IRenderable
+    public abstract class Renderable : Interactable<Renderable>, IRenderable
     {
         protected Renderable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) { }
