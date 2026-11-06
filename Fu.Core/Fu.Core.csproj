@@ -8,4 +8,12 @@
     <PackageReference Include="VL.Core" />
     <PackageReference Include="VL.Core.Skia" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Fu.Core.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Config\" />
+  </ItemGroup>
 </Project>

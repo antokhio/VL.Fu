@@ -10,6 +10,7 @@ namespace Fu.Core
         public override void Configure(AppHost appHost)
         {
             // add yoga default config handling
+            // appHost.RegisterService<YogaConfigService>(new YogaConfigService());
 
             base.Configure(appHost);
         }

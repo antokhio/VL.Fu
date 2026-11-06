@@ -1,38 +1,50 @@
-# Proposal: `Layout` Root & `Layoutable<TSelf>` (`Fu.Core`, `YogaSharp`, `VL.Core.Skia`)
+# Proposal: Layout Roots & `Layoutable<TSelf>` (`Fu.Core`, `YogaSharp`, `VL.Core.Skia`)
 
 > Code samples are guidance for the shape of the implementation, not code to copy.
 
 ## 1. Decisions
 
-### 1.1 `Layout` root node
+### 1.1 Layout roots (no separate `Layout` node)
 
-* `Layout` is a separate `ILayer`. It is **not** part of the Fu tree; it wraps exactly one Fu root (`Renderable` with `Parent is null`).
-* It is modelled after VL.Skia's `InViewportUpstream`:
-  * A `Bounds` pin in the **caller's space** (whatever space the renderer / downstream uses). When unset, the layout fills the caller's viewport.
-  * On `Render` / `Notify` it maps its bounds to window pixels, opens a new viewport with `caller.InViewport(...)` and switches to its own space.
-  * `ILayer.Bounds` returns the `Bounds` pin, in the caller's space.
-* A `CommonSpace Space` pin selects the space Fu works in. Default: **`DIPTopLeft`**.
-  * Units are the vvvv space units as they are: in `DIPTopLeft` **1 unit = 100 DIP** (`Padding = 0.08` is 8 DIP).
-  * Yoga is top-left / y-down. For centred spaces (`Normalized`, `DIP`) the layout area is the viewport mapped back into the space, `inv(us.Transformation).MapRect(us.ViewportBounds)`, and the root is placed at that area's top-left, so the UI never starts in the middle of the window.
-  * VL keeps `GetWithinCommonSpaceTransformation` `internal`. Fu either re-implements the few lines of scale/origin math in a small `Spaces` helper, or drives a cached `SetSpaceUpstream2` (`UpdateTransformation(...)` + `Transformation` are public).
-* The `Layout` owns the layout trigger: it calls `CalculateLayout` on its root when the root is dirty or the available size changed.
-* Notifications are mapped into the Fu space by a Fu-owned sender (`IWorldSpace2d`, `IProjectionSpace`), because VL's `IntermediateTransformNotificationSender` is `internal`.
+* Any Fu node with `Parent is null` is a **layout root**. There is no extra `Layout` node to place.
+* The root lays out into the **caller's viewport, in the caller's space**:
+  * Layout area = the viewport mapped back into the caller's space, `inv(caller.Transformation).MapRect(caller.ViewportBounds)`.
+  * The root is placed at that area's top-left, so centred spaces (`Normalized`, `DIP`) don't start the UI in the middle of the window. Yoga is top-left / y-down, like every vvvv Skia space.
+  * Units are the caller's units as they are (in `DIPTopLeft`, 1 unit = 100 DIP, so `Padding = 0.08` is 8 DIP).
+* Space and placement come from **existing VL.Skia nodes downstream** instead of Fu pins:
+  * `WithinCommonSpace` selects the space (e.g. `DIPTopLeft`).
+  * `InViewport` limits the UI to a rectangle in the caller's space.
+* The root owns the layout trigger: `Render` / `Notify` call `CalculateLayout` when the root is dirty or the available size changed.
+* Notifications are mapped into local space by a Fu-owned sender (`IWorldSpace2d`, `IProjectionSpace`), because VL's `IntermediateTransformNotificationSender` is `internal`.
 
-### 1.2 Fu nodes without a `Layout`
+### 1.2 Yoga configuration (`YogaConfig`, inherited)
 
-* A Fu root that is rendered or notified without a `Layout` above it logs a warning through `NodeBase.Log` (no throw, the patch keeps running) and renders with its last computed layout, which is zero-sized until a `Layout` has laid it out.
-* The `Layout` marks its root as hosted when it adopts it and clears the mark when the root is replaced or the `Layout` is disposed. That mark is what the root checks.
+Implemented in [YogaConfig.cs](../../Fu.Core/Layout/YogaConfig.cs) and [Layoutable.cs](../../Fu.Core/Layout/Layoutable.cs).
 
-### 1.3 Yoga configuration
+* `YogaConfig` is an immutable record with `YogaConfig.Default`:
 
-* Fu creates **one default `YGConfig*`** (`YGConfig.New()`, not Yoga's process-wide `YGConfig.GetDefault()`) once during assembly initialization. Every Fu node is created with it: `YGNode.New(DefaultConfig)`.
-* Default settings:
-  * `PointScaleFactor = 0`: Yoga does not round, which is required because a unit is 100 DIP (rounding to whole units would snap to 100 DIP steps).
-  * `UseWebDefaults` is fixed by the default. Yoga hits a fatal assert when a node's config is replaced by one with a different `UseWebDefaults`, so overrides must not change it.
-* A `Layout` may take **one override config**. When set, the `Layout` calls `SetConfig` on every node of its subtree; `Layoutable.OnChildrenChanged` gives newly added children their parent's config, so later additions follow.
-* Pixel snapping (`PointScaleFactor` = pixels per unit of the Layout's space) is possible through the override, but not automatic yet.
+  ```csharp
+  public sealed record YogaConfig(float PointScaleFactor = 0f, YGErrata Errata = YGErrata.None, bool WebFlexBasis = false)
+  {
+      public static YogaConfig Default { get; } = new();
+  }
+  ```
 
-### 1.4 Rectangles & transformations (minimal & compositional)
+  * `PointScaleFactor = 0` by default: no rounding, which is required because one unit is far bigger than a pixel.
+  * `UseWebDefaults` is **not** part of the record. Yoga hits a fatal assert when a node's config is replaced by one with a different `UseWebDefaults`, so it is a Fu-wide constant.
+* **Inherited like a CSS property:** `ILayoutable.Config` / `SetConfig(YogaConfig?)` on any node; `null` inherits.
+  * Effective config = own config, otherwise the parent's effective config, otherwise `YogaConfig.Default`.
+  * Recomputed in `OnParentChanged` (attach, move, detach) and pushed down to children without their own config; a child with its own config stops the walk for its subtree.
+  * It travels through the tree hooks, not through VL notifications (`INotification` is the input pipeline and only flows during `Notify`).
+  * Caveat: Yoga rounds each node with its own config, so different `PointScaleFactor`s inside one tree can leave small gaps.
+* **Native configs** are shared and reference counted (`YogaConfigCache`):
+  * Equal records map to one native `YGConfig*`; nodes are created with the default one (`YGNode.New(config)`), not with Yoga's process-wide `YGConfig.GetDefault()`.
+  * A node switches to the new config before releasing the old one, and releases its config when disposed; a native config is freed when no node uses it, so a patch animating a value doesn't leak one per frame.
+  * `YogaConfig.Default` is pinned and never freed.
+  * No `AppHost` service is involved: nodes need a config before they know their surroundings, tests run without a host, and a host-owned native config could be freed while nodes still point at it. An app-wide default `YogaConfig` service can be added later if needed.
+* Automatic pixel snapping (`PointScaleFactor` = pixels per unit of the caller's space) is not automatic yet; users can set it through a config.
+
+### 1.3 Rectangles & transformations (minimal & compositional)
 
 * **No extra `LocalBounds`, `ContentBounds` or `ScrollOffset` on `Layoutable<TSelf>`.**
 * Two rectangles, both already present:
@@ -47,7 +59,7 @@
 
 ## 2. `ILayoutable` & Scrolling
 
-`ILayoutable` stays as it is in [Layoutable.cs](../../Fu.Core/Layout/Layoutable.cs):
+`ILayoutable` as in [Layoutable.cs](../../Fu.Core/Layout/Layoutable.cs):
 
 ```csharp
 public interface ILayoutable
@@ -55,6 +67,8 @@ public interface ILayoutable
     RectangleF Layout { get; }
     Matrix Transformation { get; }
     void SetTransformation(Matrix transformation);
+    YogaConfig? Config { get; }
+    void SetConfig(YogaConfig? config);
 }
 ```
 
@@ -133,7 +147,7 @@ public unsafe void CalculateLayout(
     if (Parent is not null)
     {
         // Yoga would lay this subtree out as if it were a root and overwrite the parent's results.
-        Log(LogLevel.Warning, "Only a root element can calculate layout; it is calculated by its Layout.");
+        Log(LogLevel.Warning, "Only a root element can calculate layout; its root calculates it.");
         return;
     }
 
@@ -183,64 +197,61 @@ protected virtual void OnLayoutChanged(RectangleF layout) { }
 
 The "position changes without `HasNewLayout`" case gets a unit test before relying on the pruning.
 
-### 4.3 Trigger in `Layout`
+### 4.3 Trigger on the root
 
-* Recalculate when `root.IsDirty()` or the available size changed.
+* In `Render` / `Notify`, when `Parent is null`: recalculate when the root is dirty or the available size changed.
 * Compare sizes NaN-safely (`a.Equals(b)`, not `a == b`); an unconstrained `NaN` size is otherwise never equal to itself and layout runs every frame.
 
 ---
 
-## 5. Frame Pipeline (`Layout` → `Layoutable` → `Interactable` → `Renderable`)
+## 5. Frame Pipeline (`Layoutable` → `Interactable` → `Renderable`)
 
 ```mermaid
 sequenceDiagram
-    participant Skia as VL.Skia Renderer
-    participant Layout as Layout (ILayer)
-    participant Root as Fu Root
+    participant Skia as VL.Skia (Renderer, WithinCommonSpace, InViewport)
+    participant Root as Fu Root (Parent is null)
     participant Child as Fu Child
     participant Yoga as YogaSharp (YGNode*)
 
     Note over Skia,Yoga: Notification (front to back)
-    Skia->>Layout: Notify(n, caller)
-    Layout->>Layout: InViewport(bounds) + Space, area = inv(us).MapRect(viewport)
-    Layout->>Yoga: CalculateLayout(area.Width, area.Height) if dirty or size changed
-    Layout->>Root: Notify(n', us · Translate(area.Left, area.Top))
-    Root->>Root: us = caller.PushTransformation(local), map n into local space
+    Skia->>Root: Notify(n, caller)
+    Root->>Root: area = inv(caller.Transformation).MapRect(caller.ViewportBounds)
+    Root->>Yoga: CalculateLayout(area.Width, area.Height) if dirty or size changed
+    Root->>Root: us = caller.PushTransformation(Translate(area.Left, area.Top) · local), map n into local space
     Root->>Root: if clipped and point outside (0, 0, w, h) -> return false
     Root->>Child: Notify(n', us) (last child first)
     Child-->>Root: handled
     Root->>Root: if !handled and HitTest(0, 0, w, h) -> NotifySelf
-    Root-->>Layout: handled
-    Layout-->>Skia: handled
+    Root-->>Skia: handled
 
     Note over Skia,Yoga: Render (back to front)
-    Skia->>Layout: Render(caller)
-    Layout->>Yoga: CalculateLayout(...) if dirty or size changed
-    Layout->>Root: Render(us · Translate(area.Left, area.Top))
-    Root->>Root: us = caller.PushTransformation(local), Canvas.SetMatrix(us.Transformation)
+    Skia->>Root: Render(caller)
+    Root->>Yoga: CalculateLayout(...) if dirty or size changed
+    Root->>Root: us = caller.PushTransformation(Translate(area.Left, area.Top) · local), Canvas.SetMatrix(us.Transformation)
     Root->>Root: RenderSelf(us) in (0, 0, w, h)
     Root->>Root: if Overflow != Visible -> Save + ClipRect(0, 0, w, h)
     Root->>Child: Render(us) (first child first)
     Root->>Root: Restore if clipped, Canvas.SetMatrix(caller.Transformation)
 ```
 
+* Non-root nodes do the same without the area step: their `local` already contains the Yoga slot.
+
 * Transforms follow VL.Skia: `Canvas.SetMatrix` and restore the caller's matrix afterwards; `Save` / `Restore` only for clipping.
 * Dragging (including `ScrollContent`) needs pointer capture: once a press is handled, moves and the release go to the capturing node even outside its bounds. Details belong to the gesture proposal.
-* Like `InViewportUpstream`, a `Layout` under a rotated transform lays out in the axis-aligned pixel rectangle of its bounds.
+* The layout area is the axis-aligned rectangle of the viewport in the caller's space; under a rotated caller transform the UI lays out in that bounding rectangle.
 
 ### Responsibilities
 
 | Layer | Responsibility | Members |
 | :--- | :--- | :--- |
-| **`Layout`** | `ILayer` host for one Fu root. Bounds in caller space, `CommonSpace` (default `DIPTopLeft`), optional config override, layout trigger, notification mapping. | `Bounds`, `Space`, `Config`, `Root`, `Render`, `Notify` |
-| **`Layoutable<TSelf>`** | Owns `YGNode*` (created with the Fu default config), syncs the Yoga tree and config in `OnChildrenChanged`, `CalculateLayout` on roots, `ApplyLayout` chain, parent-relative `Layout`, local `Transformation`. | `Layout`, `Transformation`, `SetTransformation`, `CalculateLayout`, `OnLayoutChanged` |
-| **`Interactable<TSelf>`** | Pushes the local transform, maps notifications into local space, respects clipping, routes to children last-first, hit-tests `(0, 0, w, h)`. | `Notify`, `NotifySelf` |
-| **`Renderable`** | `Bounds` in parent space, `RenderSelf` in `(0, 0, w, h)`, clipping, children first-first. Warns when rendered without a `Layout`. | `Bounds`, `Render`, `RenderSelf` |
+| **`Layoutable<TSelf>`** | Owns `YGNode*`, syncs the Yoga tree in `OnChildrenChanged`, inherited `YogaConfig`, `CalculateLayout` on roots, `ApplyLayout` chain, parent-relative `Layout`, local `Transformation`. | `Layout`, `Transformation`, `SetTransformation`, `Config`, `SetConfig`, `EffectiveConfig`, `CalculateLayout`, `OnLayoutChanged` |
+| **`Interactable<TSelf>`** | Root: layout trigger and area. Pushes the local transform, maps notifications into local space, respects clipping, routes to children last-first, hit-tests `(0, 0, w, h)`. | `Notify`, `NotifySelf` |
+| **`Renderable`** | Root: layout trigger and area. `Bounds` in parent space (caller space for the root), `RenderSelf` in `(0, 0, w, h)`, clipping, children first-first. | `Bounds`, `Render`, `RenderSelf` |
 
 ---
 
 ## 6. Out of Scope
 
 * **Measure functions** (intrinsic sizing for text, images, wrapped `ILayer`s). Hard to set up from a patch; revisit with text rendering. When added: one static `[UnmanagedCallersOnly]` callback resolving the node through `GetContext`, and a guard, because Yoga asserts fatally on a node with both a measure function and children.
-* **Automatic pixel snapping** from the Layout's space.
+* **Automatic pixel snapping** from the caller's space.
 * **Transform origin** for `Transformation`.
