@@ -3,7 +3,9 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="VL.Core" Version="2025.7.4" />
     <PackageVersion Include="antokhio.YogaSharp" Version="1.2.0" />
+    <PackageVersion Include="VL.Core" Version="2025.7.4" />
+    <PackageVersion Include="VL.Core.Skia" Version="2025.7.4" />
+    <PackageVersion Include="MSTest" Version="4.2.3" />
   </ItemGroup>
 </Project>

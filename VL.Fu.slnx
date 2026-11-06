@@ -10,6 +10,7 @@
   <Folder Name="/Solution Items/.github/">
     <File Path=".github/copilot-instructions.md" />
   </Folder>
+  <Project Path="Fu.Core.Tests/Fu.Core.Tests.csproj" />
   <Project Path="Fu.Core/Fu.Core.csproj" />
   <Project Path="VL.Fu/src/VL.Fu.csproj" />
 </Solution>
