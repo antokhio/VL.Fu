@@ -145,7 +145,7 @@ classDiagram
 ```text
 NodeBase (INodeBase : IDisposable)                           [Fu.Core.Base]
   └── Traversable<TSelf> (ITraversable<TSelf> : ITraversable) [Fu.Core.Tree]
-        └── Stylable<TSelf> (IStylable)                       [Fu.Core.Style]
+        └── Stylable<TSelf> (IStylable)                       [Fu.Core.Styling]
               └── Layoutable<TSelf> (ILayoutable)             [Fu.Core.Layout]
                     └── Interactable<TSelf> (VL.Skia.IBehavior) [Fu.Core.Interaction]
                           └── Renderable (IRenderable : ILayer) [Fu.Core.Rendering] (closes TSelf = Renderable)
@@ -153,7 +153,7 @@ NodeBase (INodeBase : IDisposable)                           [Fu.Core.Base]
 
 **Supporting / Standalone Types:**
 * `TraversableExtensions` (`Fu.Core.Tree`) — `Root()`, `Ancestors()`, `Descendants()`, `IsAncestorOf()`
-* `Style : IStyle` (`Fu.Core.Style`)
+* `Style : IStyle` (`Fu.Core.Styling`)
 * `Gesture` (`abstract record` in `Fu.Core.Interaction`)
 
 ---

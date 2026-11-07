@@ -3,7 +3,7 @@ using VL.Core;
 using VL.Core.Import;
 using VL.Model;
 
-namespace Fu.Core.Style
+namespace Fu.Core.Styling
 {
     public interface IStylable
     {

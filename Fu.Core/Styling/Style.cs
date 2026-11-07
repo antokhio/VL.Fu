@@ -1,4 +1,4 @@
-﻿namespace Fu.Core.Style
+﻿namespace Fu.Core.Styling
 {
     public interface IStyle
     {

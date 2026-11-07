@@ -1,5 +1,5 @@
 ﻿using Fu.Core.Extensions;
-using Fu.Core.Style;
+using Fu.Core.Styling;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using Stride.Core.Mathematics;
