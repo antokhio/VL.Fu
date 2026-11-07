@@ -17,3 +17,9 @@
 ## Tooling Boundaries
 
 - vvvv gamma patches `.vl` files are hand-authored in the vvvv IDE by user. Don't read or edit them, they are outside of scope.
+
+## Code preference
+
+- Prefer IReadOnlyList<T> on facade Spread<T> internally.
+- Properties on classes, or maybe used in context of ProcesNode, should have `public X => _x; public void SetX(...)` pattern for getters and setters, where setters and getters maybe called via mainloop every frame.
+- NaN handling: we keep NaN's internally but on facade we replace it with Optional<float>
