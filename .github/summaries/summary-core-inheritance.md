@@ -62,28 +62,44 @@ classDiagram
     ITraversable~T~ <|.. Traversable~TSelf~
 
     %% Style Layer
-    class IStyle {
-        <<interface>>
-        +Apply() void
-        +Remove() void
-    }
     class Style {
-        <<abstract>>
-        +Apply() void
-        +Remove() void
+        <<abstract record>>
+        +Inputs : Spread~Style~
+        +Build(NodeBase) void
     }
-    IStyle <|.. Style
+    class Style~TNode~ {
+        <<abstract record>>
+        +Build(TNode) void
+    }
+    class YogaStyle {
+        <<abstract record>>
+        +Build(YGNode*) void
+    }
+    Style <|-- Style~TNode~
+    Style <|-- YogaStyle
+
+    class StyleNode {
+        <<abstract, ProcessNode>>
+        +SetInput(Spread~Style~) void
+        +Output : Style?
+    }
+    StyleNode --> Style : outputs
 
     class IStylable {
         <<interface>>
-        +Style : IStyle
+        +Style : Style?
+        +SetStyle(Style?) void
     }
     class Stylable~TSelf~ {
         <<abstract>>
-        +Style : IStyle
+        +Style : Style?
+        +SetStyle(Style?) void
+        #BeginStyle() void
+        #BuildStyleCore(Style) void
+        #EndStyle() void
     }
     IStylable <|.. Stylable~TSelf~
-    IStylable --> IStyle : has
+    IStylable --> Style : has
     Traversable~TSelf~ <|-- Stylable~TSelf~
 
     %% Layout Layer
@@ -153,7 +169,7 @@ NodeBase (INodeBase : IDisposable)                           [Fu.Core.Base]
 
 **Supporting / Standalone Types:**
 * `TraversableExtensions` (`Fu.Core.Tree`) — `Root()`, `Ancestors()`, `Descendants()`, `IsAncestorOf()`
-* `Style : IStyle` (`Fu.Core.Styling`)
+* `Style`, `Style<TNode>`, `YogaStyle` (immutable records) and `StyleNode` process nodes (`Fu.Core.Styling`), see [proposal-style-instructions.md](../proposals/proposal-style-instructions.md)
 * `Gesture` (`abstract record` in `Fu.Core.Interaction`)
 
 ---
@@ -182,12 +198,8 @@ NodeBase (INodeBase : IDisposable)                           [Fu.Core.Base]
 
 With `NodeBase` and `Traversable<TSelf>` in place and `Interactable<TSelf>` renamed, the remaining design decisions focus on how data flows down and up the `Stylable -> Layoutable -> Interactable -> Renderable` layers:
 
-### A. Styling Semantics (`IStyle` & `Stylable<TSelf>`)
-Currently `IStyle` has parameterless `void Apply()` and `void Remove()`.
-* **Target of `Apply()`:** What does `Style` apply to?
-  * Does it configure a `YGNode` (layout properties: width, height, flex, padding, margin)?
-  * Does it configure Skia drawing state (visual properties: background, border, corner radius, font, color)?
-  * Or does `Apply(TSelf node)` / `Apply(StyleContext ctx)` mutate resolved properties on the element?
+### A. Styling Semantics (`Style` & `Stylable<TSelf>`)
+Resolved and implemented as immutable style instructions, see [proposal-style-instructions.md](../proposals/proposal-style-instructions.md). Still open:
 * **State-Driven Styling (Pseudo-states):**
   * Visual and layout styles often depend on interaction state (`Hovered`, `Pressed`, `Focused`, `Disabled`) which lives lower in `Interactable<TSelf>`.
   * Either `Stylable<TSelf>` exposes a style sheet/rule that gets evaluated with the current interaction state during the update/render pass, or `Interactable<TSelf>` notifies `Stylable<TSelf>` when pseudo-states change.

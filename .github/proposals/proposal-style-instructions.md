@@ -282,8 +282,12 @@ Later, if passes show up in measurements: since a `YogaStyle` chain's result is 
 
 * Namespace: done, `Fu.Core.Styling` (folder `Fu.Core\Styling`).
 * VL rebuilds a pin-group `Spread` only when one of its inputs changes (believed, to confirm in vvvv); the item comparison is a fallback either way.
+* Implemented in `Fu.Core\Styling` (`Style.cs`, `YogaStyle.cs`, `Stylable.cs`, `StyleNode.cs`, `WidthStyle.cs`, `GapStyle.cs`, `TransformStyle.cs`) and `Fu.Core\Layout\YogaStyleStage.cs`; tests in `Fu.Core.Tests\Styling`.
+* Confirmed by test: `YGNodeCopyStyle` leaves an equal style undirtied, and a fresh node's style equals the template.
+* Additions while implementing: `StyleNode.ValidateFinite` turns NaN or infinity into an empty value with a warning on the style node; a `null` `Inputs` becomes empty; `SetInput` compares items by reference.
+* The assembly has no `ImportAsIs` yet, so the style nodes are not visible in VL until it is added.
 
-First tests, before any concrete style node:
+First tests, all in place:
 
 1. `YGNodeCopyStyle` leaves an equal style undirtied (the bulk path relies on it).
 2. Tree combining: `Combine(Combine(a, b), c)` applies a, b, c in order; a shared subtree in two trees applies in both; equal trees compare equal, a changed leaf makes them differ.
