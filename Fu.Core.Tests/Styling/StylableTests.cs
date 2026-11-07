@@ -1,5 +1,6 @@
 using Fu.Core.Layout;
 using Fu.Core.Rendering;
+using Fu.Core.Styles;
 using Fu.Core.Styling;
 using Microsoft.Extensions.Logging;
 using Stride.Core.Mathematics;
@@ -78,12 +79,12 @@ namespace Fu.Core.Tests.Styling
         /// <summary>
         /// Records the order instructions run in.
         /// </summary>
-        private sealed record Mark(Spread<Style> Inputs, string Name) : Style<Node>(Inputs)
+        private sealed record Mark(IReadOnlyList<Style> Inputs, string Name) : Style<Node>(Inputs)
         {
             public override void Build(Node node) => node.Marks.Add(Name);
         }
 
-        private sealed record Throwing(Spread<Style> Inputs) : Style(Inputs)
+        private sealed record Throwing(IReadOnlyList<Style> Inputs) : Style(Inputs)
         {
             public override void Build(Fu.Core.Base.NodeBase node) => throw new InvalidOperationException("boom");
         }
@@ -187,6 +188,25 @@ namespace Fu.Core.Tests.Styling
 
             CollectionAssert.AreEqual(new[] { "a", "b", "c" }, first.Marks);
             CollectionAssert.AreEqual(new[] { "d", "a", "b" }, second.Marks);
+        }
+
+        [TestMethod]
+        public void Inputs_Spread_IsKeptWithoutCopy()
+        {
+            var inputs = S(M("a"));
+
+            Assert.AreSame(inputs, new CombinedStyle(inputs).Inputs);
+        }
+
+        [TestMethod]
+        public void Inputs_MutableList_IsCopied()
+        {
+            var inputs = new List<Style> { M("a") };
+            var style = new CombinedStyle(inputs);
+
+            inputs.Add(M("b"));
+
+            Assert.AreEqual(1, style.Inputs.Count);
         }
 
         [TestMethod]

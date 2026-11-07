@@ -1,35 +1,12 @@
+using Fu.Core.Styles;
+using Fu.Core.Styling;
 using VL.Core;
 using VL.Core.Import;
-using VL.Lib.Collections;
 using VL.Model;
 using YogaSharp;
 
-namespace Fu.Core.Styling
+namespace VL.Fu.Styles
 {
-    /// <summary>
-    /// Sets the Yoga width. Points, percent and auto write the same slot, so the later instruction wins.
-    /// </summary>
-    public sealed record WidthStyle(Spread<Style> Inputs, YGValue Width) : YogaStyle(Inputs)
-    {
-        public override unsafe void Build(YGNode* node)
-        {
-            switch (Width.Unit)
-            {
-                case YGUnit.Point:
-                    node->SetWidth(Width.Value);
-                    break;
-                case YGUnit.Percent:
-                    node->SetWidthPercent(Width.Value);
-                    break;
-                case YGUnit.Auto:
-                    node->SetWidthAuto();
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(Width), Width.Unit, "Unsupported width unit.");
-            }
-        }
-    }
-
     /// <summary>
     /// Sets the width in points. Without a value the width is not set here, so an earlier setter or the default holds.
     /// </summary>
@@ -47,7 +24,7 @@ namespace Fu.Core.Styling
                 RebuildStyle();
         }
 
-        protected override Style? BuildStyle(Spread<Style> inputs) =>
+        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
             _width.HasValue ? new WidthStyle(inputs, YGValue.Point(_width.Value)) : null;
     }
 
@@ -69,7 +46,7 @@ namespace Fu.Core.Styling
                 RebuildStyle();
         }
 
-        protected override Style? BuildStyle(Spread<Style> inputs) =>
+        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
             _percent.HasValue ? new WidthStyle(inputs, YGValue.Percent(_percent.Value)) : null;
     }
 
@@ -82,6 +59,6 @@ namespace Fu.Core.Styling
         public SetWidthAutoNode([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) => RebuildStyle();
 
-        protected override Style? BuildStyle(Spread<Style> inputs) => new WidthStyle(inputs, YGValue.Auto);
+        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) => new WidthStyle(inputs, YGValue.Auto);
     }
 }

@@ -12,13 +12,18 @@ namespace Fu.Core.Styling
     /// A style holds no node state, so one style can be set on many nodes, and one subtree can be shared by many trees.
     /// Derive from <see cref="Style{TNode}"/> for values owned by a node type, or from <see cref="YogaStyle"/> for Yoga style.
     /// </remarks>
-    /// <param name="Inputs">The styles that run before this one. Null items are skipped.</param>
-    public abstract record Style(Spread<Style> Inputs)
+    /// <param name="Inputs">
+    /// The styles that run before this one. Null items are skipped.
+    /// A list that is not a <see cref="Spread{T}"/> is copied, so the style stays immutable.
+    /// </param>
+    public abstract record Style(IReadOnlyList<Style> Inputs)
     {
+        private readonly Spread<Style> _inputs = Inputs?.ToSpread() ?? Spread<Style>.Empty;
+
         /// <summary>
         /// The styles that run before this one, in order.
         /// </summary>
-        public Spread<Style> Inputs { get; } = Inputs ?? Spread<Style>.Empty;
+        public IReadOnlyList<Style> Inputs => _inputs;
 
         /// <summary>
         /// Writes this instruction, without its inputs, into the staged style of <paramref name="node"/>.
@@ -39,8 +44,8 @@ namespace Fu.Core.Styling
             if (other is null || EqualityContract != other.EqualityContract)
                 return false;
 
-            var inputs = Inputs;
-            var otherInputs = other.Inputs;
+            var inputs = _inputs;
+            var otherInputs = other._inputs;
             if (ReferenceEquals(inputs, otherInputs))
                 return true;
 
@@ -60,7 +65,7 @@ namespace Fu.Core.Styling
         {
             var hash = new HashCode();
             hash.Add(EqualityContract);
-            foreach (var input in Inputs)
+            foreach (var input in _inputs)
                 hash.Add(input);
             return hash.ToHashCode();
         }
@@ -70,7 +75,7 @@ namespace Fu.Core.Styling
     /// A style for values owned by <typeparamref name="TNode"/>, written through the staging API of that node type.
     /// Set on a node of another type, it is reported on that node and skipped.
     /// </summary>
-    public abstract record Style<TNode>(Spread<Style> Inputs) : Style(Inputs)
+    public abstract record Style<TNode>(IReadOnlyList<Style> Inputs) : Style(Inputs)
         where TNode : NodeBase
     {
         /// <summary>
@@ -89,7 +94,7 @@ namespace Fu.Core.Styling
     /// <summary>
     /// Joins its inputs without an instruction of its own. Built by style nodes with several inputs and nothing set.
     /// </summary>
-    internal sealed record CombinedStyle(Spread<Style> Inputs) : Style(Inputs)
+    internal sealed record CombinedStyle(IReadOnlyList<Style> Inputs) : Style(Inputs)
     {
         public override void Build(NodeBase node) { }
     }

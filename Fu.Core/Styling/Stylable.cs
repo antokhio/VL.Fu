@@ -75,9 +75,10 @@ namespace Fu.Core.Styling
         // Inputs left to right, then the instruction itself, so later instructions win.
         private void Build(Style style)
         {
-            foreach (var input in style.Inputs)
+            var inputs = style.Inputs;
+            for (var i = 0; i < inputs.Count; i++)
             {
-                if (input is not null)
+                if (inputs[i] is { } input)
                     Build(input);
             }
 

@@ -15,6 +15,7 @@ namespace Fu.Core.Styling
     /// so an empty value lets an earlier setter or the default hold.
     /// Derived nodes call <see cref="RebuildStyle"/> at the end of their constructor and in setters whose value changed.
     /// Invalid pin values are corrected and reported on the style node, not on the nodes it styles.
+    /// The base lives in the core so other packages can add style nodes; the concrete nodes live in <c>VL.Fu.Styles</c>.
     /// </remarks>
     [ProcessNode]
     public abstract class StyleNode : NodeBase
@@ -78,8 +79,9 @@ namespace Fu.Core.Styling
         /// <summary>
         /// Builds this node's own instruction with <paramref name="inputs"/> as its inputs,
         /// or returns null when nothing is set, so the output is the inputs alone.
+        /// <paramref name="inputs"/> holds no nulls and is immutable, so a style can keep it without copying.
         /// </summary>
-        protected abstract Style? BuildStyle(Spread<Style> inputs);
+        protected abstract Style? BuildStyle(IReadOnlyList<Style> inputs);
 
         /// <summary>
         /// Returns <paramref name="value"/>, or an empty optional when it holds NaN or infinity, which is reported on this node.
@@ -122,18 +124,5 @@ namespace Fu.Core.Styling
 
             return input;
         }
-    }
-
-    /// <summary>
-    /// Joins styles into one, later inputs winning over earlier ones. Its output can be the input of another
-    /// combine or setter, so styles form a tree that can share subtrees.
-    /// </summary>
-    [ProcessNode(Name = "Combine")]
-    public sealed class CombineNode : StyleNode
-    {
-        public CombineNode([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
-            : base(nodeContext) => RebuildStyle();
-
-        protected override Style? BuildStyle(Spread<Style> inputs) => null;
     }
 }

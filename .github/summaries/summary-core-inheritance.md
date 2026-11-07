@@ -64,7 +64,7 @@ classDiagram
     %% Style Layer
     class Style {
         <<abstract record>>
-        +Inputs : Spread~Style~
+        +Inputs : IReadOnlyList~Style~
         +Build(NodeBase) void
     }
     class Style~TNode~ {
@@ -169,7 +169,7 @@ NodeBase (INodeBase : IDisposable)                           [Fu.Core.Base]
 
 **Supporting / Standalone Types:**
 * `TraversableExtensions` (`Fu.Core.Tree`) — `Root()`, `Ancestors()`, `Descendants()`, `IsAncestorOf()`
-* `Style`, `Style<TNode>`, `YogaStyle` (immutable records) and `StyleNode` process nodes (`Fu.Core.Styling`), see [proposal-style-instructions.md](../proposals/proposal-style-instructions.md)
+* `Style`, `Style<TNode>`, `YogaStyle` (immutable records) and the `StyleNode` base (`Fu.Core.Styling`); concrete style records in `Fu.Core.Styles`; style process nodes in `VL.Fu.Styles` (VL.Fu project). See [proposal-style-instructions.md](../proposals/proposal-style-instructions.md)
 * `Gesture` (`abstract record` in `Fu.Core.Interaction`)
 
 ---

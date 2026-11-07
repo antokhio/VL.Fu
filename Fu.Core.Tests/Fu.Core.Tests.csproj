@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Fu.Core\Fu.Core.csproj" />
+    <ProjectReference Include="..\VL.Fu\src\VL.Fu.csproj" />
   </ItemGroup>
 
 </Project>

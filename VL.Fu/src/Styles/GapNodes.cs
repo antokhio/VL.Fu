@@ -1,21 +1,13 @@
 using Fu.Core.Base;
+using Fu.Core.Styles;
+using Fu.Core.Styling;
 using VL.Core;
 using VL.Core.Import;
-using VL.Lib.Collections;
 using VL.Model;
 using YogaSharp;
 
-namespace Fu.Core.Styling
+namespace VL.Fu.Styles
 {
-    /// <summary>
-    /// Sets the Yoga gap between children for one gutter. A row or column gap beats the gap for all gutters,
-    /// regardless of the order the instructions run in.
-    /// </summary>
-    public sealed record GapStyle(Spread<Style> Inputs, YGGutter Gutter, float Value) : YogaStyle(Inputs)
-    {
-        public override unsafe void Build(YGNode* node) => node->SetGap(Gutter, Value);
-    }
-
     /// <summary>
     /// Shared state of the gap setters: one cached value and gutter, rebuilt once per change.
     /// Without a value the gap is not set here, so an earlier setter or the default holds.
@@ -51,7 +43,7 @@ namespace Fu.Core.Styling
                 RebuildStyle();
         }
 
-        protected sealed override Style? BuildStyle(Spread<Style> inputs) =>
+        protected sealed override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
             _gap.HasValue ? new GapStyle(inputs, _gutter, _gap.Value) : null;
     }
 
