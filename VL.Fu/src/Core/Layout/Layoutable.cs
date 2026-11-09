@@ -43,6 +43,7 @@ namespace VL.Fu.Core.Layout
         /// Lays out the whole tree below this node and updates <see cref="Layout"/> on every node that changed.
         /// Only a root can do this; on a node with a parent it logs a warning and does nothing.
         /// A NaN size leaves that axis unconstrained, so the root takes the size of its content.
+        /// The root is placed at (0, 0) of its caller's space.
         /// </summary>
         void CalculateLayout(
             float availableWidth = float.NaN,
@@ -87,10 +88,14 @@ namespace VL.Fu.Core.Layout
 
         private SKMatrix _localTransformation = SKMatrix.Identity;
 
+        // The root's place in its caller's space, set by each layout pass on the root; zero for every child.
+        private Vector2 _origin;
+
         /// <summary>
         /// Maps this node's own space, with (0, 0) at its top-left corner, into its parent's space:
         /// first <see cref="Transformation"/>, then the move to the <see cref="Layout"/> position.
-        /// Kept up to date whenever either of them changes, so reading it is free.
+        /// A root also moves to the top-left of the area it was laid out into, so it maps into its caller's space.
+        /// Kept up to date whenever any of them changes, so reading it is free.
         /// </summary>
         protected SKMatrix LocalTransformation => _localTransformation;
 
@@ -162,10 +167,25 @@ namespace VL.Fu.Core.Layout
             base.EndStyle();
         }
 
-        public unsafe void CalculateLayout(
+        public void CalculateLayout(
             float availableWidth = float.NaN,
             float availableHeight = float.NaN,
             YGDirection direction = YGDirection.LTR
+        ) => CalculateLayout(Vector2.Zero, availableWidth, availableHeight, direction);
+
+        /// <summary>
+        /// Lays out the whole tree into <paramref name="area"/>, a rectangle in the caller's space:
+        /// its size is the available size, and the root is placed at its top-left corner.
+        /// Only a root can do this; on a node with a parent it logs a warning and does nothing.
+        /// </summary>
+        protected void CalculateLayout(RectangleF area, YGDirection direction) =>
+            CalculateLayout(new Vector2(area.X, area.Y), area.Width, area.Height, direction);
+
+        private unsafe void CalculateLayout(
+            Vector2 origin,
+            float availableWidth,
+            float availableHeight,
+            YGDirection direction
         )
         {
             if (_handle is null)
@@ -180,6 +200,8 @@ namespace VL.Fu.Core.Layout
                 );
                 return;
             }
+
+            SetOrigin(origin);
 
             _handle->CalculateLayout(availableWidth, availableHeight, direction);
 
@@ -203,11 +225,15 @@ namespace VL.Fu.Core.Layout
 
         /// <summary>
         /// A node that was attached, moved or detached picks up the config of its new surroundings,
-        /// unless it has one of its own.
+        /// unless it has one of its own. An attached node drops its place as a root, since its parent's layout places it now.
         /// </summary>
         protected override void OnParentChanged(TSelf? oldParent, TSelf? newParent)
         {
             base.OnParentChanged(oldParent, newParent);
+
+            if (newParent is not null)
+                SetOrigin(Vector2.Zero);
+
             UpdateConfig();
         }
 
@@ -309,10 +335,19 @@ namespace VL.Fu.Core.Layout
                 OnLayoutChanged(old, layout);
         }
 
+        private void SetOrigin(Vector2 origin)
+        {
+            if (origin.X.Equals(_origin.X) && origin.Y.Equals(_origin.Y))
+                return;
+
+            _origin = origin;
+            UpdateLocalTransformation();
+        }
+
         private void UpdateLocalTransformation()
         {
             _localTransformation = SKMatrix
-                .CreateTranslation(_layout.X, _layout.Y)
+                .CreateTranslation(_origin.X + _layout.X, _origin.Y + _layout.Y)
                 .PreConcat(_transformation.ToSKMatrix());
 
             OnLocalTransformationChanged();

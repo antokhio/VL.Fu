@@ -1,4 +1,6 @@
+using Stride.Core.Mathematics;
 using VL.Fu.Core.Region;
+using VL.Lib.Collections;
 using VL.Skia;
 
 namespace VL.Fu.Tests.Core.Region
@@ -58,6 +60,29 @@ namespace VL.Fu.Tests.Core.Region
             node.Update();
 
             Assert.AreEqual(1, inlay.Updates);
+        }
+
+        [TestMethod]
+        public void FuNodeUpdate_Root_LaysOutIntoBounds()
+        {
+            using var node = new FuNode(null!);
+            node.SetBounds(new RectangleF(20, 30, 200, 50));
+
+            node.Update();
+
+            Assert.AreEqual(new RectangleF(0, 0, 200, 50), node.Layout);
+        }
+
+        [TestMethod]
+        public void FuNodeUpdate_Child_DoesNotLayOut()
+        {
+            using FuNode root = new(null!), child = new(null!);
+            root.SetChildren(Spread.Create<IFuNode>(child));
+            child.SetBounds(new RectangleF(0, 0, 200, 50));
+
+            child.Update();
+
+            Assert.AreEqual(RectangleF.Empty, child.Layout);
         }
     }
 }

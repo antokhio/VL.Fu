@@ -35,6 +35,18 @@ namespace VL.Fu
         {
             base.SetChildren(children);
         }
+
+        /// <summary>
+        /// Runs the patch inside the node, then lays the tree out if this node is its root.
+        /// Children are upstream, so they ran before this and the layout sees this frame's tree and styles.
+        /// The root lays out into its bounds if set, otherwise into the viewport of its last render.
+        /// </summary>
+        [Fragment]
+        public override void Update()
+        {
+            base.Update();
+            CalculateRootLayout();
+        }
     }
 
     [ProcessNode(Name = "FuNode (Spectral)", HasStateOutput = true)]

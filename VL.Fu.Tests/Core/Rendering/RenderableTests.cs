@@ -1,4 +1,5 @@
 using VL.Fu.Core.Rendering;
+using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using Stride.Core.Mathematics;
 using VL.Lib.Collections;
@@ -24,6 +25,25 @@ namespace VL.Fu.Tests.Core.Rendering
             public string Name { get; }
 
             public YGNode* Native => Handle;
+
+            public List<string> Warnings { get; } = new();
+
+            public int LayoutChanges { get; private set; }
+
+            public void LayoutRoot() => CalculateRootLayout();
+
+            public override void Log(LogLevel level, string message, TimeSpan? lifetime = null)
+            {
+                if (level >= LogLevel.Warning)
+                    Warnings.Add(message);
+                base.Log(level, message, lifetime);
+            }
+
+            protected override void OnLayoutChanged(RectangleF oldLayout, RectangleF newLayout)
+            {
+                base.OnLayoutChanged(oldLayout, newLayout);
+                LayoutChanges++;
+            }
 
             public override string ToString() => Name;
         }
@@ -269,6 +289,251 @@ namespace VL.Fu.Tests.Core.Rendering
                 Assert.AreEqual(1, log.Count);
                 AssertTranslation(log[0].Caller, 90, 10);
             }
+        }
+
+        /// <summary>
+        /// Renders once on a 1 x 1 canvas, only to let a root capture the caller's viewport.
+        /// </summary>
+        private static void RenderOnce(Node node, Func<CallerInfo, CallerInfo>? adjust = null)
+        {
+            using var bitmap = new SKBitmap(1, 1);
+            using var canvas = new SKCanvas(bitmap);
+            var caller = CreateCaller(canvas);
+            node.Render(adjust?.Invoke(caller) ?? caller);
+        }
+
+        [TestMethod]
+        public void CalculateRootLayout_NeverRendered_DoesNothing()
+        {
+            using var a = new Node("a");
+
+            a.LayoutRoot();
+
+            Assert.IsNull(a.Bounds);
+        }
+
+        [TestMethod]
+        public void CalculateRootLayout_AfterRender_StretchesToViewport()
+        {
+            using var a = new Node("a");
+            RenderOnce(a);
+
+            a.LayoutRoot();
+
+            AssertRect(a.Layout, 0, 0, 300, 100);
+            AssertRect(a.Bounds, 0, 0, 300, 100);
+        }
+
+        [TestMethod]
+        public void CalculateRootLayout_WidthStyle_WinsOverViewport()
+        {
+            using var a = new Node("a");
+            a.Native->SetWidth(120);
+            RenderOnce(a);
+
+            a.LayoutRoot();
+
+            AssertRect(a.Layout, 0, 0, 120, 100);
+        }
+
+        [TestMethod]
+        public void CalculateRootLayout_PercentWidth_ResolvesAgainstViewport()
+        {
+            using var a = new Node("a");
+            a.Native->SetWidthPercent(50);
+            RenderOnce(a);
+
+            a.LayoutRoot();
+
+            AssertRect(a.Layout, 0, 0, 150, 100);
+        }
+
+        /// <summary>
+        /// A centred space (like DIP) puts the caller's origin in the middle of the viewport;
+        /// the root still starts at the viewport's top-left.
+        /// </summary>
+        [TestMethod]
+        public void CalculateRootLayout_CentredCaller_PlacesRootAtViewportTopLeft()
+        {
+            using var a = new Node("a");
+            var log = new List<(string Name, SKMatrix Caller, SKMatrix Canvas)>();
+            a.SetLayer(new RecordingLayer("a", log));
+            Func<CallerInfo, CallerInfo> centred = c => c.WithTransformation(SKMatrix.CreateTranslation(150, 50));
+            RenderOnce(a, centred);
+
+            a.LayoutRoot();
+            RenderOnce(a, centred);
+
+            AssertRect(a.Layout, 0, 0, 300, 100);
+            AssertRect(a.Bounds, -150, -50, 300, 100);
+            Assert.AreEqual(1, log.Count);
+            AssertTranslation(log[0].Caller, 0, 0);
+        }
+
+        [TestMethod]
+        public void CalculateRootLayout_SameViewportAgain_ChangesNothing()
+        {
+            using var a = new Node("a");
+            RenderOnce(a);
+            a.LayoutRoot();
+            var changes = a.LayoutChanges;
+
+            RenderOnce(a);
+            a.LayoutRoot();
+
+            Assert.AreEqual(changes, a.LayoutChanges);
+        }
+
+        [TestMethod]
+        public void CalculateRootLayout_SingularCaller_KeepsLastViewport()
+        {
+            using var a = new Node("a");
+            RenderOnce(a);
+
+            RenderOnce(a, c => c.WithTransformation(SKMatrix.CreateScale(0, 0)));
+            a.LayoutRoot();
+
+            AssertRect(a.Layout, 0, 0, 300, 100);
+        }
+
+        [TestMethod]
+        public void CalculateRootLayout_OnChild_DoesNothing()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                RenderOnce(b);
+
+                b.LayoutRoot();
+
+                Assert.IsNull(b.Bounds);
+                Assert.AreEqual(0, b.Warnings.Count);
+            }
+        }
+
+        [TestMethod]
+        public void Attach_FormerRoot_DropsItsPlaceAndViewport()
+        {
+            using Node p = new("p"), a = new("a");
+            RenderOnce(a, c => c.WithTransformation(SKMatrix.CreateTranslation(150, 50)));
+            a.LayoutRoot();
+
+            p.SetChildren(Spread.Create(a));
+            AssertRect(a.Bounds, 0, 0, 300, 100);
+
+            p.SetChildren(Spread<Node>.Empty);
+            a.LayoutRoot();
+            AssertRect(a.Bounds, 0, 0, 300, 100);
+        }
+
+        [TestMethod]
+        public void SetBounds_Root_LaysOutIntoThemWithoutRender()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                root.Native->SetWidthAuto();
+                root.Native->SetHeightAuto();
+
+                root.SetBounds(new RectangleF(20, 30, 200, 50));
+                root.LayoutRoot();
+
+                AssertRect(root.Layout, 0, 0, 200, 50);
+                AssertRect(root.Bounds, 20, 30, 200, 50);
+                AssertRect(b.Bounds, 10, 10, 80, 30);
+            }
+        }
+
+        [TestMethod]
+        public void SetBounds_Root_PlacesRootAtTheirTopLeft()
+        {
+            using var a = new Node("a");
+            var log = new List<(string Name, SKMatrix Caller, SKMatrix Canvas)>();
+            a.SetLayer(new RecordingLayer("a", log));
+            a.SetBounds(new RectangleF(20, 30, 200, 50));
+
+            a.LayoutRoot();
+            RenderOnce(a);
+
+            Assert.AreEqual(1, log.Count);
+            AssertTranslation(log[0].Caller, 20, 30);
+        }
+
+        [TestMethod]
+        public void SetBounds_WinOverViewport()
+        {
+            using var a = new Node("a");
+            RenderOnce(a);
+
+            a.SetBounds(new RectangleF(0, 0, 200, 50));
+            a.LayoutRoot();
+
+            AssertRect(a.Layout, 0, 0, 200, 50);
+        }
+
+        [TestMethod]
+        public void SetBounds_Null_FallsBackToViewportAndComputedBounds()
+        {
+            using var a = new Node("a");
+            RenderOnce(a);
+            a.SetBounds(new RectangleF(20, 30, 200, 50));
+            a.LayoutRoot();
+
+            a.SetBounds(null);
+            a.LayoutRoot();
+
+            AssertRect(a.Layout, 0, 0, 300, 100);
+            AssertRect(a.Bounds, 0, 0, 300, 100);
+        }
+
+        [TestMethod]
+        public void SetBounds_NotFinite_IsIgnoredWithWarning()
+        {
+            using var a = new Node("a");
+
+            a.SetBounds(new RectangleF(0, 0, float.NaN, 50));
+
+            Assert.IsNull(a.Bounds);
+            Assert.AreEqual(1, a.Warnings.Count);
+        }
+
+        [TestMethod]
+        public void SetBounds_NegativeSize_IsIgnoredWithWarning()
+        {
+            using var a = new Node("a");
+
+            a.SetBounds(new RectangleF(0, 0, -10, 50));
+
+            Assert.IsNull(a.Bounds);
+            Assert.AreEqual(1, a.Warnings.Count);
+        }
+
+        [TestMethod]
+        public void SetBounds_Child_IsReportedButDoesNotPlaceIt()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                b.SetBounds(new RectangleF(1, 2, 3, 4));
+                root.CalculateLayout();
+
+                Assert.AreEqual(1, b.Warnings.Count);
+                AssertRect(b.Layout, 10, 10, 80, 80);
+                AssertRect(b.Bounds, 1, 2, 3, 4);
+            }
+        }
+
+        [TestMethod]
+        public void CalculateLayout_AfterArea_PlacesRootAtZero()
+        {
+            using var a = new Node("a");
+            a.SetBounds(new RectangleF(20, 30, 200, 50));
+            a.LayoutRoot();
+            a.SetBounds(null);
+
+            a.CalculateLayout(300, 100);
+
+            AssertRect(a.Bounds, 0, 0, 300, 100);
         }
     }
 }
