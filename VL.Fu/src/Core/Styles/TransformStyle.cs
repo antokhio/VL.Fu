@@ -5,7 +5,7 @@ using Stride.Core.Mathematics;
 namespace VL.Fu.Core.Styles
 {
     /// <summary>
-    /// Sets the transformation of the node, moving, rotating or scaling it around its top-left corner
+    /// Sets the transformation of the node, moving, rotating or scaling it around its center
     /// without affecting the layout.
     /// </summary>
     /// <remarks>

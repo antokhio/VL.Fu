@@ -302,7 +302,7 @@ NodeBase (INodeBase : IDisposable)                                        [VL.Fu
   * `Renderable<TSelf>.Layer` / `SetLayer(ILayer)` stores the visual Skia layer produced for the node.
 * **Closing the Chain at `IFuNode` (`RegionProvider`, `FuNode`, `FuNodeSpectral`):**
   * All generic layers (`Traversable<TSelf>` through `Renderable<TSelf>`) and `RegionProvider` carry `[ProcessNode(FragmentSelection = FragmentSelection.Explicit)]` so only `[Fragment]`-marked methods (`SetStyle`, `SetTransformation`, `SetConfig`, `Update`, `SetChildren`) become process-node pins, ordered via `PinOrder`.
-  * `RegionProvider` closes the CRTP chain at `IFuNode` (`RegionProvider : Renderable<IFuNode>, IFuNode`), implements `IRegion<IRegionProvider.IRegionInlay>` (`Update(IFuNode node, out ILayer layer)`), forwards the inlay's `ILayer` output to `SetLayer(layer)` on `Update()`, and disposes the inlay (if `IDisposable`) and clears control-point dictionaries in `Dispose(bool)`.
+  * `RegionProvider` closes the CRTP chain at `IFuNode` (`RegionProvider : Renderable<IFuNode>, IFuNode`), implements `IRegion<IRegionProvider.IRegionInlay>` (`Update(IFuNode node, RectangleF bounds, out ILayer layer)`, where `bounds` is the node's box in its own space, `(0, 0, Layout.Width, Layout.Height)`), forwards the inlay's `ILayer` output to `SetLayer(layer)` on `Update()`, and disposes the inlay (if `IDisposable`) and clears control-point dictionaries in `Dispose(bool)`.
   * `FuNode` (`[ProcessNode(Name = "FuNode", HasStateOutput = true)]`) exposes `Children` as a collection pin group (`Spread<IFuNode>`), while `FuNodeSpectral` (`[ProcessNode(Name = "FuNode (Spectral)", HasStateOutput = true)]`) exposes `Children` as a single `Spread<IFuNode>` pin.
 
 ---

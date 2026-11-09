@@ -153,21 +153,21 @@ namespace VL.Fu.Tests.Core.Rendering
         }
 
         [TestMethod]
-        public void Bounds_Rotation_PivotsAroundTopLeft()
+        public void Bounds_Rotation_PivotsAroundCenter()
         {
             var (root, b, c) = CreateRow();
             using (root) using (b) using (c)
             {
                 root.CalculateLayout();
 
-                b.SetTransformation(Matrix.RotationZ(MathUtil.PiOverTwo));
+                c.SetTransformation(Matrix.RotationZ(MathUtil.PiOverTwo));
 
-                AssertRect(b.Bounds, -70, 10, 80, 80);
+                AssertRect(c.Bounds, 75, 25, 80, 50);
             }
         }
 
         [TestMethod]
-        public void Bounds_Scaling_GrowsFromTopLeft()
+        public void Bounds_Scaling_GrowsFromCenter()
         {
             var (root, b, c) = CreateRow();
             using (root) using (b) using (c)
@@ -176,7 +176,20 @@ namespace VL.Fu.Tests.Core.Rendering
 
                 b.SetTransformation(Matrix.Scaling(2, 0.5f, 1));
 
-                AssertRect(b.Bounds, 10, 10, 160, 40);
+                AssertRect(b.Bounds, -30, 30, 160, 40);
+            }
+        }
+
+        [TestMethod]
+        public void Bounds_RotationSetBeforeLayout_PivotsAroundLaidOutCenter()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                c.SetTransformation(Matrix.RotationZ(MathUtil.PiOverTwo));
+                root.CalculateLayout();
+
+                AssertRect(c.Bounds, 75, 25, 80, 50);
             }
         }
 

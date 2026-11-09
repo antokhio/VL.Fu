@@ -21,8 +21,9 @@ namespace VL.Fu.Core.Layout
         RectangleF Layout { get; }
 
         /// <summary>
-        /// Moves, rotates or scales this node around its top-left corner without affecting the layout,
+        /// Moves, rotates or scales this node around its center without affecting the layout,
         /// so siblings keep their places. Only X, Y and perspective are used; Z is ignored.
+        /// The center follows the layout, so a node that changes size keeps turning around its middle.
         /// </summary>
         Matrix Transformation { get; }
         void SetTransformation(Matrix transformation);
@@ -99,7 +100,7 @@ namespace VL.Fu.Core.Layout
 
         /// <summary>
         /// Maps this node's own space, with (0, 0) at its top-left corner, into its parent's space:
-        /// first <see cref="Transformation"/>, then the move to the <see cref="Layout"/> position.
+        /// first <see cref="Transformation"/> around the center of the node's box, then the move to the <see cref="Layout"/> position.
         /// A root also moves to the top-left of the area it was laid out into, so it maps into its caller's space.
         /// Kept up to date whenever any of them changes, so reading it is free.
         /// </summary>
@@ -352,9 +353,13 @@ namespace VL.Fu.Core.Layout
 
         private void UpdateLocalTransformation()
         {
+            var pivotX = _layout.Width / 2;
+            var pivotY = _layout.Height / 2;
+
             _localTransformation = SKMatrix
-                .CreateTranslation(_origin.X + _layout.X, _origin.Y + _layout.Y)
-                .PreConcat(_transformation.ToSKMatrix());
+                .CreateTranslation(_origin.X + _layout.X + pivotX, _origin.Y + _layout.Y + pivotY)
+                .PreConcat(_transformation.ToSKMatrix())
+                .PreConcat(SKMatrix.CreateTranslation(-pivotX, -pivotY));
 
             OnLocalTransformationChanged();
         }

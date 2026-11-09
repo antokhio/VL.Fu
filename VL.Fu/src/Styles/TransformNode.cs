@@ -8,7 +8,8 @@ using VL.Model;
 namespace VL.Fu.Styles
 {
     /// <summary>
-    /// Sets the transformation of the node. Without a value it is not set here, so an earlier setter or identity holds.
+    /// Sets the transformation of the node, which rotates and scales it around its center.
+    /// Without a value it is not set here, so an earlier setter or identity holds.
     /// </summary>
     [ProcessNode(Name = "SetTransform")]
     public sealed class SetTransformNode : StyleNode

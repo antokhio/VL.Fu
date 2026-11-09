@@ -1,4 +1,5 @@
-﻿using VL.Core;
+﻿using Stride.Core.Mathematics;
+using VL.Core;
 using VL.Core.Import;
 using VL.Core.PublicAPI;
 using VL.Fu.Core.Rendering;
@@ -15,7 +16,15 @@ namespace VL.Fu.Core.Region
     {
         public interface IRegionInlay
         {
-            void Update(IFuNode node, out ILayer layer);
+            /// <summary>
+            /// Runs the patch inside the node. <paramref name="bounds"/> is the node's box in its own space, where the layer draws:
+            /// (0, 0) is its top-left corner and the size is the one from <see cref="Core.Layout.ILayoutable.Layout"/>.
+            /// </summary>
+            /// <remarks>
+            /// The inlay runs before the root lays the tree out, so the size is the one from the previous layout pass,
+            /// and it is empty until the node was laid out once.
+            /// </remarks>
+            void Update(IFuNode node, RectangleF bounds, out ILayer layer);
         }
     }
 
@@ -45,7 +54,8 @@ namespace VL.Fu.Core.Region
             if (_inlay is null)
                 return;
 
-            _inlay.Update(this, out var layer);
+            var layout = Layout;
+            _inlay.Update(this, new RectangleF(0, 0, layout.Width, layout.Height), out var layer);
 
             this.SetLayer(layer);
         }
