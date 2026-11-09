@@ -44,9 +44,38 @@ namespace VL.Fu.Core.Rendering
             _layer = layer;
         }
 
+        /// <summary>
+        /// Draws <see cref="Layer"/> and then the children on top, in order, all in this node's own space,
+        /// with (0, 0) at its top-left corner.
+        /// </summary>
+        /// <remarks>
+        /// The local transformation is pushed onto the canvas and onto <see cref="CallerInfo.Transformation"/> alike,
+        /// so both stay in sync for layers that read either one; the canvas is restored afterwards.
+        /// A node that was not laid out yet draws nothing, since its place is unknown.
+        /// </remarks>
         public void Render(CallerInfo caller)
         {
-            //throw new NotImplementedException();
+            if (!HasLayout)
+                return;
+
+            var local = LocalTransformation;
+            var canvas = caller.Canvas;
+            var save = canvas.Save();
+            try
+            {
+                canvas.Concat(ref local);
+                var inner = caller.WithTransformation(caller.Transformation.PreConcat(local));
+
+                _layer?.Render(inner);
+
+                var children = Children;
+                for (var i = 0; i < children.Count; i++)
+                    children[i].Render(inner);
+            }
+            finally
+            {
+                canvas.RestoreToCount(save);
+            }
         }
 
         protected override void OnLocalTransformationChanged()

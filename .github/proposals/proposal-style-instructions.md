@@ -29,12 +29,12 @@ public abstract record Style(IReadOnlyList<Style> Inputs)
     public override int GetHashCode();
 }
 
-/// A general style for one node type, without the cast in every record.
-public abstract record Style<TNode>(IReadOnlyList<Style> Inputs) : Style(Inputs) where TNode : NodeBase
+/// A general style for one node type or interface, without the cast in every record.
+public abstract record Style<TNode>(IReadOnlyList<Style> Inputs) : Style(Inputs) where TNode : class
 {
     public abstract void Build(TNode node);
     public sealed override void Build(NodeBase node) => Build(node as TNode ?? throw new ArgumentException(
-        $"{GetType().Name} requires a {typeof(TNode).Name} node."));
+        $"{GetType().Name} only styles {typeof(TNode).Name} nodes, got {node.GetType().Name}.", nameof(node)));
 }
 
 /// The Yoga subset. Sees only a native Yoga node, never the Fu node.
@@ -233,9 +233,9 @@ public sealed class SetWidthNode : StyleNode
 ## 6. Example: transform (node value)
 
 ```csharp
-public sealed record TransformStyle(IReadOnlyList<Style> Inputs, Matrix Transform) : Style<Renderable>(Inputs)
+public sealed record TransformStyle(IReadOnlyList<Style> Inputs, Matrix Transform) : Style<IFuNode>(Inputs)
 {
-    public override void Build(Renderable node) => node.StageTransformation(Transform);
+    public override void Build(IFuNode node) => ((Layoutable<IFuNode>)node).StageTransformation(Transform);
 }
 ```
 

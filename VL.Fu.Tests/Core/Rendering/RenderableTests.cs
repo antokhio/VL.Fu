@@ -1,6 +1,9 @@
 using VL.Fu.Core.Rendering;
+using SkiaSharp;
 using Stride.Core.Mathematics;
 using VL.Lib.Collections;
+using VL.Lib.IO.Notifications;
+using VL.Skia;
 using YogaSharp;
 
 namespace VL.Fu.Tests.Core.Rendering
@@ -23,6 +26,26 @@ namespace VL.Fu.Tests.Core.Rendering
             public YGNode* Native => Handle;
 
             public override string ToString() => Name;
+        }
+
+        /// <summary>
+        /// Records each render: its name, the caller transformation and the canvas matrix at that moment.
+        /// </summary>
+        private sealed class RecordingLayer(string name, List<(string Name, SKMatrix Caller, SKMatrix Canvas)> log) : ILayer
+        {
+            public RectangleF? Bounds => null;
+
+            public void Render(CallerInfo caller) => log.Add((name, caller.Transformation, caller.Canvas.TotalMatrix));
+
+            public bool Notify(INotification notification, CallerInfo caller) => false;
+        }
+
+        private static CallerInfo CreateCaller(SKCanvas canvas) => CallerInfo.InRenderer(300, 100, canvas, null!, 1f);
+
+        private static void AssertTranslation(SKMatrix m, float x, float y)
+        {
+            Assert.AreEqual(x, m.TransX, Tolerance, $"x of {m}");
+            Assert.AreEqual(y, m.TransY, Tolerance, $"y of {m}");
         }
 
         private static void AssertRect(RectangleF? actual, float x, float y, float width, float height)
@@ -164,6 +187,87 @@ namespace VL.Fu.Tests.Core.Rendering
                 root.CalculateLayout();
 
                 AssertRect(c.Bounds, 130, 15, 50, 80);
+            }
+        }
+
+        [TestMethod]
+        public void Render_BeforeLayout_DrawsNothing()
+        {
+            using var a = new Node("a");
+            var log = new List<(string Name, SKMatrix Caller, SKMatrix Canvas)>();
+            a.SetLayer(new RecordingLayer("a", log));
+            using var bitmap = new SKBitmap(1, 1);
+            using var canvas = new SKCanvas(bitmap);
+
+            a.Render(CreateCaller(canvas));
+
+            Assert.AreEqual(0, log.Count);
+        }
+
+        /// <summary>
+        /// Own layer first, then the children on top; each in its own space, with canvas and caller in sync.
+        /// </summary>
+        [TestMethod]
+        public void Render_DrawsLayerThenChildrenInTheirOwnSpace()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                var log = new List<(string Name, SKMatrix Caller, SKMatrix Canvas)>();
+                root.SetLayer(new RecordingLayer("root", log));
+                b.SetLayer(new RecordingLayer("b", log));
+                c.SetLayer(new RecordingLayer("c", log));
+                root.SetTransformation(Matrix.Translation(100, 0, 0));
+                root.CalculateLayout();
+                using var bitmap = new SKBitmap(1, 1);
+                using var canvas = new SKCanvas(bitmap);
+
+                root.Render(CreateCaller(canvas));
+
+                CollectionAssert.AreEqual(new[] { "root", "b", "c" }, log.Select(l => l.Name).ToArray());
+                AssertTranslation(log[0].Caller, 100, 0);
+                AssertTranslation(log[1].Caller, 110, 10);
+                AssertTranslation(log[2].Caller, 190, 10);
+                foreach (var entry in log)
+                    Assert.AreEqual(entry.Caller, entry.Canvas, $"canvas of {entry.Name}");
+            }
+        }
+
+        [TestMethod]
+        public void Render_RestoresCanvas()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                root.SetTransformation(Matrix.Translation(100, 0, 0));
+                root.CalculateLayout();
+                using var bitmap = new SKBitmap(1, 1);
+                using var canvas = new SKCanvas(bitmap);
+                var saves = canvas.SaveCount;
+
+                root.Render(CreateCaller(canvas));
+
+                Assert.AreEqual(saves, canvas.SaveCount);
+                Assert.AreEqual(SKMatrix.Identity, canvas.TotalMatrix);
+            }
+        }
+
+        [TestMethod]
+        public void Render_NoLayer_StillDrawsChildren()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                var log = new List<(string Name, SKMatrix Caller, SKMatrix Canvas)>();
+                c.SetLayer(new RecordingLayer("c", log));
+                root.CalculateLayout();
+                using var bitmap = new SKBitmap(1, 1);
+                using var canvas = new SKCanvas(bitmap);
+
+                root.Render(CreateCaller(canvas));
+
+                Assert.AreEqual(1, log.Count);
+                AssertTranslation(log[0].Caller, 90, 10);
             }
         }
     }

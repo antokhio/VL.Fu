@@ -146,10 +146,11 @@ VL.Fu/                                   # Repo root
 │   └── src/
 │       ├── VL.Fu.csproj
 │       ├── Properties/AssemblyInfo.cs   # ImportAsIs, later the curated import rules
-│       ├── FuNode.cs                    # VL.Fu
+│       ├── FuNode.cs                    # VL.Fu (IFuNode, FuNode, FuNodeSpectral)
 │       ├── Core/                        # VL.Fu.Core.*
 │       │   ├── Initializer.cs
 │       │   ├── Base/                    # NodeBase, NodeBaseExtensions
+│       │   ├── Constants/               # PinOrder
 │       │   ├── Tree/                    # Traversable
 │       │   ├── Styling/                 # Style, YogaStyle, Stylable, StyleNode
 │       │   ├── Styles/                  # WidthStyle, HeightStyle, SizeStyle, GapStyle, TransformStyle, YogaValues, YogaDimension

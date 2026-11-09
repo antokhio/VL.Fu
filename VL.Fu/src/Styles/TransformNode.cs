@@ -20,7 +20,7 @@ namespace VL.Fu.Styles
 
         public void SetTransform(Optional<Matrix> transform = default)
         {
-            if (SetValue(ref _transform, transform))
+            if (SetValue(ref _transform, ValidateFinite(transform, "Transform")))
                 RebuildStyle();
         }
 

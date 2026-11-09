@@ -15,17 +15,13 @@
       </p:NodeReference>
       <Patch Id="OBi4atIcbu2PatZP1pMEOD">
         <Canvas Id="FZXlQc3doVGNcdlARc1ELe" CanvasType="Group">
-          <Node Bounds="394,483,84,95" Id="RUAol4d65ZSLufsIv36Apf">
+          <Node Bounds="384,483,81,124" Id="RUAol4d65ZSLufsIv36Apf">
             <p:NodeReference LastCategoryFullName="Fu" LastDependency="VL.Fu.dll">
               <Choice Kind="StatefulRegion" Name="Region (Stateful)" Fixed="true" />
               <CategoryReference Kind="Category" Name="Fu" />
               <Choice Kind="ProcessAppFlag" Name="FuNode" />
             </p:NodeReference>
             <Pin Id="JNlchGg3g1qLmITbzr5w8v" Name="Node Context" Kind="InputPin" IsHidden="true" />
-            <Pin Id="C4QJzVnGJubOqjRqaxLF6Z" Name="Style" Kind="InputPin" />
-            <Pin Id="NoSjG6847nnQEUhftMmdXx" Name="Transformation" Kind="InputPin" />
-            <Pin Id="UkkuIysIo3aQKeuJiYb9Ln" Name="Config" Kind="InputPin" IsHidden="true" />
-            <Pin Id="Qkp1u01KA4xLqu3zSihKYC" Name="Update" Kind="ApplyPin" />
             <Pin Id="T3WrQ7oYxClLjY1raAsJ60" Name="Children" Kind="InputPin" />
             <Pin Id="TadguPGgQdHPvcTtDX35PX" Name="Output" Kind="StateOutputPin" />
             <Patch Id="Frh4aZfwMqhQVSTnxQ5ixN" ManuallySortedPins="true">
@@ -36,8 +32,22 @@
               </Patch>
               <Patch Id="Af6uv8T5nADMg3xA1H0xTl" Name="Dispose" ManuallySortedPins="true" />
               <ControlPoint Id="FDIkR0JYPB9LfwPmdSC6Pt" Bounds="398,491" />
-              <ControlPoint Id="PIkicfihTX4MTTyDGPiGRs" Bounds="398,571" />
+              <ControlPoint Id="PIkicfihTX4MTTyDGPiGRs" Bounds="397,600" />
+              <Node Bounds="396,510,57,26" Id="Dhudla8EIYwOoCL55c3J0d">
+                <p:NodeReference LastCategoryFullName="Fu.Core.Layout.ILayoutable" LastDependency="VL.Fu.dll">
+                  <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                  <FullNameCategoryReference ID="Fu.Core.Layout.ILayoutable" />
+                  <Choice Kind="OperationCallFlag" Name="Layout" />
+                </p:NodeReference>
+                <Pin Id="L3NTyboisWsMREMaH0cla0" Name="Input" Kind="StateInputPin" />
+                <Pin Id="HEPmr66TNKkPA0PuUwAEDz" Name="Output" Kind="StateOutputPin" />
+                <Pin Id="Mx3NEk0tKmOLg3kszbcHtR" Name="Layout" Kind="OutputPin" />
+              </Node>
             </Patch>
+            <Pin Id="C4QJzVnGJubOqjRqaxLF6Z" Name="Style" Kind="InputPin" />
+            <Pin Id="NoSjG6847nnQEUhftMmdXx" Name="Transformation" Kind="InputPin" />
+            <Pin Id="Qkp1u01KA4xLqu3zSihKYC" Name="Update" Kind="ApplyPin" />
+            <Pin Id="UkkuIysIo3aQKeuJiYb9Ln" Name="Config" Kind="InputPin" IsHidden="true" />
           </Node>
         </Canvas>
         <Patch Id="RybydS7GGfoMq5OlnI8kWV" Name="Create" />
@@ -48,6 +58,7 @@
         </ProcessDefinition>
         <Link Id="DUP3qXF82HuNgaVHUFEjRV" Ids="Ru0Bgm9V5B3O6bspD8vAxT,FDIkR0JYPB9LfwPmdSC6Pt" IsHidden="true" />
         <Link Id="JPUAvjiKXwVLF5uqZ6BbxZ" Ids="PIkicfihTX4MTTyDGPiGRs,Ty8aKftYFe8LUoSkQOJaPF" IsHidden="true" />
+        <Link Id="Gsbl6qDebUANWYFwlyF8zQ" Ids="FDIkR0JYPB9LfwPmdSC6Pt,L3NTyboisWsMREMaH0cla0" />
       </Patch>
     </Node>
   </Patch>

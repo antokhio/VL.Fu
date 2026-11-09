@@ -32,12 +32,17 @@ namespace VL.Fu.Tests.Styles
         public void Output_FromConstruction_IsBuilt()
         {
             Assert.IsNull(new SetWidthNode(null!).Output);
+#pragma warning disable CS0618 // Obsolete, but still imported, so it must still build.
+            Assert.IsNull(new SetWidthPercentNode(null!).Output);
+#pragma warning restore CS0618
             Assert.IsNull(new SetWidthRatioNode(null!).Output);
             Assert.IsNull(new SetHeightNode(null!).Output);
             Assert.IsNull(new SetHeightRatioNode(null!).Output);
             Assert.IsNull(new SetSizeNode(null!).Output);
             Assert.IsNull(new SetSizeRatioNode(null!).Output);
             Assert.IsNull(new SetGapNode(null!).Output);
+            Assert.IsNull(new SetRowGapNode(null!).Output);
+            Assert.IsNull(new SetColumnGapNode(null!).Output);
             Assert.IsNull(new SetTransformNode(null!).Output);
             Assert.IsNull(new CombineNode(null!).Output);
             Assert.AreEqual(new WidthStyle(S(), YGValue.Auto), new SetWidthAutoNode(null!).Output);
@@ -343,6 +348,32 @@ namespace VL.Fu.Tests.Styles
             node.SetStyle(transform.Output);
 
             Assert.AreEqual(Stride.Core.Mathematics.Matrix.Identity, node.Transformation);
+        }
+
+        [TestMethod]
+        public void SetTransform_NonFiniteElement_IgnoresWholeValue()
+        {
+            var transform = new SetTransformNode(null!);
+
+            transform.SetTransform(Stride.Core.Mathematics.Matrix.Translation(5, float.NaN, 0));
+
+            Assert.IsNull(transform.Output);
+        }
+
+        [TestMethod]
+        public void SetTransform_NonFiniteElement_EarlierSetterHolds()
+        {
+            using var node = new Node();
+            var first = new SetTransformNode(null!);
+            first.SetTransform(Stride.Core.Mathematics.Matrix.Translation(5, 0, 0));
+            var second = new SetTransformNode(null!);
+            second.SetInput(S(first.Output));
+            second.SetTransform(Stride.Core.Mathematics.Matrix.Scaling(float.PositiveInfinity));
+
+            node.SetStyle(second.Output);
+
+            Assert.AreSame(first.Output, second.Output);
+            Assert.AreEqual(Stride.Core.Mathematics.Matrix.Translation(5, 0, 0), node.Transformation);
         }
     }
 }

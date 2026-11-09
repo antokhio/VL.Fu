@@ -49,7 +49,7 @@ Implemented in [YogaConfig.cs](../../VL.Fu/src/Core/Layout/YogaConfig.cs) and [L
 * **No extra `LocalBounds`, `ContentBounds` or `ScrollOffset` on `Layoutable<TSelf>`.**
 * Two rectangles, both already present:
   1. **`Layout` (`ILayoutable.Layout`):** parent-relative `RectangleF(Left, Top, Width, Height)`, straight from Yoga.
-  2. **`Bounds` (`ILayer.Bounds` on `Renderable`):** the node's local rectangle in its **parent's space**, following the VL.Skia convention (`TransformUpstream` returns `M.MapRect(Input.Bounds)`, without the caller's matrix). It is computed from `Layout` and `Transformation`, so it is always current and needs no render pass.
+  2. **`Bounds` (`ILayer.Bounds` on `Renderable<TSelf>`):** the node's local rectangle in its **parent's space**, following the VL.Skia convention (`TransformUpstream` returns `M.MapRect(Input.Bounds)`, without the caller's matrix). It is computed from `Layout` and `Transformation`, so it is always current and needs no render pass.
 * One `Transformation` (`ILayoutable.Transformation`):
   * `Matrix` (Stride) is the VL-facing facade; Fu converts to and from `SKMatrix` with helpers (§ 3).
   * Rotation and scale pivot around the node's top-left (CSS defaults to the centre). A transform-origin is a possible later addition.
@@ -62,13 +62,17 @@ Implemented in [YogaConfig.cs](../../VL.Fu/src/Core/Layout/YogaConfig.cs) and [L
 `ILayoutable` as in [Layoutable.cs](../../VL.Fu/src/Core/Layout/Layoutable.cs):
 
 ```csharp
-public interface ILayoutable
+public interface ILayoutable : IStylable
 {
     RectangleF Layout { get; }
     Matrix Transformation { get; }
     void SetTransformation(Matrix transformation);
     YogaConfig? Config { get; }
     void SetConfig(YogaConfig? config);
+    void CalculateLayout(
+        float availableWidth = float.NaN,
+        float availableHeight = float.NaN,
+        YGDirection direction = YGDirection.LTR);
 }
 ```
 
@@ -100,7 +104,7 @@ ScrollViewport (Overflow = Hidden, fixed Width/Height)
 
 * World transforms are never stored. Each node pushes `local` onto the `CallerInfo` (`caller.PushTransformation(local)`), as `TransformUpstream` does.
 * `LocalTransformation` (protected `SKMatrix` on `Layoutable`) caches `local`. It is rebuilt in `SetTransformation`, when `ReadLayout` sees a new `Layout` (before `OnLayoutChanged`), and once on the first layout pass. Each rebuild calls `protected virtual OnLocalTransformationChanged()`, where derived classes cache what they compute from it (bounds now, the inverse for notifications later).
-* `Bounds` (on `Renderable`) is a cached field, so reading it every frame costs nothing. It is `null` until the node was laid out (`HasLayout`), since VL treats `null` as unknown and `Group` unions skip it:
+* `Bounds` (on `Renderable<TSelf>`) is a cached field, so reading it every frame costs nothing. It is `null` until the node was laid out (`HasLayout`), since VL treats `null` as unknown and `Group` unions skip it:
 
   ```csharp
   private RectangleF? _bounds;
@@ -257,7 +261,7 @@ sequenceDiagram
 | :--- | :--- | :--- |
 | **`Layoutable<TSelf>`** | Owns `YGNode*`, syncs the Yoga tree in `OnChildrenChanged`, inherited `YogaConfig`, `CalculateLayout` on roots, `ApplyLayout` chain, parent-relative `Layout`, local `Transformation`. | `Layout`, `Transformation`, `SetTransformation`, `Config`, `SetConfig`, `EffectiveConfig`, `CalculateLayout`, `OnLayoutChanged` |
 | **`Interactable<TSelf>`** | Root: layout trigger and area. Pushes the local transform, maps notifications into local space, respects clipping, routes to children last-first, hit-tests `(0, 0, w, h)`. | `Notify`, `NotifySelf` |
-| **`Renderable`** | Root: layout trigger and area. `Bounds` in parent space (caller space for the root), `RenderSelf` in `(0, 0, w, h)`, clipping, children first-first. | `Bounds`, `Render`, `RenderSelf` |
+| **`Renderable<TSelf>`** | Root: layout trigger and area. `Bounds` in parent space (caller space for the root), `RenderSelf` in `(0, 0, w, h)`, clipping, children first-first. | `Bounds`, `Render`, `RenderSelf` |
 
 ---
 

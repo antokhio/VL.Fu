@@ -110,6 +110,28 @@ namespace VL.Fu.Core.Styling
             return default;
         }
 
+        /// <summary>
+        /// Returns <paramref name="value"/>, or an empty optional when an element holds NaN or infinity, which is reported on this node.
+        /// The whole matrix is ignored, since one bad element would spread NaN into the node's transformation and bounds.
+        /// </summary>
+        /// <remarks>
+        /// Only finiteness is checked. A singular matrix, such as a zero scale, is a valid way to collapse a node.
+        /// </remarks>
+        protected Optional<Matrix> ValidateFinite(Optional<Matrix> value, string name)
+        {
+            if (!value.HasValue || IsFinite(value.Value))
+                return value;
+
+            this.LogWarning($"{name} must have finite elements, got {value.Value}. It is ignored.");
+            return default;
+        }
+
+        private static bool IsFinite(in Matrix m) =>
+            float.IsFinite(m.M11) && float.IsFinite(m.M12) && float.IsFinite(m.M13) && float.IsFinite(m.M14)
+            && float.IsFinite(m.M21) && float.IsFinite(m.M22) && float.IsFinite(m.M23) && float.IsFinite(m.M24)
+            && float.IsFinite(m.M31) && float.IsFinite(m.M32) && float.IsFinite(m.M33) && float.IsFinite(m.M34)
+            && float.IsFinite(m.M41) && float.IsFinite(m.M42) && float.IsFinite(m.M43) && float.IsFinite(m.M44);
+
         // A changed item always arrives as a new spread, but a new spread may still hold the same items.
         private static bool HaveSameItems(Spread<Style> a, Spread<Style> b)
         {

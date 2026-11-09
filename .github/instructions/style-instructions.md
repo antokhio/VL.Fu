@@ -9,7 +9,7 @@ A style has two parts:
 | Part | Location | Namespace | Role |
 |---|---|---|---|
 | Record | `VL.Fu\src\Core\Styles\XStyle.cs` | `VL.Fu.Core.Styles` | Immutable instruction; writes the value into the node. |
-| Process node | `VL.Fu\src\Styles\XNodes.cs` | `VL.Fu.Styles` (VL: `Fu.Styles`) | Holds the pin values, outputs a cached record. |
+| Process node | `VL.Fu\src\Styles\XNode.cs` or `XNodes.cs` | `VL.Fu.Styles` (VL: `Fu.Styles`) | Holds the pin values, outputs a cached record. |
 
 The base types (`Style`, `Style<TNode>`, `YogaStyle`, `StyleNode`) live in `VL.Fu\src\Core\Styling` (`VL.Fu.Core.Styling`) and should not change for a new style.
 
@@ -25,7 +25,10 @@ The base types (`Style`, `Style<TNode>`, `YogaStyle`, `StyleNode`) live in `VL.F
 Pick the base:
 
 * `YogaStyle`: for anything that ends up in the Yoga style; override `unsafe void Build(YGNode* node)`.
-* `Style<TNode>`: for values owned by a Fu node type, written through that type's staging API; override `void Build(TNode node)`. Staging methods on core layers are `internal` (e.g. `StageTransformation`).
+* `Style<TNode>`: for values owned by Fu nodes, written through their staging API; override `void Build(TNode node)`.
+  * Target `IFuNode`, the type every node of a Fu tree has, not a generic layer like `Layoutable<T>` or a concrete class.
+  * Staging methods on core layers are `internal` (e.g. `StageTransformation`); reach them by casting to the closed layer: `((Layoutable<IFuNode>)node).StageTransformation(Transform)`. The cast is safe, since a node only styles itself.
+  * On a node that isn't a `TNode`, the pass logs "X only styles TNode nodes" and skips the instruction.
 
 ```csharp
 namespace VL.Fu.Core.Styles
@@ -87,7 +90,7 @@ Rules:
 * Pin values are `Optional<T>` with `= default`. An empty value means "not set here": `BuildStyle` returns `null` and the node passes its inputs through.
 * Setters: `if (SetValue(ref _x, Validate(x))) RebuildStyle();`, so an unchanged value per frame costs nothing and the output keeps its reference.
 * Never throw from a node. Correct invalid values and report them with `this.LogWarning(...)`:
-  * `ValidateFinite` for `float` and `Vector2` (a bad component drops the whole vector);
+  * `ValidateFinite` for `float`, `Vector2` and `Matrix` (a bad component drops the whole value);
   * an unknown enum falls back to a default with a warning.
 * Facade conventions: no NaN on pins (use `Optional`); relative sizes are ratios where `1` is the whole parent (`YogaValues.Ratio`), not percent; vectors are Stride `Vector2`.
 * Nodes without a value (e.g. `Auto`) have no setter and always return their record.
@@ -96,20 +99,20 @@ Rules:
 ### Naming
 
 * `Name = "SetX"` for the plain value, unit variants as `"SetX (Ratio)"`, `"SetX (Auto)"`; class `SetX<Variant>Node`, setter `SetX<Variant>`.
-* Related nodes share one file: `XNodes.cs`.
+* One node per file is singular, `XNode.cs` (`TransformNode.cs`, `CombineNode.cs`); related nodes share one plural file, `XNodes.cs` (`WidthNodes.cs`, `GapNodes.cs`).
 * Don't add Percent variants; the existing `SetWidth (Percent)` is `[Obsolete]`.
 
 ## 3. Tests
 
 In `VL.Fu.Tests\Styles\StyleNodeTests.cs`:
 
-* add the node to `Output_FromConstruction_IsBuilt` (`null` for value nodes, the record for valueless ones);
+* add every node to `Output_FromConstruction_IsBuilt` (`null` for value nodes, the record for valueless ones), obsolete ones too, inside `#pragma warning disable CS0618`;
 * the value lands in the right slot and leaves the others untouched;
 * later wins against an overlapping setter (e.g. `SetWidth` after `SetSize` changes only the width);
 * invalid input is ignored with an empty output; an empty value passes the inputs through;
 * one layout check for relative units.
 
-Verify with `run_build` and `run_tests` filtered to project `VL.Fu.Tests`.
+Verify by building the solution and running the `VL.Fu.Tests` tests: in Visual Studio through the build and Test Explorer (filtered to project `VL.Fu.Tests`), from the command line with `dotnet test VL.Fu.Tests\VL.Fu.Tests.csproj`.
 
 ## Docs
 
