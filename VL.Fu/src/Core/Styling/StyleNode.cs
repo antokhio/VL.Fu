@@ -98,6 +98,39 @@ namespace VL.Fu.Core.Styling
         }
 
         /// <summary>
+        /// Returns <paramref name="value"/>, or an empty optional when it is negative, NaN or infinity, which is reported on this node.
+        /// For values Yoga has no meaning for below zero, such as flex grow, padding or border.
+        /// </summary>
+        protected Optional<float> ValidateNonNegative(Optional<float> value, string name)
+        {
+            value = ValidateFinite(value, name);
+            if (!value.HasValue || value.Value >= 0)
+                return value;
+
+            this.LogWarning($"{name} can't be negative, got {value.Value}. It is ignored.");
+            return default;
+        }
+
+        /// <summary>
+        /// Returns <paramref name="value"/>, or an empty optional when it is no member of <typeparamref name="TEnum"/>
+        /// or <paramref name="isSupported"/> rejects it, which is reported on this node.
+        /// </summary>
+        /// <remarks>
+        /// VL can hand over any number as an enum, so a value is checked before it reaches Yoga.
+        /// <paramref name="isSupported"/> narrows a shared Yoga enum to the members one slot accepts,
+        /// e.g. <c>Auto</c> is an align-self value but no align-items value.
+        /// </remarks>
+        protected Optional<TEnum> ValidateEnum<TEnum>(Optional<TEnum> value, string name, Func<TEnum, bool>? isSupported = null)
+            where TEnum : struct, Enum
+        {
+            if (!value.HasValue || (Enum.IsDefined(value.Value) && (isSupported is null || isSupported(value.Value))))
+                return value;
+
+            this.LogWarning($"{name} can't be {value.Value}. It is ignored.");
+            return default;
+        }
+
+        /// <summary>
         /// Returns <paramref name="value"/>, or an empty optional when a component holds NaN or infinity, which is reported on this node.
         /// The whole vector is ignored, so a style never sets only one axis by accident.
         /// </summary>

@@ -73,6 +73,12 @@ namespace VL.Fu.Core.Layout
         /// </summary>
         protected bool HasLayout => _hasLayout;
 
+        /// <summary>
+        /// False when the node's style sets display to none, which removes it and its subtree from the layout.
+        /// Read from the style committed by the last styling pass, so it is cheap to check every frame.
+        /// </summary>
+        protected unsafe bool IsDisplayed => _handle is not null && _handle->GetDisplay() != YGDisplay.None;
+
         private Matrix _transformation = Matrix.Identity;
         public Matrix Transformation => _transformation;
 

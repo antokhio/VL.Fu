@@ -20,7 +20,8 @@ The base types (`IStyle`, `Style`, `Style<TNode>`, `YogaStyle`, `StyleNode`) liv
 * A style chain is a tree. The pass runs inputs depth first, left to right, then the style itself, so the **later instruction wins**.
 * Every pass starts from defaults. Removing a setter falls back to an earlier setter or the default; there is no reset.
 * Yoga styles are written onto a shared stage node and copied once, so an unchanged result doesn't dirty layout.
-* Yoga's own specificity still applies regardless of order: `Margin.Left` beats `Margin.All`, a row gap beats `All`.
+* Yoga resolves overlapping slots by specificity, not order (`Margin.Left` beats `Margin.All`). Records writing overlapping slots therefore go through a helper that also clears the more specific slots it covers, so the later instruction wins: edges and positions use `YogaEdges`. Gaps don't clear yet (a row gap still beats `All`); see `.github\issues\style-overrides-issue.md`.
+* Code outside the style pass (rendering, interaction) reads the committed Yoga style from the node's handle, e.g. `Layoutable.IsDisplayed`, never the records.
 
 ## 1. The record
 
@@ -56,6 +57,17 @@ Rules:
 * A record writing several slots validates everything before writing anything, so it never applies half.
 * Shared unit switches go into an internal helper (`YogaDimension`), not copied per record.
 
+### Record shapes
+
+| Shape | Example | `Build` |
+|---|---|---|
+| Value | `HeightStyle(Inputs, YGValue Height)` | One setter call, through `YogaDimension` for size slots. |
+| Enum | `DisplayStyle(Inputs, YGDisplay Display)` | `YogaEnums.EnsureSupported(Display, nameof(Display))`, then the setter; Yoga trusts enum values blindly. When only part of the enum is valid for the slot, the record owns `internal static bool IsSupported(T)` and passes it too (`AlignItemsStyle`). |
+| Edge | `PaddingStyle(Inputs, YGEdge Edge, float Value)` | `YogaEdges.EnsureSupported(Edge, Value, "Padding")`, then `YogaEdges.Set(node, &SetPadding, Edge, Value)`. The record owns the function pointer target, `internal static unsafe void SetPadding(YGNode*, YGEdge, float)`. |
+| Four edges | `PaddingLRTBStyle(Inputs, float Left, float Right, float Top, float Bottom)` | NaN marks an edge as not set. Validates all four, then `YogaEdges.Set(node, &PaddingStyle.SetPadding, Left, Right, Top, Bottom)`, reusing the single-edge record's target. |
+| Axes | `PositionStyle(Inputs, float X, float Y)` | NaN marks an axis as not set and is skipped; infinity throws. One record serves the X, Y and both-axes nodes. |
+| Derived | `AspectRatioStyle(Inputs, float AspectRatio)` | Stores the one canonical value; converting the input variants (`Vector2`, `Int2`) is the node's job. |
+
 ## 2. The process node
 
 ```csharp
@@ -73,7 +85,7 @@ namespace VL.Fu.Styles
         public SetHeightNode([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) => RebuildStyle();
 
-        public void SetHeight(
+        public void SetHeight(Optional<float> height = default)
         {
             if (SetValue(ref _height, ValidateFinite(height, "Height")))
                 RebuildStyle();
@@ -93,16 +105,42 @@ Rules:
 * Setters: `if (SetValue(ref _x, Validate(x))) RebuildStyle();`, so an unchanged value per frame costs nothing and the output keeps its reference.
 * Never throw from a node. Correct invalid values and report them with `this.LogWarning(...)`:
   * `ValidateFinite` for `float`, `Vector2` and `Matrix` (a bad component drops the whole value);
-  * an unknown enum falls back to a default with a warning.
-* Facade conventions: no NaN on pins (use `Optional`); relative sizes are ratios where `1` is the whole parent (`YogaValues.Ratio`), not percent; vectors are Stride `Vector2`.
+  * `ValidateNonNegative` for values Yoga clamps or rejects below 0 (grow, shrink, padding, border);
+  * `ValidateEnum(value, name, Record.IsSupported)` for enums: an unknown or unsupported value is ignored with a warning, so an earlier setter or the default holds. The record's `internal static IsSupported` is the single source of the allowed set.
+  * other ranges are checked in the node with the same wording, `"X must be above 0, got {value}. It is ignored."` (see `AspectRatioStyleNode`);
+  * a node mirrors its record's checks, so invalid input never reaches the pass. The record's throw is the backstop for records built in code.
+* Facade conventions: no NaN on pins (use `Optional`); relative sizes are ratios where `1` is the whole parent (`YogaValues.Ratio`), not percent; vectors are Stride `Vector2`, whole-number pairs `Int2`; Yoga enums (`YGDisplay`, `YGEdge`, ...) go on pins as they are, since VL imports them.
+* A non-value pin has a plain default instead of `Optional`, e.g. `YGEdge edge = YGEdge.All`; an unknown value is reported and the whole setting ignored. `SetGap` still corrects an unknown gutter to `All` instead; see `.github\issues\style-overrides-issue.md`.
 * Nodes without a value (e.g. `Auto`) have no setter and always return their record.
-* Several nodes sharing state go through an abstract `[ProcessNode]` base with a protected `SetXCore` (see `GapStyleNode`); without the attribute on the base, its members are not imported.
+* Axis nodes build the shared record with NaN for the other axis: `SetPositionX` builds `PositionStyle(inputs, x, float.NaN)`, so a later X doesn't touch an earlier Y.
+
+### Shared base
+
+Several nodes writing the same record share state through an abstract base:
+
+* `[ProcessNode]` on the base, otherwise its members are not imported; the base is `public abstract`, the leaves `sealed`.
+* The base holds the fields and the protected constructor ending in `RebuildStyle()`; leaves pass the `NodeContext` on with an empty body.
+* Leaves only validate and call a protected `SetXCore(...)`, which stores the values with `SetValue` and rebuilds once if any changed. A `ClearX()` drops the value when the input is empty.
+* The base implements `protected sealed override BuildStyle`; per-style differences are abstract factories (`BuildEdgeStyle`, `BuildEdgesStyle`) or virtual flags (`AllowsNegative`).
+* Existing bases:
+  * `GapStyleNode`: gap with gutter.
+  * `EdgesStyleNode`, extended by `PaddingStyleNode`, `MarginStyleNode` and `BorderStyleNode`: one edge (`SetEdgeCore`) or four physical edges (`SetEdgesCore`); the four-edge values win when any is set.
+  * `AspectRatioStyleNode`: converts every variant to one ratio, so proportional inputs such as 16:9 and 32:18 keep the output reference.
 
 ### Naming
 
 * `Name = "SetX"` for the plain value, unit variants as `"SetX (Ratio)"`, `"SetX (Auto)"`; class `SetX<Variant>Node`, setter `SetX<Variant>`.
-* One node per file is singular, `XNode.cs` (`TransformNode.cs`, `CombineNode.cs`); related nodes share one plural file, `XNodes.cs` (`WidthNodes.cs`, `GapNodes.cs`).
-* Don't add Percent variants; the existing `SetWidth (Percent)` is `[Obsolete]`.
+* Edge styles have `SetX` with a value and a `YGEdge` pin (default `All`), like `SetGap`, plus `"SetX (Uniform)"`, `"SetX (Horizontal)"`, `"SetX (Vertical)"` and `"SetX (LRTB)"`, sharing an abstract `[ProcessNode]` `XStyleNode : EdgesStyleNode`.
+* Several input types for one value are variants named after the type, e.g. `"SetAspectRatio (Vector2)"` and `"SetAspectRatio (Int2)"`.
+* Position offsets follow the width/height/size shape instead of the edge shape: `SetPositionX` (left), `SetPositionY` (top) and `SetPosition` (`Vector2`), all writing one `PositionStyle(Inputs, float X, float Y)` where NaN marks an axis as not set.
+* One node per file is singular, `XNode.cs` (`TransformNode.cs`, `CombineNode.cs`); related nodes share one plural file, `XNodes.cs` (`WidthNodes.cs`, `GapNodes.cs`, `FlexNodes.cs`, `AlignNodes.cs`, `PositionNodes.cs`, `DisplayNodes.cs`). A shared base used by several files gets its own file (`EdgesStyleNode.cs`); a base used by one file stays in it (`PaddingStyleNode` in `PaddingNodes.cs`).
+* Pin names in warnings are the facade names (`"PositionX"`, `"AspectRatio"`), so the user can find the pin.
+
+### Left out on purpose
+
+* Percent variants; the existing `SetWidth (Percent)` is `[Obsolete]`.
+* `SetFlex`: under web defaults Yoga's `flex` only acts as a grow value that `FlexGrow` beats.
+* Ratio or Auto variants of position offsets, until there is a need.
 
 ## 3. Tests
 
@@ -112,11 +150,17 @@ In `VL.Fu.Tests\Styles\StyleNodeTests.cs`:
 * the value lands in the right slot and leaves the others untouched;
 * later wins against an overlapping setter (e.g. `SetWidth` after `SetSize` changes only the width);
 * invalid input is ignored with an empty output; an empty value passes the inputs through;
-* one layout check for relative units.
+* an unknown enum value (e.g. `(YGDisplay)99`) is ignored;
+* a record built in code with an invalid value is skipped by the pass and the earlier value holds;
+* one layout check for behaviour that only shows after layout (relative units, absolute placement, direction, box sizing).
+
+Helpers in that file: `S(...)` builds the input `Spread`; `LayOut(rootStyle, childStyles)` lays out a root with children and returns their bounds; `Resolved(style, EdgeKind)` returns the resolved edges, honouring the node's own direction. Styles that change rendering also get a test in `VL.Fu.Tests\Core\Rendering\RenderableTests.cs` (e.g. Display None skips the subtree).
 
 Verify by building the solution and running the `VL.Fu.Tests` tests: in Visual Studio through the build and Test Explorer (filtered to project `VL.Fu.Tests`), from the command line with `dotnet test VL.Fu.Tests\VL.Fu.Tests.csproj`.
 
 ## Docs
 
-* Multi-line `<summary>`; say what is set and what happens without a value.
+* Multi-line `<summary>`; say what is set and what happens without a value, naming the default: "Without a value the display is not set here, so an earlier setter or the default, flex, holds."
+* Put Yoga behaviour the user wouldn't expect in `<remarks>` (e.g. a ratio needs a definite parent size; X also clears Start and End).
+* Say when a style only partly works yet (`SetOverflow` doesn't clip).
 * Record new nodes in §10 of `.github\proposals\proposal-style-instructions.md` and in `.github\summaries\summary-core-inheritance.md`.
