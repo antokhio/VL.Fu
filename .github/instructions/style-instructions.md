@@ -93,7 +93,9 @@ Rules:
 * Setters: `if (SetValue(ref _x, Validate(x))) RebuildStyle();`, so an unchanged value per frame costs nothing and the output keeps its reference.
 * Never throw from a node. Correct invalid values and report them with `this.LogWarning(...)`:
   * `ValidateFinite` for `float`, `Vector2` and `Matrix` (a bad component drops the whole value);
-  * an unknown enum falls back to a default with a warning.
+  * `ValidateNonNegative` for values Yoga clamps or rejects below 0 (grow, shrink, padding, border);
+  * `ValidateEnum(value, name, Record.IsSupported)` for enums: an unknown or unsupported value is ignored with a warning, so an earlier setter or the default holds. The record's `internal static IsSupported` is the single source of the allowed set.
+* Records with edges (padding, margin, border) write through `YogaEdges.Set`, which writes the Yoga slot and clears the more specific slots it covers (All clears all, Horizontal clears Left/Right/Start/End, Vertical clears Top/Bottom, Left or Right clears Start/End). Yoga resolves edges by specificity, not order, so without the clearing an earlier per-edge value would beat a later broader one; with it the later instruction wins. Each edge style has a single-edge record (`XStyle(Inputs, YGEdge Edge, float Value)`) and a four-edge record (`XLRTBStyle`, NaN marks an edge as not set).
 * Facade conventions: no NaN on pins (use `Optional`); relative sizes are ratios where `1` is the whole parent (`YogaValues.Ratio`), not percent; vectors are Stride `Vector2`.
 * Nodes without a value (e.g. `Auto`) have no setter and always return their record.
 * Several nodes sharing state go through an abstract `[ProcessNode]` base with a protected `SetXCore` (see `GapStyleNode`); without the attribute on the base, its members are not imported.
@@ -101,6 +103,8 @@ Rules:
 ### Naming
 
 * `Name = "SetX"` for the plain value, unit variants as `"SetX (Ratio)"`, `"SetX (Auto)"`; class `SetX<Variant>Node`, setter `SetX<Variant>`.
+* Edge styles have `SetX` with a value and a `YGEdge` pin (default `All`), like `SetGap`, plus `"SetX (Uniform)"`, `"SetX (Horizontal)"`, `"SetX (Vertical)"` and `"SetX (LRTB)"`, sharing an abstract `[ProcessNode]` `XStyleNode : EdgesStyleNode`.
+* Several input types for one value are variants named after the type, e.g. `"SetAspectRatio (Vector2)"` and `"SetAspectRatio (Int2)"`.
 * One node per file is singular, `XNode.cs` (`TransformNode.cs`, `CombineNode.cs`); related nodes share one plural file, `XNodes.cs` (`WidthNodes.cs`, `GapNodes.cs`).
 * Don't add Percent variants; the existing `SetWidth (Percent)` is `[Obsolete]`.
 
