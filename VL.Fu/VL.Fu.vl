@@ -24,4 +24,5 @@
       </Patch>
     </Node>
   </Patch>
+  <PlatformDependency Id="NS0rjnNL8zgNHq0jlPkNH0" Location="./lib/net8.0/VL.Fu.dll" IsForward="true" />
 </Document>

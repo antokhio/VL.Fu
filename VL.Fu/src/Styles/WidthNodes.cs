@@ -1,5 +1,5 @@
-using Fu.Core.Styles;
-using Fu.Core.Styling;
+using VL.Fu.Core.Styles;
+using VL.Fu.Core.Styling;
 using VL.Core;
 using VL.Core.Import;
 using VL.Model;

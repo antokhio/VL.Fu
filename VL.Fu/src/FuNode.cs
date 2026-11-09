@@ -1,4 +1,4 @@
-﻿using Fu.Core.Region;
+﻿using VL.Fu.Core.Region;
 using VL.Core;
 using VL.Core.Import;
 using VL.Core.PublicAPI;

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "dev": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\vvvv\\vvvv_gamma_7.4-win-x64\\vvvv.exe",
+      "commandLineArgs": "--nuget-path \"..\\..\\..\\__nugets\" --package-repositories \"..\\..\" --editable-packages \"VL.Fu*\"",
+      "workingDirectory": "$(ProjectDir)"
+    }
+  }
+}

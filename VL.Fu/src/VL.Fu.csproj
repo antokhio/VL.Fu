@@ -1,13 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <BaseOutputPath>..\lib\</BaseOutputPath>
+    <OutputPath>..\lib\net8.0\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="antokhio.YogaSharp" />
     <PackageReference Include="VL.Core" />
+    <PackageReference Include="VL.Core.Skia" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Fu.Core\Fu.Core.csproj" />
+    <InternalsVisibleTo Include="VL.Fu.Tests" />
   </ItemGroup>
 </Project>

@@ -119,72 +119,53 @@ Refactor `Fu.Core` so it has zero dependency on `VL.Core` or `VL.Core.Skia`, tur
 
 ## 5. Proposed Layout & VL Import Design (Option 2)
 
-### 5.1 Repository & Directory Structure
+Status: **decided**, ready to implement.
 
-Following the [Library Recognition Pattern](https://github.com/tebjan/vvvv-skills/blob/main/skills/vvvv-node-libraries/SKILL.md#library-recognition-pattern):
+### 5.0 Decisions
+
+* One assembly: `Fu.Core` is merged into `VL.Fu\src\VL.Fu.csproj`; `Fu.Core.Tests` becomes `VL.Fu.Tests`.
+* Import everything as is with the existing `Properties\AssemblyInfo.cs`: `[assembly: ImportAsIs(Namespace = "VL.Fu", Category = "Fu")]`. NodeBrowser curation (aspects, `[Smell]`, extra import rules) is done later by hand, not part of the move.
+* Everything stays `public`; hiding happens through the import later, never through `internal`. Existing `internal` types stay `internal`.
+* `FuNode` stays in the root namespace `VL.Fu`. No `Elements` namespace yet.
+* The initializer is kept as is, only renamespaced.
+* `[ProcessNode]` along the element chain and the `RegionProvider` shape (e.g. explicit `IRegion` members, so they don't become `FuNode` pins) are set up after the functionality is done.
+* No consumers yet, so renamed types breaking `.vl` references is accepted.
+
+### 5.1 Directory Structure
+
+Namespaces follow folders, `Fu.Core.*` becomes `VL.Fu.Core.*`. Records and nodes keep the current split (records in Core, nodes in `VL.Fu.Styles`).
 
 ```text
-VL.Fu/                                   # Solution / repo root
+VL.Fu/                                   # Repo root
 ├── Directory.Build.props
 ├── Directory.Packages.props
 ├── VL.Fu.slnx
 ├── VL.Fu/                               # vvvv package root (matches VL.Fu.vl)
-│   ├── VL.Fu.vl                         # Hand-authored vvvv document
-│   ├── lib/
-│   │   └── net8.0/                      # OutputPath of VL.Fu.csproj (no Debug/ subfolder)
-│   │       └── VL.Fu.dll
+│   ├── VL.Fu.vl
+│   ├── lib/net8.0/VL.Fu.dll             # OutputPath, no Debug/ subfolder
 │   └── src/
 │       ├── VL.Fu.csproj
-│       ├── Initialization.cs            # [assembly: ImportNamespace(...)], [assembly: AssemblyInitializer(...)]
-│       │
-│       ├── Core/                        # Foundational engine (Namespace: VL.Fu.Core.*)
-│       │   ├── Base/
-│       │   │   ├── NodeBase.cs          # INodeBase (internal), NodeBase
-│       │   │   └── NodeBaseExtensions.cs
-│       │   ├── Tree/
-│       │   │   └── Traversable.cs       # ITraversable, ITraversable<T>, Traversable<TSelf>, TraversableExtensions
-│       │   ├── Styling/
-│       │   │   ├── Style.cs             # Style, Style<TNode>, CombinedStyle (internal)
-│       │   │   ├── YogaStyle.cs         # YogaStyle
-│       │   │   ├── Stylable.cs          # IStylable, Stylable<TSelf>
-│       │   │   └── StyleNode.cs         # StyleNode ([ProcessNode] base)
-│       │   ├── Layout/
-│       │   │   ├── Layoutable.cs        # ILayoutable, Layoutable<TSelf>
-│       │   │   ├── YogaConfig.cs        # YogaConfig, YogaConfigCache (internal)
-│       │   │   └── YogaStyleStage.cs    # YogaStyleStage (internal)
-│       │   ├── Interaction/
-│       │   │   ├── Interactable.cs      # Interactable<TSelf>
-│       │   │   └── Gesture.cs           # Gesture
-│       │   ├── Rendering/
-│       │   │   └── Renderable.cs        # IRenderable, Renderable
-│       │   └── Extensions/
-│       │       └── MatrixExtensions.cs  # internal Matrix <-> SKMatrix helpers
-│       │
-│       ├── Styles/                      # Concrete Style records + StyleNode process nodes (Namespace: VL.Fu.Styles)
-│       │   ├── CombineNode.cs           # CombineNode
-│       │   ├── WidthNodes.cs            # WidthStyle + SetWidthNode, SetWidthPercentNode, SetWidthAutoNode
-│       │   ├── GapNodes.cs              # GapStyle + GapStyleNode, SetGapNode, SetRowGapNode, SetColumnGapNode
-│       │   └── TransformNode.cs         # TransformStyle + SetTransformNode
-│       │
-│       └── Elements/                    # Concrete UI element ProcessNodes (Namespace: VL.Fu.Elements or VL.Fu)
-│           └── FuNode.cs                # FuNode : Renderable
+│       ├── Properties/AssemblyInfo.cs   # ImportAsIs, later the curated import rules
+│       ├── FuNode.cs                    # VL.Fu
+│       ├── Core/                        # VL.Fu.Core.*
+│       │   ├── Initializer.cs
+│       │   ├── Base/                    # NodeBase, NodeBaseExtensions
+│       │   ├── Tree/                    # Traversable
+│       │   ├── Styling/                 # Style, YogaStyle, Stylable, StyleNode
+│       │   ├── Styles/                  # WidthStyle, HeightStyle, SizeStyle, GapStyle, TransformStyle, YogaValues, YogaDimension
+│       │   ├── Layout/                  # Layoutable, YogaConfig, YogaStyleStage
+│       │   ├── Interaction/             # Interactable, Gesture
+│       │   ├── Rendering/               # Renderable
+│       │   ├── Region/                  # RegionProvider
+│       │   └── Extensions/              # MatrixExtensions
+│       └── Styles/                      # VL.Fu.Styles: CombineNode, Width/Height/Size/Gap nodes, TransformNode
 │
-└── VL.Fu.Tests/                         # Unit tests ([InternalsVisibleTo("VL.Fu.Tests")])
-    ├── VL.Fu.Tests.csproj
-    ├── Core/
-    │   ├── Tree/TraversableTests.cs
-    │   ├── Styling/StylableTests.cs
-    │   ├── Layout/LayoutableTests.cs
-    │   ├── Layout/YogaConfigTests.cs
-    │   ├── Rendering/RenderableTests.cs
-    │   └── Extensions/MatrixExtensionsTests.cs
-    └── Styles/
-        └── StyleNodeTests.cs
+└── VL.Fu.Tests/                         # VL.Fu.Tests.*, mirrors src (Core/..., Styles/...)
 ```
 
-### 5.2 `.csproj` Configuration (`VL.Fu\src\VL.Fu.csproj`)
+### 5.2 `.csproj` (`VL.Fu\src\VL.Fu.csproj`)
 
-Per the `vvvv-node-libraries` skill, use `<OutputPath>..\lib\net8.0\</OutputPath>` with `<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>` instead of `<BaseOutputPath>..\lib\</BaseOutputPath>` so compiled DLLs land in `VL.Fu\lib\net8.0\` regardless of `Debug`/`Release` configuration:
+`OutputPath` instead of `BaseOutputPath`, so the DLL lands in `lib\net8.0\` for every configuration. The `Fu.Core` project reference goes away.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -206,46 +187,14 @@ Per the `vvvv-node-libraries` skill, use `<OutputPath>..\lib\net8.0\</OutputPath
 </Project>
 ```
 
-### 5.3 `Initialization.cs` & Category / Aspect Strategy
+### 5.3 Notes for the later import curation
 
-Using `[assembly: ImportNamespace]` (specific-first, catch-all last) lets us map C# namespaces cleanly to vvvv categories and aspects:
+Verified against `VL.Core.Import` source:
 
-```csharp
-using VL.Core;
-using VL.Core.CompilerServices;
-using VL.Core.Import;
+* `ImportAsIs` allows one per assembly; `ImportNamespace` allows many, but matching is a plain `StartsWith`, so overlapping namespaces (e.g. a `"VL.Fu"` catch-all) also match every sub-namespace. Which of several matches wins is decided by the closed compiler; StandardLibs never overlap them. Prefer disjoint rules.
+* Aspect keywords in categories and namespaces (`Advanced`, `Internal`, `Experimental`) are used by StandardLibs, also mid-path (`Reactive.Advanced.Experimental`, `VL.IO.Redis.Internal`).
+* `[Smell(SymbolSmell...)]` applies to anything; `SymbolSmell.Obsolete` exists.
+* Base-class members become process-node fragments only if the base also has `[ProcessNode]`; `HasStateOutput = true` also imports the class members as nodes.
+* StandardLibs keep the initializer out of the imported namespace (`_VL_.IO.Redis`); with ImportAsIs on `VL.Fu`, `VL.Fu.Core.Initializer` shows up as a node until curated.
 
-// Specific first, catch-all last (first-wins rule):
-// 1. Core engine types/interfaces land under Fu.Core with the Advanced (or Internal) aspect
-[assembly: ImportNamespace("VL.Fu.Core",   Category = "Fu.Core.Advanced")]
-// 2. Style setter ProcessNodes land under Fu.Styles
-[assembly: ImportNamespace("VL.Fu.Styles", Category = "Fu.Styles")]
-// 3. Root / element ProcessNodes land under Fu
-[assembly: ImportNamespace("VL.Fu",        Category = "Fu")]
-
-[assembly: AssemblyInitializer(typeof(VL.Fu.Initialization))]
-
-namespace VL.Fu
-{
-    public sealed class Initialization : AssemblyInitializer<Initialization>
-    {
-        public override void Configure(AppHost appHost)
-        {
-            base.Configure(appHost);
-        }
-    }
-}
-```
-
-### 5.4 NodeBrowser Hygiene Checklist (Applying the 4 Levers)
-
-Because `FuNode` has `[ProcessNode(HasStateOutput = true)]`, vvvv imports `FuNode` and its inherited public members. To keep the NodeBrowser clean:
-1. **Concrete `Style` records (`WidthStyle`, `GapStyle`, `TransformStyle`):**
-   * Can be marked `internal` (or `[Smell(SymbolSmell.Internal)]` if kept `public` for external C# extensions) so `WidthStyle.Create` and `WidthStyle.Build` don't clutter `Fu.Styles` alongside `SetWidth`.
-2. **C#-only diagnostics on `NodeBase` (`AddPersistentWarning`, `Log`, `ClearWarning`, `WarningLifetime`) and `NodeBaseExtensions` (`LogInfo`, `LogWarning`, `LogError`):**
-   * Make `NodeBaseExtensions` `internal` (since all nodes live in `VL.Fu`, or mark `[Smell(SymbolSmell.Internal)]`), and either make `NodeBase`'s warning methods `protected` (with `INodeBase` for internal callers/tests) or decorate them with `[Smell(SymbolSmell.Internal)]` so patchers don't see `ClearWarning` / `AddPersistentWarning` as nodes on `FuNode`.
-3. **C#-only `Style.Build` / `YogaStyle.Build`:**
-   * Mark `Build` with `[Smell(SymbolSmell.Internal)]` (or `internal` / `protected internal` if all styles are in-assembly) so `Build` isn't offered as a patch operation on a `Style` wire.
-4. **Architecture Guard:**
-   * `VL.Fu.Core.*` never references `VL.Fu.Styles` or `VL.Fu` element classes, verifiable via Roslyn `check_architecture`.
-
+To check in vvvv: operations on the CRTP bases (`Traversable<TSelf>` ...) on a `FuNode` wire, importing `YogaStyle.Build(YGNode*)`, and whether a running vvvv locks `lib\net8.0\VL.Fu.dll` during builds.
