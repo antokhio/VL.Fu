@@ -10,7 +10,7 @@ using YogaSharp;
 
 namespace Fu.Core.Layout
 {
-    public interface ILayoutable
+    public interface ILayoutable : IStylable
     {
         /// <summary>
         /// The rectangle Yoga computed for this node, relative to its parent's top-left corner.
@@ -78,6 +78,9 @@ namespace Fu.Core.Layout
             UpdateLocalTransformation();
         }
 
+        private Matrix _styledTransformation = Matrix.Identity;
+        private Matrix _committedTransformation = Matrix.Identity;
+
         private SKMatrix _localTransformation = SKMatrix.Identity;
 
         /// <summary>
@@ -106,6 +109,53 @@ namespace Fu.Core.Layout
 
         protected Layoutable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) { }
+
+        /// <summary>
+        /// Sets the transformation the running styling pass commits to <see cref="Transformation"/>.
+        /// Each pass starts at identity, and the commit writes only when the styled value changed,
+        /// so a directly set transformation is kept until the style changes it.
+        /// </summary>
+        internal void StageTransformation(Matrix transformation) =>
+            _styledTransformation = transformation;
+
+        /// <summary>
+        /// Starts the Yoga stage from the default style and the styled transformation from identity.
+        /// </summary>
+        protected override void BeginStyle()
+        {
+            base.BeginStyle();
+            YogaStyleStage.Reset();
+            _styledTransformation = Matrix.Identity;
+        }
+
+        /// <summary>
+        /// Writes Yoga instructions into the stage, which is copied to this node once at the end of the pass.
+        /// </summary>
+        protected override unsafe void BuildStyleCore(Style instruction)
+        {
+            if (instruction is YogaStyle yoga)
+                yoga.Build(YogaStyleStage.Node);
+            else
+                base.BuildStyleCore(instruction);
+        }
+
+        /// <summary>
+        /// Copies the staged Yoga style, which Yoga does and marks the node dirty for only if it differs,
+        /// and commits the styled transformation if it changed since the last pass.
+        /// </summary>
+        protected override unsafe void EndStyle()
+        {
+            if (_handle is not null)
+                _handle->CopyStyle(YogaStyleStage.Node);
+
+            if (_styledTransformation != _committedTransformation)
+            {
+                _committedTransformation = _styledTransformation;
+                SetTransformation(_committedTransformation);
+            }
+
+            base.EndStyle();
+        }
 
         public unsafe void CalculateLayout(
             float availableWidth = float.NaN,
@@ -262,7 +312,10 @@ namespace Fu.Core.Layout
         /// Small changes still count, so a node never keeps a stale layout.
         /// </summary>
         private static bool IsSameLayout(RectangleF a, RectangleF b) =>
-            a.X.Equals(b.X) && a.Y.Equals(b.Y) && a.Width.Equals(b.Width) && a.Height.Equals(b.Height);
+            a.X.Equals(b.X)
+            && a.Y.Equals(b.Y)
+            && a.Width.Equals(b.Width)
+            && a.Height.Equals(b.Height);
 
         /// <summary>
         /// Switches the Yoga node to the effective config and pushes the change down to the children.

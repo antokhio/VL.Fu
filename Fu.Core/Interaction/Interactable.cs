@@ -7,7 +7,9 @@ using VL.Skia;
 
 namespace Fu.Core.Interaction
 {
-    public abstract class Interactable<TSelf> : Layoutable<TSelf>, IBehavior
+    public interface IInteractable : IBehavior, ILayoutable { }
+
+    public abstract class Interactable<TSelf> : Layoutable<TSelf>, IInteractable
         where TSelf : Interactable<TSelf>
     {
         protected Interactable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)

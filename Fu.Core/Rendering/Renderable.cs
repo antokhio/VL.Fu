@@ -8,7 +8,11 @@ using VL.Skia;
 
 namespace Fu.Core.Rendering
 {
-    public interface IRenderable : ILayer { }
+    public interface IRenderable : ILayer
+    {
+        ILayer? Layer { get; }
+        void SetLayer(ILayer layer);
+    }
 
     /// <summary>
     /// Closes the element chain: every node in a Fu tree is a <see cref="Renderable"/>,
@@ -16,9 +20,6 @@ namespace Fu.Core.Rendering
     /// </summary>
     public abstract class Renderable : Interactable<Renderable>, IRenderable
     {
-        protected Renderable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
-            : base(nodeContext) { }
-
         private RectangleF? _bounds;
 
         /// <summary>
@@ -28,6 +29,23 @@ namespace Fu.Core.Rendering
         /// </summary>
         public RectangleF? Bounds => _bounds;
 
+        private ILayer? _layer;
+
+        public ILayer? Layer => _layer;
+
+        protected Renderable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
+            : base(nodeContext) { }
+
+        public void SetLayer(ILayer layer)
+        {
+            _layer = layer;
+        }
+
+        public void Render(CallerInfo caller)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void OnLocalTransformationChanged()
         {
             base.OnLocalTransformationChanged();
@@ -36,12 +54,9 @@ namespace Fu.Core.Rendering
                 return;
 
             var layout = Layout;
-            _bounds = LocalTransformation.MapRect(SKRect.Create(layout.Width, layout.Height)).ToRectangleF_();
-        }
-
-        public void Render(CallerInfo caller)
-        {
-            throw new NotImplementedException();
+            _bounds = LocalTransformation
+                .MapRect(SKRect.Create(layout.Width, layout.Height))
+                .ToRectangleF_();
         }
     }
 }

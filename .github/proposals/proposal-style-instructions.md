@@ -20,7 +20,7 @@ No property keys, no diff engine, no `Remove`. **Later wins**: in a chain the do
 
 ```csharp
 /// The pin type in VL and the general instruction.
-public abstract record Style(Spread<Style> Inputs)
+public abstract record Style(IReadOnlyList<Style> Inputs)
 {
     public abstract void Build(NodeBase node);
 
@@ -30,7 +30,7 @@ public abstract record Style(Spread<Style> Inputs)
 }
 
 /// A general style for one node type, without the cast in every record.
-public abstract record Style<TNode>(Spread<Style> Inputs) : Style(Inputs) where TNode : NodeBase
+public abstract record Style<TNode>(IReadOnlyList<Style> Inputs) : Style(Inputs) where TNode : NodeBase
 {
     public abstract void Build(TNode node);
     public sealed override void Build(NodeBase node) => Build(node as TNode ?? throw new ArgumentException(
@@ -38,7 +38,7 @@ public abstract record Style<TNode>(Spread<Style> Inputs) : Style(Inputs) where 
 }
 
 /// The Yoga subset. Sees only a native Yoga node, never the Fu node.
-public abstract record YogaStyle(Spread<Style> Inputs) : Style(Inputs)
+public abstract record YogaStyle(IReadOnlyList<Style> Inputs) : Style(Inputs)
 {
     public abstract unsafe void Build(YGNode* node);
 
@@ -48,7 +48,7 @@ public abstract record YogaStyle(Spread<Style> Inputs) : Style(Inputs)
 }
 
 /// Joins inputs without an instruction of its own.
-internal sealed record CombinedStyle(Spread<Style> Inputs) : Style(Inputs)
+internal sealed record CombinedStyle(IReadOnlyList<Style> Inputs) : Style(Inputs)
 {
     public override void Build(NodeBase node) { }
 }
@@ -57,7 +57,7 @@ internal sealed record CombinedStyle(Spread<Style> Inputs) : Style(Inputs)
 * **`YogaStyle`** results depend only on the chain, never on the node. Instructions are processed in bulk on a stage node (§ 3), need no access to `Layoutable` internals, and can be tested against a bare `YGNode`. This also allows building a shared chain once and copying the result to every node later (§ 9).
 * **`Style` / `Style<TNode>`** write staged values on the Fu node through APIs of the layer that owns them. A node of another type is reported (§ 3) and skipped.
 * Other assemblies derive from `Style<TNode>` or `YogaStyle`.
-* Unit variants are separate instructions writing the same Yoga slot (`SetWidth`, `SetWidthPercent`, `SetWidthAuto`); later wins. Yoga's own specificity stays: `Margin.Left` beats `Margin.All`, a row gap beats `All`, regardless of order.
+(`SetWidth`, `SetWidth (Ratio)`, `SetWidth (Auto)`, `SetSize`)
 * **Combining is a tree.** Every style holds a `Spread` of inputs, and a `Combine` output can be an input of another `Combine` or setter. The pass walks the tree depth first, inputs left to right, then the node itself. Since styles and `Spread`s are immutable, a tree is a value: equal trees compare equal, and one subtree can be shared by many trees.
 
 ## 3. Styling pass (`Stylable<TSelf>` and the layers above)
@@ -180,7 +180,7 @@ public abstract class StyleNode : NodeBase
     }
 
     /// The node's own instruction linked to its inputs, or null when it has nothing set.
-    protected abstract Style? BuildStyle(Spread<Style> inputs);
+    protected abstract Style? BuildStyle(IReadOnlyList<Style> inputs);
 }
 ```
 
@@ -195,7 +195,7 @@ public abstract class StyleNode : NodeBase
 ## 5. Example: width (Yoga)
 
 ```csharp
-public sealed record WidthStyle(Spread<Style> Inputs, YGValue Width) : YogaStyle(Inputs)
+public sealed record WidthStyle(IReadOnlyList<Style> Inputs, YGValue Width) : YogaStyle(Inputs)
 {
     public override unsafe void Build(YGNode* node)
     {
@@ -223,17 +223,17 @@ public sealed class SetWidthNode : StyleNode
             RebuildStyle();
     }
 
-    protected override Style? BuildStyle(Spread<Style> inputs)
+    protected override Style? BuildStyle(IReadOnlyList<Style> inputs)
         => _width.HasValue ? new WidthStyle(inputs, YGValue.Point(_width.Value)) : null;
 }
 ```
 
-`SetWidthPercent` and `SetWidthAuto` build the same record with `YGValue.Percent(value)` and `YGValue.Auto`.
+`SetWidth (Ratio)` and `SetWidth (Auto)` build the same record with `YogaValues.Ratio(value)` and `YGValue.Auto`.
 
 ## 6. Example: transform (node value)
 
 ```csharp
-public sealed record TransformStyle(Spread<Style> Inputs, Matrix Transform) : Style<Renderable>(Inputs)
+public sealed record TransformStyle(IReadOnlyList<Style> Inputs, Matrix Transform) : Style<Renderable>(Inputs)
 {
     public override void Build(Renderable node) => node.StageTransformation(Transform);
 }
@@ -245,7 +245,7 @@ public sealed record TransformStyle(Spread<Style> Inputs, Matrix Transform) : St
 ## 7. Example: gap (several inputs, one instruction)
 
 ```csharp
-public sealed record GapStyle(Spread<Style> Inputs, YGGutter Gutter, float Value) : YogaStyle(Inputs)
+public sealed record GapStyle(IReadOnlyList<Style> Inputs, YGGutter Gutter, float Value) : YogaStyle(Inputs)
 {
     public override unsafe void Build(YGNode* node) => node->SetGap(Gutter, Value);
 }
@@ -282,8 +282,19 @@ Later, if passes show up in measurements: since a `YogaStyle` chain's result is 
 
 * Namespace: done, `Fu.Core.Styling` (folder `Fu.Core\Styling`).
 * VL rebuilds a pin-group `Spread` only when one of its inputs changes (believed, to confirm in vvvv); the item comparison is a fallback either way.
+* Implemented. Layout of the code:
+  * Base in `Fu.Core\Styling` (`Fu.Core.Styling`): `Style`, `Style<TNode>`, `CombinedStyle`, `YogaStyle`, `Stylable`, `StyleNode`; plus `Fu.Core\Layout\YogaStyleStage.cs`.
+  * Records in `Fu.Core\Styles` (`Fu.Core.Styles`): `WidthStyle`, `HeightStyle`, `SizeStyle`, `GapStyle`, `TransformStyle`; helpers `YogaValues` (public) and `YogaDimension` (internal unit switch shared by the size records).
+  * Process nodes in `VL.Fu\src\Styles` (`VL.Fu.Styles`, imported to VL as `Fu.Styles`): `Combine`, `SetWidth`, `SetWidth (Ratio)`, `SetWidth (Auto)`, `SetHeight`, `SetHeight (Ratio)`, `SetHeight (Auto)`, `SetSize`, `SetSize (Ratio)`, `SetSize (Auto)`, `SetGap`, `SetRowGap`, `SetColumnGap`, `SetTransform`. `SetWidth (Percent)` is `[Obsolete]`.
+* Ratio instead of percent on the facade: `1` is the whole parent. Records stay Yoga-native and store a ratio as `YGUnit.Percent` via `YogaValues.Ratio(ratio)`, which multiplies by `YogaValues.PercentPerRatio` (100).
+* `SetSize` takes a `Vector2`; a non-finite component ignores the whole vector with a warning. `SizeStyle` checks both units before writing, so an unsupported unit leaves both axes untouched. `SetSize` and `SetWidth`/`SetHeight` write the same slots, so the later one wins per axis.
+  * Tests in `Fu.Core.Tests\Styling`, which references `VL.Fu` for the node tests.
+* `Spread` only on the `SetInput` pin group. Records take `IReadOnlyList<Style>` and keep it as an immutable `Spread`: a `Spread` is kept as is, any other list is copied.
+* Confirmed by test: `YGNodeCopyStyle` leaves an equal style undirtied, and a fresh node's style equals the template.
+* Additions while implementing: `StyleNode.ValidateFinite` turns NaN or infinity into an empty value with a warning on the style node; a `null` `Inputs` becomes empty; `SetInput` compares items by reference.
+* The assembly has no `ImportAsIs` yet, so the style nodes are not visible in VL until it is added.
 
-First tests, before any concrete style node:
+First tests, all in place:
 
 1. `YGNodeCopyStyle` leaves an equal style undirtied (the bulk path relies on it).
 2. Tree combining: `Combine(Combine(a, b), c)` applies a, b, c in order; a shared subtree in two trees applies in both; equal trees compare equal, a changed leaf makes them differ.
