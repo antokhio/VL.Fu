@@ -291,6 +291,51 @@ namespace VL.Fu.Tests.Core.Rendering
             }
         }
 
+        [TestMethod]
+        public void Render_DisplayNone_SkipsNodeAndLaysOutWithoutIt()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                var log = new List<(string Name, SKMatrix Caller, SKMatrix Canvas)>();
+                b.SetLayer(new RecordingLayer("b", log));
+                c.SetLayer(new RecordingLayer("c", log));
+                b.Native->SetDisplay(YGDisplay.None);
+                root.CalculateLayout();
+                using var bitmap = new SKBitmap(1, 1);
+                using var canvas = new SKCanvas(bitmap);
+
+                root.Render(CreateCaller(canvas));
+
+                CollectionAssert.AreEqual(new[] { "c" }, log.Select(l => l.Name).ToArray());
+                AssertTranslation(log[0].Caller, 10, 10);
+            }
+        }
+
+        [TestMethod]
+        public void Render_DisplayNone_SkipsSubtree()
+        {
+            Node root = new("root"), b = new("b"), d = new("d");
+            using (root) using (b) using (d)
+            {
+                root.SetChildren(Spread.Create(new[] { b }));
+                b.SetChildren(Spread.Create(new[] { d }));
+                d.Native->SetWidth(10);
+                d.Native->SetHeight(10);
+                var log = new List<(string Name, SKMatrix Caller, SKMatrix Canvas)>();
+                root.SetLayer(new RecordingLayer("root", log));
+                d.SetLayer(new RecordingLayer("d", log));
+                b.Native->SetDisplay(YGDisplay.None);
+                root.CalculateLayout();
+                using var bitmap = new SKBitmap(1, 1);
+                using var canvas = new SKCanvas(bitmap);
+
+                root.Render(CreateCaller(canvas));
+
+                CollectionAssert.AreEqual(new[] { "root" }, log.Select(l => l.Name).ToArray());
+            }
+        }
+
         /// <summary>
         /// Renders once on a 1 x 1 canvas, only to let a root capture the caller's viewport.
         /// </summary>

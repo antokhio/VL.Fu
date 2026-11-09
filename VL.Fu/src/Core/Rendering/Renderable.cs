@@ -82,13 +82,14 @@ namespace VL.Fu.Core.Rendering
         /// so both stay in sync for layers that read either one; the canvas is restored afterwards.
         /// A root remembers the caller's viewport for its next layout pass (see <see cref="CalculateRootLayout"/>).
         /// A node that was not laid out yet draws nothing, since its place is unknown.
+        /// A node with display none draws nothing either, and neither does its subtree, like in the layout.
         /// </remarks>
         public void Render(CallerInfo caller)
         {
             if (Parent is null)
                 CaptureViewportArea(caller);
 
-            if (!HasLayout)
+            if (!HasLayout || !IsDisplayed)
                 return;
 
             var local = LocalTransformation;

@@ -159,6 +159,14 @@ namespace VL.Fu.Tests.Styles
             Assert.IsNull(new SetAspectRatioNode(null!).Output);
             Assert.IsNull(new SetAspectRatioVector2Node(null!).Output);
             Assert.IsNull(new SetAspectRatioInt2Node(null!).Output);
+            Assert.IsNull(new SetPositionTypeNode(null!).Output);
+            Assert.IsNull(new SetPositionXNode(null!).Output);
+            Assert.IsNull(new SetPositionYNode(null!).Output);
+            Assert.IsNull(new SetPositionNode(null!).Output);
+            Assert.IsNull(new SetDisplayNode(null!).Output);
+            Assert.IsNull(new SetOverflowNode(null!).Output);
+            Assert.IsNull(new SetDirectionNode(null!).Output);
+            Assert.IsNull(new SetBoxSizingNode(null!).Output);
             Assert.AreEqual(new WidthStyle(S(), YGValue.Auto), new SetWidthAutoNode(null!).Output);
             Assert.AreEqual(new HeightStyle(S(), YGValue.Auto), new SetHeightAutoNode(null!).Output);
             Assert.AreEqual(new SizeStyle(S(), YGValue.Auto, YGValue.Auto), new SetSizeAutoNode(null!).Output);
@@ -1159,6 +1167,200 @@ namespace VL.Fu.Tests.Styles
             Assert.AreEqual(1f, Resolved(combined, EdgeKind.Padding)[2]);
             Assert.AreEqual(2f, Resolved(combined, EdgeKind.Margin)[2]);
             Assert.AreEqual(3f, Resolved(combined, EdgeKind.Border)[2]);
+        }
+
+        private static IStyle? PositionType(YGPositionType positionType, params IStyle?[] inputs)
+        {
+            var node = new SetPositionTypeNode(null!);
+            node.SetInput(S(inputs));
+            node.SetPositionType(positionType);
+            return node.Output;
+        }
+
+        private static IStyle? Position(float x, float y, params IStyle?[] inputs)
+        {
+            var node = new SetPositionNode(null!);
+            node.SetInput(S(inputs));
+            node.SetPosition(new Stride.Core.Mathematics.Vector2(x, y));
+            return node.Output;
+        }
+
+        [TestMethod]
+        public void SetPositionType_WritesSlot()
+        {
+            using var node = new Node();
+
+            node.SetStyle(PositionType(YGPositionType.Absolute));
+
+            Assert.AreEqual(YGPositionType.Absolute, node.Native->GetPositionType());
+        }
+
+        [TestMethod]
+        public void SetPositionType_UnknownValue_IsIgnored()
+        {
+            var positionType = new SetPositionTypeNode(null!);
+
+            positionType.SetPositionType((YGPositionType)99);
+
+            Assert.IsNull(positionType.Output);
+        }
+
+        [TestMethod]
+        public void SetPosition_Absolute_PlacesInsideParent()
+        {
+            var child = Position(20, 30, PositionType(YGPositionType.Absolute, Size(10, 10)));
+
+            var layouts = LayOut(Size(100, 100), child, Size(40, 40));
+
+            Assert.AreEqual(20f, layouts[0].X);
+            Assert.AreEqual(30f, layouts[0].Y);
+            Assert.AreEqual(0f, layouts[1].X, "the absolute child takes no room in the row");
+        }
+
+        [TestMethod]
+        public void SetPositionX_Relative_OffsetsWithoutMovingSiblings()
+        {
+            var positionX = new SetPositionXNode(null!);
+            positionX.SetInput(S(Size(10, 10)));
+            positionX.SetPositionX(5);
+
+            var layouts = LayOut(Size(100, 100), positionX.Output, Size(10, 10));
+
+            Assert.AreEqual(5f, layouts[0].X);
+            Assert.AreEqual(0f, layouts[0].Y);
+            Assert.AreEqual(10f, layouts[1].X);
+        }
+
+        [TestMethod]
+        public void SetPositionY_AfterSetPosition_OverridesYOnly()
+        {
+            var positionY = new SetPositionYNode(null!);
+            positionY.SetInput(S(Position(20, 30, Size(10, 10))));
+            positionY.SetPositionY(7);
+
+            var layouts = LayOut(Size(100, 100), positionY.Output);
+
+            Assert.AreEqual(20f, layouts[0].X);
+            Assert.AreEqual(7f, layouts[0].Y);
+        }
+
+        [TestMethod]
+        public void SetPosition_NonFiniteComponent_IgnoresWholeValue()
+        {
+            var position = new SetPositionNode(null!);
+
+            position.SetPosition(new Stride.Core.Mathematics.Vector2(1, float.NaN));
+
+            Assert.IsNull(position.Output);
+        }
+
+        [TestMethod]
+        public void SetPositionX_EmptyValue_PassesInputsThrough()
+        {
+            var ten = Width(10).Output;
+            var positionX = new SetPositionXNode(null!);
+            positionX.SetInput(S(ten));
+            positionX.SetPositionX(5);
+
+            positionX.SetPositionX(default);
+
+            Assert.AreSame(ten, positionX.Output);
+        }
+
+        [TestMethod]
+        public void PositionStyle_Infinite_IsSkipped()
+        {
+            var child = Combine(Size(10, 10), new PositionStyle(S(), 5, float.PositiveInfinity));
+
+            var layouts = LayOut(Size(100, 100), child);
+
+            Assert.AreEqual(0f, layouts[0].X);
+            Assert.AreEqual(0f, layouts[0].Y);
+        }
+
+        [TestMethod]
+        public void SetDisplay_None_RemovesFromLayout()
+        {
+            var display = new SetDisplayNode(null!);
+            display.SetInput(S(Size(10, 10)));
+            display.SetDisplay(YGDisplay.None);
+
+            var layouts = LayOut(Size(100, 100), display.Output, Size(10, 10));
+
+            Assert.AreEqual(0f, layouts[0].Width);
+            Assert.AreEqual(0f, layouts[1].X);
+        }
+
+        [TestMethod]
+        public void SetDisplay_UnknownValue_IsIgnored()
+        {
+            var display = new SetDisplayNode(null!);
+
+            display.SetDisplay((YGDisplay)99);
+
+            Assert.IsNull(display.Output);
+        }
+
+        [TestMethod]
+        public void SetOverflow_WritesSlot()
+        {
+            using var node = new Node();
+            var overflow = new SetOverflowNode(null!);
+            overflow.SetOverflow(YGOverflow.Hidden);
+
+            node.SetStyle(overflow.Output);
+
+            Assert.AreEqual(YGOverflow.Hidden, node.Native->GetOverflow());
+        }
+
+        [TestMethod]
+        public void SetDirection_RTL_ReversesRow()
+        {
+            var direction = new SetDirectionNode(null!);
+            direction.SetInput(S(Size(100, 100)));
+            direction.SetDirection(YGDirection.RTL);
+
+            var layouts = LayOut(direction.Output, Size(10, 10));
+
+            Assert.AreEqual(90f, layouts[0].X);
+        }
+
+        [TestMethod]
+        public void SetDirection_RTL_StartLandsRight()
+        {
+            var padding = new SetPaddingNode(null!);
+            padding.SetPadding(4, YGEdge.Start);
+            var direction = new SetDirectionNode(null!);
+            direction.SetInput(S(padding.Output));
+            direction.SetDirection(YGDirection.RTL);
+
+            CollectionAssert.AreEqual(new[] { 0f, 4f, 0f, 0f }, Resolved(direction.Output, EdgeKind.Padding));
+        }
+
+        [TestMethod]
+        public void SetDirection_UnknownValue_IsIgnored()
+        {
+            var direction = new SetDirectionNode(null!);
+
+            direction.SetDirection((YGDirection)99);
+
+            Assert.IsNull(direction.Output);
+        }
+
+        [TestMethod]
+        public void SetBoxSizing_ContentBox_AddsPaddingToWidth()
+        {
+            var padding = new SetPaddingNode(null!);
+            padding.SetInput(S(Size(50, 50)));
+            padding.SetPadding(10);
+            var boxSizing = new SetBoxSizingNode(null!);
+            boxSizing.SetInput(S(padding.Output));
+            boxSizing.SetBoxSizing(YGBoxSizing.ContentBox);
+
+            var layouts = LayOut(Size(200, 200), boxSizing.Output, padding.Output);
+
+            Assert.AreEqual(70f, layouts[0].Width);
+            Assert.AreEqual(50f, layouts[1].Width);
         }
     }
 }
