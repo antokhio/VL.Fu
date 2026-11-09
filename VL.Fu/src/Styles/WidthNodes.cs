@@ -32,7 +32,8 @@ namespace VL.Fu.Styles
     /// Sets the width in percent of the parent's width.
     /// Without a value the width is not set here, so an earlier setter or the default holds.
     /// </summary>
-    [ProcessNode(Name = "SetWidthPercent")]
+    [Obsolete("Use SetWidth (Ratio), where 1 is the whole parent.")]
+    [ProcessNode(Name = "SetWidth (Percent)")]
     public sealed class SetWidthPercentNode : StyleNode
     {
         private Optional<float> _percent;
@@ -51,14 +52,37 @@ namespace VL.Fu.Styles
     }
 
     /// <summary>
+    /// Sets the width relative to the parent's width, 1 being the whole parent.
+    /// Without a value the width is not set here, so an earlier setter or the default holds.
+    /// </summary>
+    [ProcessNode(Name = "SetWidth (Ratio)")]
+    public sealed class SetWidthRatioNode : StyleNode
+    {
+        private Optional<float> _ratio;
+
+        public SetWidthRatioNode([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
+            : base(nodeContext) => RebuildStyle();
+
+        public void SetWidthRatio(Optional<float> ratio = default)
+        {
+            if (SetValue(ref _ratio, ValidateFinite(ratio, "Ratio")))
+                RebuildStyle();
+        }
+
+        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+            _ratio.HasValue ? new WidthStyle(inputs, YogaValues.Ratio(_ratio.Value)) : null;
+    }
+
+    /// <summary>
     /// Lets Yoga size the width from the content and the flex settings, overriding earlier width setters.
     /// </summary>
-    [ProcessNode(Name = "SetWidthAuto")]
+    [ProcessNode(Name = "SetWidth (Auto)")]
     public sealed class SetWidthAutoNode : StyleNode
     {
         public SetWidthAutoNode([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) => RebuildStyle();
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) => new WidthStyle(inputs, YGValue.Auto);
+        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+            new WidthStyle(inputs, YGValue.Auto);
     }
 }

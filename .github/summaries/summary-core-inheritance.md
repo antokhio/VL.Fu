@@ -199,7 +199,7 @@ NodeBase (INodeBase : IDisposable)                           [Fu.Core.Base]
 **Supporting / Standalone Types:**
 * `NodeBaseExtensions` (`Fu.Core.Base`) — `LogInfo()`, `LogWarning()`, `LogError()`
 * `TraversableExtensions` (`Fu.Core.Tree`) — `Root()`, `Ancestors()`, `Descendants()`, `IsAncestorOf()`
-* `Style`, `Style<TNode>`, `YogaStyle`, `CombinedStyle` (immutable records) and the `StyleNode` base (`Fu.Core.Styling`); concrete style records in `Fu.Core.Styles` (`WidthStyle`, `GapStyle`, `TransformStyle`); style process nodes in `VL.Fu.Styles` (`SetWidthNode`, `SetWidthPercentNode`, `SetWidthAutoNode`, `SetGapNode`, `SetRowGapNode`, `SetColumnGapNode`, `SetTransformNode`, `CombineNode`). See [proposal-style-instructions.md](../proposals/proposal-style-instructions.md)
+concrete style records in `Fu.Core.Styles` (`WidthStyle`, `HeightStyle`, `SizeStyle`, `GapStyle`, `TransformStyle`, plus `YogaValues.Ratio`, where `1` is the whole parent); style process nodes in `VL.Fu.Styles` (`SetWidthNode`, `SetWidthRatioNode`, `SetWidthAutoNode`, `SetHeightNode`, `SetHeightRatioNode`, `SetHeightAutoNode`, `SetSizeNode`, `SetSizeRatioNode`, `SetSizeAutoNode`, the obsolete `SetWidthPercentNode`, `SetGapNode`,
 * `YogaConfig`, `YogaConfigCache`, `YogaStyleStage` (`Fu.Core.Layout`). See [proposal-layoutable.md](../proposals/proposal-layoutable.md)
 * `MatrixExtensions` (`Fu.Core.Extensions`) — `ToSKMatrix()`, `ToMatrix()` conversions between Stride `Matrix` and Skia `SKMatrix`
 * `Gesture` (`abstract record` in `Fu.Core.Interaction`)

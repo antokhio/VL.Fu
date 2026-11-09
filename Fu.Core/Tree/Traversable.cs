@@ -12,6 +12,7 @@ namespace Fu.Core.Tree
     /// Untyped, read-only view of a tree node. Lets code that doesn't know the concrete
     /// node type (VL patches, renderers, hit-testers) walk any Fu tree.
     /// </summary>
+    [Name("Traversable (Ungeneric)")]
     public interface ITraversable
     {
         ITraversable? Parent { get; }

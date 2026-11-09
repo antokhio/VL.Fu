@@ -57,7 +57,7 @@ internal sealed record CombinedStyle(IReadOnlyList<Style> Inputs) : Style(Inputs
 * **`YogaStyle`** results depend only on the chain, never on the node. Instructions are processed in bulk on a stage node (§ 3), need no access to `Layoutable` internals, and can be tested against a bare `YGNode`. This also allows building a shared chain once and copying the result to every node later (§ 9).
 * **`Style` / `Style<TNode>`** write staged values on the Fu node through APIs of the layer that owns them. A node of another type is reported (§ 3) and skipped.
 * Other assemblies derive from `Style<TNode>` or `YogaStyle`.
-* Unit variants are separate instructions writing the same Yoga slot (`SetWidth`, `SetWidthPercent`, `SetWidthAuto`); later wins. Yoga's own specificity stays: `Margin.Left` beats `Margin.All`, a row gap beats `All`, regardless of order.
+(`SetWidth`, `SetWidth (Ratio)`, `SetWidth (Auto)`, `SetSize`)
 * **Combining is a tree.** Every style holds a `Spread` of inputs, and a `Combine` output can be an input of another `Combine` or setter. The pass walks the tree depth first, inputs left to right, then the node itself. Since styles and `Spread`s are immutable, a tree is a value: equal trees compare equal, and one subtree can be shared by many trees.
 
 ## 3. Styling pass (`Stylable<TSelf>` and the layers above)
@@ -228,7 +228,7 @@ public sealed class SetWidthNode : StyleNode
 }
 ```
 
-`SetWidthPercent` and `SetWidthAuto` build the same record with `YGValue.Percent(value)` and `YGValue.Auto`.
+`SetWidth (Ratio)` and `SetWidth (Auto)` build the same record with `YogaValues.Ratio(value)` and `YGValue.Auto`.
 
 ## 6. Example: transform (node value)
 
@@ -284,8 +284,10 @@ Later, if passes show up in measurements: since a `YogaStyle` chain's result is 
 * VL rebuilds a pin-group `Spread` only when one of its inputs changes (believed, to confirm in vvvv); the item comparison is a fallback either way.
 * Implemented. Layout of the code:
   * Base in `Fu.Core\Styling` (`Fu.Core.Styling`): `Style`, `Style<TNode>`, `CombinedStyle`, `YogaStyle`, `Stylable`, `StyleNode`; plus `Fu.Core\Layout\YogaStyleStage.cs`.
-  * Records in `Fu.Core\Styles` (`Fu.Core.Styles`): `WidthStyle`, `GapStyle`, `TransformStyle`.
-  * Process nodes in `VL.Fu\src\Styles` (`VL.Fu.Styles`, imported to VL as `Fu.Styles`): `Combine`, `SetWidth`, `SetWidthPercent`, `SetWidthAuto`, `SetGap`, `SetRowGap`, `SetColumnGap`, `SetTransform`.
+  * Records in `Fu.Core\Styles` (`Fu.Core.Styles`): `WidthStyle`, `HeightStyle`, `SizeStyle`, `GapStyle`, `TransformStyle`; helpers `YogaValues` (public) and `YogaDimension` (internal unit switch shared by the size records).
+  * Process nodes in `VL.Fu\src\Styles` (`VL.Fu.Styles`, imported to VL as `Fu.Styles`): `Combine`, `SetWidth`, `SetWidth (Ratio)`, `SetWidth (Auto)`, `SetHeight`, `SetHeight (Ratio)`, `SetHeight (Auto)`, `SetSize`, `SetSize (Ratio)`, `SetSize (Auto)`, `SetGap`, `SetRowGap`, `SetColumnGap`, `SetTransform`. `SetWidth (Percent)` is `[Obsolete]`.
+* Ratio instead of percent on the facade: `1` is the whole parent. Records stay Yoga-native and store a ratio as `YGUnit.Percent` via `YogaValues.Ratio(ratio)`, which multiplies by `YogaValues.PercentPerRatio` (100).
+* `SetSize` takes a `Vector2`; a non-finite component ignores the whole vector with a warning. `SizeStyle` checks both units before writing, so an unsupported unit leaves both axes untouched. `SetSize` and `SetWidth`/`SetHeight` write the same slots, so the later one wins per axis.
   * Tests in `Fu.Core.Tests\Styling`, which references `VL.Fu` for the node tests.
 * `Spread` only on the `SetInput` pin group. Records take `IReadOnlyList<Style>` and keep it as an immutable `Spread`: a `Spread` is kept as is, any other list is copied.
 * Confirmed by test: `YGNodeCopyStyle` leaves an equal style undirtied, and a fresh node's style equals the template.

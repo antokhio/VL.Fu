@@ -1,4 +1,5 @@
 using Fu.Core.Base;
+using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
 using VL.Lib.Collections;
@@ -93,6 +94,19 @@ namespace Fu.Core.Styling
                 return value;
 
             this.LogWarning($"{name} must be a finite number, got {value.Value}. It is ignored.");
+            return default;
+        }
+
+        /// <summary>
+        /// Returns <paramref name="value"/>, or an empty optional when a component holds NaN or infinity, which is reported on this node.
+        /// The whole vector is ignored, so a style never sets only one axis by accident.
+        /// </summary>
+        protected Optional<Vector2> ValidateFinite(Optional<Vector2> value, string name)
+        {
+            if (!value.HasValue || (float.IsFinite(value.Value.X) && float.IsFinite(value.Value.Y)))
+                return value;
+
+            this.LogWarning($"{name} must have finite components, got {value.Value}. It is ignored.");
             return default;
         }
 

@@ -10,7 +10,7 @@ using YogaSharp;
 
 namespace Fu.Core.Layout
 {
-    public interface ILayoutable
+    public interface ILayoutable : IStylable
     {
         /// <summary>
         /// The rectangle Yoga computed for this node, relative to its parent's top-left corner.
@@ -115,7 +115,8 @@ namespace Fu.Core.Layout
         /// Each pass starts at identity, and the commit writes only when the styled value changed,
         /// so a directly set transformation is kept until the style changes it.
         /// </summary>
-        internal void StageTransformation(Matrix transformation) => _styledTransformation = transformation;
+        internal void StageTransformation(Matrix transformation) =>
+            _styledTransformation = transformation;
 
         /// <summary>
         /// Starts the Yoga stage from the default style and the styled transformation from identity.
@@ -311,7 +312,10 @@ namespace Fu.Core.Layout
         /// Small changes still count, so a node never keeps a stale layout.
         /// </summary>
         private static bool IsSameLayout(RectangleF a, RectangleF b) =>
-            a.X.Equals(b.X) && a.Y.Equals(b.Y) && a.Width.Equals(b.Width) && a.Height.Equals(b.Height);
+            a.X.Equals(b.X)
+            && a.Y.Equals(b.Y)
+            && a.Width.Equals(b.Width)
+            && a.Height.Equals(b.Height);
 
         /// <summary>
         /// Switches the Yoga node to the effective config and pushes the change down to the children.

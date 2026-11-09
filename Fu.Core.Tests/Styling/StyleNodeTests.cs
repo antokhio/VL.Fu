@@ -32,11 +32,17 @@ namespace Fu.Core.Tests.Styling
         public void Output_FromConstruction_IsBuilt()
         {
             Assert.IsNull(new SetWidthNode(null!).Output);
-            Assert.IsNull(new SetWidthPercentNode(null!).Output);
+            Assert.IsNull(new SetWidthRatioNode(null!).Output);
+            Assert.IsNull(new SetHeightNode(null!).Output);
+            Assert.IsNull(new SetHeightRatioNode(null!).Output);
+            Assert.IsNull(new SetSizeNode(null!).Output);
+            Assert.IsNull(new SetSizeRatioNode(null!).Output);
             Assert.IsNull(new SetGapNode(null!).Output);
             Assert.IsNull(new SetTransformNode(null!).Output);
             Assert.IsNull(new CombineNode(null!).Output);
             Assert.AreEqual(new WidthStyle(S(), YGValue.Auto), new SetWidthAutoNode(null!).Output);
+            Assert.AreEqual(new HeightStyle(S(), YGValue.Auto), new SetHeightAutoNode(null!).Output);
+            Assert.AreEqual(new SizeStyle(S(), YGValue.Auto, YGValue.Auto), new SetSizeAutoNode(null!).Output);
         }
 
         [TestMethod]
@@ -145,16 +151,125 @@ namespace Fu.Core.Tests.Styling
         }
 
         [TestMethod]
-        public void SetWidthPercent_AfterSetWidth_Wins()
+        public void SetWidthRatio_AfterSetWidth_Wins()
         {
             using var node = new Node();
-            var percent = new SetWidthPercentNode(null!);
-            percent.SetInput(S(Width(10).Output));
-            percent.SetWidthPercent(50);
+            var ratio = new SetWidthRatioNode(null!);
+            ratio.SetInput(S(Width(10).Output));
+            ratio.SetWidthRatio(0.5f);
 
-            node.SetStyle(percent.Output);
+            node.SetStyle(ratio.Output);
 
             Assert.AreEqual(YGValue.Percent(50), node.Native->GetWidth());
+        }
+
+        [TestMethod]
+        public void SetWidthRatio_EmptyValue_PassesInputsThrough()
+        {
+            var ten = Width(10).Output;
+            var ratio = new SetWidthRatioNode(null!);
+            ratio.SetInput(S(ten));
+            ratio.SetWidthRatio(0.5f);
+
+            ratio.SetWidthRatio(default);
+
+            Assert.AreSame(ten, ratio.Output);
+        }
+
+        [TestMethod]
+        public void SetHeight_WritesHeightOnly()
+        {
+            using var node = new Node();
+            var height = new SetHeightNode(null!);
+            height.SetHeight(20);
+
+            node.SetStyle(height.Output);
+
+            Assert.AreEqual(YGValue.Point(20), node.Native->GetHeight());
+            Assert.AreEqual(YGValue.Auto, node.Native->GetWidth());
+        }
+
+        [TestMethod]
+        public void SetHeightAuto_AfterSetHeight_Wins()
+        {
+            using var node = new Node();
+            var height = new SetHeightNode(null!);
+            height.SetHeight(20);
+            var auto = new SetHeightAutoNode(null!);
+            auto.SetInput(S(height.Output));
+
+            node.SetStyle(auto.Output);
+
+            Assert.AreEqual(YGValue.Auto, node.Native->GetHeight());
+        }
+
+        [TestMethod]
+        public void SetSize_WritesBothAxes()
+        {
+            using var node = new Node();
+            var size = new SetSizeNode(null!);
+            size.SetSize(new Stride.Core.Mathematics.Vector2(30, 40));
+
+            node.SetStyle(size.Output);
+
+            Assert.AreEqual(YGValue.Point(30), node.Native->GetWidth());
+            Assert.AreEqual(YGValue.Point(40), node.Native->GetHeight());
+        }
+
+        [TestMethod]
+        public void SetWidth_AfterSetSize_OverridesWidthOnly()
+        {
+            using var node = new Node();
+            var size = new SetSizeNode(null!);
+            size.SetSize(new Stride.Core.Mathematics.Vector2(30, 40));
+
+            node.SetStyle(Width(10, size.Output).Output);
+
+            Assert.AreEqual(YGValue.Point(10), node.Native->GetWidth());
+            Assert.AreEqual(YGValue.Point(40), node.Native->GetHeight());
+        }
+
+        [TestMethod]
+        public void SetSize_NonFiniteComponent_IgnoresWholeValue()
+        {
+            var size = new SetSizeNode(null!);
+
+            size.SetSize(new Stride.Core.Mathematics.Vector2(30, float.NaN));
+
+            Assert.IsNull(size.Output);
+        }
+
+        /// <summary>
+        /// A 200 x 100 root with one child sized to half its width and a quarter of its height.
+        /// </summary>
+        [TestMethod]
+        public void SetSizeRatio_LaysOutRelativeToParent()
+        {
+            using var root = new Node();
+            using var child = new Node();
+            root.SetChildren(Spread.Create(new[] { child }));
+            var rootSize = new SetSizeNode(null!);
+            rootSize.SetSize(new Stride.Core.Mathematics.Vector2(200, 100));
+            root.SetStyle(rootSize.Output);
+            var ratio = new SetSizeRatioNode(null!);
+            ratio.SetSizeRatio(new Stride.Core.Mathematics.Vector2(0.5f, 0.25f));
+            child.SetStyle(ratio.Output);
+
+            root.CalculateLayout();
+
+            Assert.AreEqual(100f, child.Layout.Width);
+            Assert.AreEqual(25f, child.Layout.Height);
+        }
+
+        [TestMethod]
+        public void SizeStyle_UnsupportedUnit_SkipsBothAxes()
+        {
+            using var node = new Node();
+
+            node.SetStyle(new SizeStyle(S(), YGValue.Point(30), YGValue.Undefined));
+
+            Assert.AreEqual(YGValue.Auto, node.Native->GetWidth());
+            Assert.AreEqual(YGValue.Auto, node.Native->GetHeight());
         }
 
         [TestMethod]
