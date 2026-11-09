@@ -2,7 +2,390 @@
 <Document xmlns:p="property" xmlns:r="reflection" Id="RP148BCumEnLz0nErjXisx" LanguageVersion="2025.7.4" Version="0.128">
   <NugetDependency Id="F8ABQiEjrl6NfDwcMqBPyY" Location="VL.CoreLib" Version="2025.7.4" />
   <Patch Id="FAlXU1uguT3OYhmovfKqCa">
-    <Canvas Id="VBLJSBHKZDoPL7ufouPZFk" DefaultCategory="Main" BordersChecked="false" CanvasType="FullCategory" />
+    <Canvas Id="VBLJSBHKZDoPL7ufouPZFk" DefaultCategory="Fu" CanvasType="FullCategory">
+      <Canvas Id="DRsiFN0fT2FOYDBOhVWNoA" Name="Enums" Position="131,140">
+        <!--
+
+    ************************ YGAlign ************************
+
+-->
+        <Node Name="YGAlign" Bounds="183,235" Id="DPN30j3CpdYLWrLKcOfoip">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGAlign" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="H9iLhlsvhWOO20Y55LiEHI">
+            <Canvas Id="Jwba5ctQVs3M9iUG1sqvtq" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="Cc5NN44Kb9lMYY1jrMxq23" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGBoxSizing ************************
+
+-->
+        <Node Name="YGBoxSizing" Bounds="463,235" Id="HqQEY5VvUmMLD7qOREINGX">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGBoxSizing" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="ClvdiZdUVxINf0YW7gnViF">
+            <Canvas Id="NvmyNe0zHlGOouEqUO211n" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="S9fCsu7EDisQHKEILn2QK7" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGDimension ************************
+
+-->
+        <Node Name="YGDimension" Bounds="743,235" Id="VBIFfYzWEWeP50Oagud2zZ">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGDimension" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="Od4J9XRO65OQUgKr4TATYC">
+            <Canvas Id="T96aeozidFBOefbxPZHkcN" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="B8SylrREGBgPxWsp7BiuUT" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGDirection ************************
+
+-->
+        <Node Name="YGDirection" Bounds="1023,235" Id="G1cViiQPeGWM19qqATfigr">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGDirection" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="C0FLTfVJquVN2FuYvvGoFJ">
+            <Canvas Id="Jhpsx1Ie6uSMRsVmbL9utq" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="Lby8xR4wiCcLmixv1m6Sw5" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGDisplay ************************
+
+-->
+        <Node Name="YGDisplay" Bounds="183,285" Id="VTVDSHq2Y5EPf4eYkigdFo">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGDisplay" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="QG1YQhwQmRxQUI68YUvwuo">
+            <Canvas Id="UFkgBOWCecxOrMKviL2Jky" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="LcDfJEvLZxyMsSLGJ7MYUM" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGEdge ************************
+
+-->
+        <Node Name="YGEdge" Bounds="463,285" Id="VRdNbQAxhEQMr0QeNB65kF">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGEdge" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="AhrF1HjPsIWN9UVYlspCFr">
+            <Canvas Id="Ucta5wWlBobOlDdtl9QOF5" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="VAO1PUe78ncQWCySTJNcvv" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGErrata ************************
+
+-->
+        <Node Name="YGErrata" Bounds="743,285" Id="FXNYlU4svXaQU08a5pF0rO">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGErrata" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="Ru107VMhNyeMMliGEJmxED">
+            <Canvas Id="CMI23zlL3Q7QLWwCaPNX8y" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="Oc1YaQIwmh2P3Lw4BweRmX" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGExperimentalFeature ************************
+
+-->
+        <Node Name="YGExperimentalFeature" Bounds="1023,285" Id="UzQkr4DBrPTOLDng7H63pS">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGExperimentalFeature" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="UPPLB1RHNQ7OTMdE1xCvtH">
+            <Canvas Id="Q2TIgzLpa5RNzDCxpHFrrn" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="CSSXmUXSFgZMWeTyVZwK3c" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGFlexDirection ************************
+
+-->
+        <Node Name="YGFlexDirection" Bounds="183,335" Id="AStRBIqbfd9PLmMOGAJN9S">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGFlexDirection" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="AlYdGQ46OBjMSVzOBkMS2y">
+            <Canvas Id="L2W3XTbuyihPNMIV8r8KfK" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="K7zMnZ9W4O8NZPen1d4J8a" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGGutter ************************
+
+-->
+        <Node Name="YGGutter" Bounds="463,335" Id="TrtTcYtOFu1LSORsT0XVBh">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGGutter" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="JpX7GSndGozQbTj0Se8Q94">
+            <Canvas Id="ERhs3KBvxB0NWWQPVXjpVC" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="IKOeTwyBAvJOT0RkwUFS1W" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGJustify ************************
+
+-->
+        <Node Name="YGJustify" Bounds="743,335" Id="UKuW3XHgs2yPxTdFXB25PF">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGJustify" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="FHpTEDKc8WpP5Z4BTAzEPG">
+            <Canvas Id="IsAcfy5Gcc3MyjSFxrQklO" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="AFGe2jNMOScLer6fUn8NNA" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGLogLevel ************************
+
+-->
+        <Node Name="YGLogLevel" Bounds="1023,335" Id="LCz6fCllUWBLpFveemrwg7">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGLogLevel" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="HDz9bta1r1oNxAOQjHZXon">
+            <Canvas Id="IyaiIjE7Hp7PcaqY2o6uLp" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="MFSU8ffaweILC1hGH7D3eY" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGMeasureMode ************************
+
+-->
+        <Node Name="YGMeasureMode" Bounds="183,385" Id="CPzQklKsi6ZPYRUM0JIVtt">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGMeasureMode" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="S9x0C0CvfyCLcqymHnkQhf">
+            <Canvas Id="UOtsUbK4stxP7ynhNQZ9Oc" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="HIFBPVJFRk9Oq6KDyvPy7u" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGNodeType ************************
+
+-->
+        <Node Name="YGNodeType" Bounds="463,385" Id="KdXrwy8RulmLUHSbF3Kq8B">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGNodeType" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="GNPCvMMYMoqPSTARg72Jm3">
+            <Canvas Id="SXDUPXGdSn3Oy3lpv6lxGF" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="TFPJEh0ewkbNO3GqUcaxcy" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGOverflow ************************
+
+-->
+        <Node Name="YGOverflow" Bounds="743,385" Id="JvlVDb7GdagMwdDV7XrCbz">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGOverflow" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="MJ4sk1YMeRrMjKRkDvDpPv">
+            <Canvas Id="R3KU1lX77p6QC9pOsLxWpS" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="DM35o52cf9qPNTrgPcC93A" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGPhysicalEdge ************************
+
+-->
+        <Node Name="YGPhysicalEdge" Bounds="1023,385" Id="Tw094JfeoBNMiqucUB42cj">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGPhysicalEdge" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="Jb8B1MJH589NSK78pgfFAQ">
+            <Canvas Id="JqHioH6sCklLNaof0vzN3b" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="TDykDgMFxM9OjDgszSf2q7" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGPositionType ************************
+
+-->
+        <Node Name="YGPositionType" Bounds="183,435" Id="SrJRa2ON90LQKTwVVBMYay">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGPositionType" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="U9DqkAUKJRVN868QRbn1Ni">
+            <Canvas Id="ObP1i8kxWkGLjkZ88FIic4" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="Jrtu5o05UqTNPR2UN805Jo" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGUnit ************************
+
+-->
+        <Node Name="YGUnit" Bounds="463,435" Id="UO5HqLPS1nHMNUmOZFhu6F">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGUnit" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="OTShA1Fx7wVLa4e1jRXfAW">
+            <Canvas Id="F4OZD622kMnOStsFXhWpDb" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="OaAH348u6oaLCOHIVTqHAf" IsHidden="true" />
+          </Patch>
+        </Node>
+        <!--
+
+    ************************ YGWrap ************************
+
+-->
+        <Node Name="YGWrap" Bounds="743,435" Id="EmjskLczUNIPVU0OZiRiay">
+          <p:NodeReference>
+            <Choice Kind="ForwardRecordDefinition" Name="Immutable Forward" />
+            <CategoryReference Kind="Category" Name="Primitive" />
+          </p:NodeReference>
+          <p:TypeAnnotation LastCategoryFullName="YogaSharp" LastDependency="YogaSharp.dll">
+            <Choice Kind="TypeFlag" Name="YGWrap" />
+            <FullNameCategoryReference ID="YogaSharp" />
+            <AssemblyReference ID="YogaSharp.dll" />
+          </p:TypeAnnotation>
+          <Patch Id="DGtKPc88cwWQLVGtro38Pn">
+            <Canvas Id="JMe4iIlFet6OXUpi3qCLqK" BordersChecked="false" CanvasType="Group" />
+            <ProcessDefinition Id="IdHZWJrJEtJMpkFJjfliis" IsHidden="true" />
+          </Patch>
+        </Node>
+      </Canvas>
+    </Canvas>
     <!--
 
     ************************ Application ************************
@@ -14,53 +397,16 @@
         <CategoryReference Kind="Category" Name="Primitive" />
       </p:NodeReference>
       <Patch Id="OBi4atIcbu2PatZP1pMEOD">
-        <Canvas Id="FZXlQc3doVGNcdlARc1ELe" CanvasType="Group">
-          <Node Bounds="384,483,81,124" Id="RUAol4d65ZSLufsIv36Apf">
-            <p:NodeReference LastCategoryFullName="Fu" LastDependency="VL.Fu.dll">
-              <Choice Kind="StatefulRegion" Name="Region (Stateful)" Fixed="true" />
-              <CategoryReference Kind="Category" Name="Fu" />
-              <Choice Kind="ProcessAppFlag" Name="FuNode" />
-            </p:NodeReference>
-            <Pin Id="JNlchGg3g1qLmITbzr5w8v" Name="Node Context" Kind="InputPin" IsHidden="true" />
-            <Pin Id="T3WrQ7oYxClLjY1raAsJ60" Name="Children" Kind="InputPin" />
-            <Pin Id="TadguPGgQdHPvcTtDX35PX" Name="Output" Kind="StateOutputPin" />
-            <Patch Id="Frh4aZfwMqhQVSTnxQ5ixN" ManuallySortedPins="true">
-              <Patch Id="ETVitGHRZa2Oy6EsGpXWyc" Name="Create" ManuallySortedPins="true" />
-              <Patch Id="BFOKuZPAB1aNF3ZlbPJ1GI" Name="Update" ManuallySortedPins="true">
-                <Pin Id="Ru0Bgm9V5B3O6bspD8vAxT" Name="Node" Kind="InputPin" />
-                <Pin Id="Ty8aKftYFe8LUoSkQOJaPF" Name="Layer" Kind="OutputPin" />
-              </Patch>
-              <Patch Id="Af6uv8T5nADMg3xA1H0xTl" Name="Dispose" ManuallySortedPins="true" />
-              <ControlPoint Id="FDIkR0JYPB9LfwPmdSC6Pt" Bounds="398,491" />
-              <ControlPoint Id="PIkicfihTX4MTTyDGPiGRs" Bounds="397,600" />
-              <Node Bounds="396,510,57,26" Id="Dhudla8EIYwOoCL55c3J0d">
-                <p:NodeReference LastCategoryFullName="Fu.Core.Layout.ILayoutable" LastDependency="VL.Fu.dll">
-                  <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-                  <FullNameCategoryReference ID="Fu.Core.Layout.ILayoutable" />
-                  <Choice Kind="OperationCallFlag" Name="Layout" />
-                </p:NodeReference>
-                <Pin Id="L3NTyboisWsMREMaH0cla0" Name="Input" Kind="StateInputPin" />
-                <Pin Id="HEPmr66TNKkPA0PuUwAEDz" Name="Output" Kind="StateOutputPin" />
-                <Pin Id="Mx3NEk0tKmOLg3kszbcHtR" Name="Layout" Kind="OutputPin" />
-              </Node>
-            </Patch>
-            <Pin Id="C4QJzVnGJubOqjRqaxLF6Z" Name="Style" Kind="InputPin" />
-            <Pin Id="NoSjG6847nnQEUhftMmdXx" Name="Transformation" Kind="InputPin" />
-            <Pin Id="Qkp1u01KA4xLqu3zSihKYC" Name="Update" Kind="ApplyPin" />
-            <Pin Id="UkkuIysIo3aQKeuJiYb9Ln" Name="Config" Kind="InputPin" IsHidden="true" />
-          </Node>
-        </Canvas>
+        <Canvas Id="FZXlQc3doVGNcdlARc1ELe" CanvasType="Group" />
         <Patch Id="RybydS7GGfoMq5OlnI8kWV" Name="Create" />
         <Patch Id="TeiutGA9vcmLq73MecQhiY" Name="Update" />
         <ProcessDefinition Id="QsdllPOFpIdLz5NY6lr9mE">
           <Fragment Id="Fcf4ZXylZ8LPwB3SYdL6Qn" Patch="RybydS7GGfoMq5OlnI8kWV" Enabled="true" />
           <Fragment Id="QRTSBc2QAbkOiRwTzYfoaS" Patch="TeiutGA9vcmLq73MecQhiY" Enabled="true" />
         </ProcessDefinition>
-        <Link Id="DUP3qXF82HuNgaVHUFEjRV" Ids="Ru0Bgm9V5B3O6bspD8vAxT,FDIkR0JYPB9LfwPmdSC6Pt" IsHidden="true" />
-        <Link Id="JPUAvjiKXwVLF5uqZ6BbxZ" Ids="PIkicfihTX4MTTyDGPiGRs,Ty8aKftYFe8LUoSkQOJaPF" IsHidden="true" />
-        <Link Id="Gsbl6qDebUANWYFwlyF8zQ" Ids="FDIkR0JYPB9LfwPmdSC6Pt,L3NTyboisWsMREMaH0cla0" />
       </Patch>
     </Node>
   </Patch>
   <PlatformDependency Id="NS0rjnNL8zgNHq0jlPkNH0" Location="./lib/net8.0/VL.Fu.dll" IsForward="true" />
+  <NugetDependency Id="UmLVxGj6cB9MBOXEjPbVWb" Location="antokhio.YogaSharp" Version="1.2.0" />
 </Document>

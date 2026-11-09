@@ -18,9 +18,9 @@ namespace VL.Fu.Tests.Styles
             public YGNode* Native => Handle;
         }
 
-        private static Spread<Style> S(params Style?[] items) => Spread.Create(items!);
+        private static Spread<IStyle> S(params IStyle?[] items) => Spread.Create(items!);
 
-        private static SetWidthNode Width(float width, params Style?[] inputs)
+        private static SetWidthNode Width(float width, params IStyle?[] inputs)
         {
             var node = new SetWidthNode(null!);
             node.SetInput(S(inputs));

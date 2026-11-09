@@ -21,8 +21,8 @@ namespace VL.Fu.Core.Styling
     [ProcessNode]
     public abstract class StyleNode : NodeBase
     {
-        private Spread<Style> _input = Spread<Style>.Empty;
-        private Style? _output;
+        private Spread<IStyle> _input = Spread<IStyle>.Empty;
+        private IStyle? _output;
 
         protected StyleNode([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) { }
@@ -35,10 +35,10 @@ namespace VL.Fu.Core.Styling
         /// A pin group, which VL accepts only as an array or <see cref="Spread{T}"/>; hence no <see cref="IReadOnlyList{T}"/>.
         /// </remarks>
         public void SetInput(
-            [Pin(PinGroupKind = PinGroupKind.Collection, PinGroupDefaultCount = 1)] Spread<Style> input
+            [Pin(PinGroupKind = PinGroupKind.Collection, PinGroupDefaultCount = 1)] Spread<IStyle> input
         )
         {
-            input ??= Spread<Style>.Empty;
+            input ??= Spread<IStyle>.Empty;
             if (HaveSameItems(_input, input))
                 return;
 
@@ -46,7 +46,7 @@ namespace VL.Fu.Core.Styling
             RebuildStyle();
         }
 
-        public Style? Output => _output;
+        public IStyle? Output => _output;
 
         /// <summary>
         /// Stores <paramref name="value"/> in <paramref name="field"/> and tells whether it changed.
@@ -82,7 +82,7 @@ namespace VL.Fu.Core.Styling
         /// or returns null when nothing is set, so the output is the inputs alone.
         /// <paramref name="inputs"/> holds no nulls and is immutable, so a style can keep it without copying.
         /// </summary>
-        protected abstract Style? BuildStyle(IReadOnlyList<Style> inputs);
+        protected abstract IStyle? BuildStyle(IReadOnlyList<IStyle> inputs);
 
         /// <summary>
         /// Returns <paramref name="value"/>, or an empty optional when it holds NaN or infinity, which is reported on this node.
@@ -133,7 +133,7 @@ namespace VL.Fu.Core.Styling
             && float.IsFinite(m.M41) && float.IsFinite(m.M42) && float.IsFinite(m.M43) && float.IsFinite(m.M44);
 
         // A changed item always arrives as a new spread, but a new spread may still hold the same items.
-        private static bool HaveSameItems(Spread<Style> a, Spread<Style> b)
+        private static bool HaveSameItems(Spread<IStyle> a, Spread<IStyle> b)
         {
             if (ReferenceEquals(a, b))
                 return true;
@@ -150,7 +150,7 @@ namespace VL.Fu.Core.Styling
             return true;
         }
 
-        private static Spread<Style> WithoutNulls(Spread<Style> input)
+        private static Spread<IStyle> WithoutNulls(Spread<IStyle> input)
         {
             foreach (var item in input)
             {

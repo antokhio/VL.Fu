@@ -19,7 +19,8 @@ namespace VL.Fu.Core.Interaction
 
         public bool Notify(INotification notification, CallerInfo caller)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            return false;
         }
     }
 }

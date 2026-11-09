@@ -13,7 +13,7 @@ namespace VL.Fu.Core.Styling
     /// Yoga's own specificity still applies regardless of order: a left margin beats the margin for all edges,
     /// a row gap beats the gap for all gutters.
     /// </remarks>
-    public abstract record YogaStyle(IReadOnlyList<Style> Inputs) : Style(Inputs)
+    public abstract record YogaStyle(IReadOnlyList<IStyle> Inputs) : Style(Inputs)
     {
         /// <summary>
         /// Writes this instruction into the style of <paramref name="node"/>, the stage of the running pass.

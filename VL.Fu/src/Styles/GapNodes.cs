@@ -43,7 +43,7 @@ namespace VL.Fu.Styles
                 RebuildStyle();
         }
 
-        protected sealed override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+        protected sealed override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) =>
             _gap.HasValue ? new GapStyle(inputs, _gutter, _gap.Value) : null;
     }
 

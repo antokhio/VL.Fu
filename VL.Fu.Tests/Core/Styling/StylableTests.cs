@@ -79,19 +79,19 @@ namespace VL.Fu.Tests.Core.Styling
         /// <summary>
         /// Records the order instructions run in.
         /// </summary>
-        private sealed record Mark(IReadOnlyList<Style> Inputs, string Name) : Style<Node>(Inputs)
+        private sealed record Mark(IReadOnlyList<IStyle> Inputs, string Name) : Style<Node>(Inputs)
         {
             public override void Build(Node node) => node.Marks.Add(Name);
         }
 
-        private sealed record Throwing(IReadOnlyList<Style> Inputs) : Style(Inputs)
+        private sealed record Throwing(IReadOnlyList<IStyle> Inputs) : Style(Inputs)
         {
             public override void Build(VL.Fu.Core.Base.NodeBase node) => throw new InvalidOperationException("boom");
         }
 
-        private static Spread<Style> S(params Style[] items) => Spread.Create(items);
+        private static Spread<IStyle> S(params IStyle[] items) => Spread.Create(items);
 
-        private static Style Combine(params Style[] items) => new CombinedStyle(S(items));
+        private static Style Combine(params IStyle[] items) => new CombinedStyle(S(items));
 
         private static Mark M(string name) => new(S(), name);
 
@@ -201,7 +201,7 @@ namespace VL.Fu.Tests.Core.Styling
         [TestMethod]
         public void Inputs_MutableList_IsCopied()
         {
-            var inputs = new List<Style> { M("a") };
+            var inputs = new List<IStyle> { M("a") };
             var style = new CombinedStyle(inputs);
 
             inputs.Add(M("b"));

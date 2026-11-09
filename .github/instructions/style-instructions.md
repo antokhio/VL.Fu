@@ -11,7 +11,9 @@ A style has two parts:
 | Record | `VL.Fu\src\Core\Styles\XStyle.cs` | `VL.Fu.Core.Styles` | Immutable instruction; writes the value into the node. |
 | Process node | `VL.Fu\src\Styles\XNode.cs` or `XNodes.cs` | `VL.Fu.Styles` (VL: `Fu.Styles`) | Holds the pin values, outputs a cached record. |
 
-The base types (`Style`, `Style<TNode>`, `YogaStyle`, `StyleNode`) live in `VL.Fu\src\Core\Styling` (`VL.Fu.Core.Styling`) and should not change for a new style.
+The base types (`IStyle`, `Style`, `Style<TNode>`, `YogaStyle`, `StyleNode`) live in `VL.Fu\src\Core\Styling` (`VL.Fu.Core.Styling`) and should not change for a new style.
+
+**Pins and inputs are typed `IStyle`, never `Style` or a record:** vvvv fails to compile a pin group of a record type. Records implement `IStyle` through `Style`.
 
 ## Pipeline in short
 
@@ -37,7 +39,7 @@ namespace VL.Fu.Core.Styles
     /// Sets the Yoga height. Points, ratio (stored as Yoga percent) and auto write the same slot,
     /// so the later instruction wins, also over the height of a <see cref="SizeStyle"/>.
     /// </summary>
-    public sealed record HeightStyle(IReadOnlyList<Style> Inputs, YGValue Height) : YogaStyle(Inputs)
+    public sealed record HeightStyle(IReadOnlyList<IStyle> Inputs, YGValue Height) : YogaStyle(Inputs)
     {
         public override unsafe void Build(YGNode* node) => YogaDimension.SetHeight(node, Height);
     }
@@ -46,7 +48,7 @@ namespace VL.Fu.Core.Styles
 
 Rules:
 
-* `sealed record`, `IReadOnlyList<Style> Inputs` first, then the values. Never a `Spread` parameter; `Style` copies non-`Spread` lists itself.
+* `sealed record`, `IReadOnlyList<IStyle> Inputs` first, then the values. Never a `Spread` parameter; `Style` copies non-`Spread` lists itself.
 * Values are immutable value types (or records), so equal settings give equal records; the base already compares `Inputs` item by item.
 * `Build` only makes deterministic assignments. It doesn't read live node state, layout results, children or config, and keeps no reference to the node.
 * Store Yoga-native values (`YGValue`, Yoga enums). Facade conversions belong to the node, e.g. ratio via `YogaValues.Ratio`.
@@ -71,13 +73,13 @@ namespace VL.Fu.Styles
         public SetHeightNode([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) => RebuildStyle();
 
-        public void SetHeight(Optional<float> height = default)
+        public void SetHeight(
         {
             if (SetValue(ref _height, ValidateFinite(height, "Height")))
                 RebuildStyle();
         }
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+        protected override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) =>
             _height.HasValue ? new HeightStyle(inputs, YGValue.Point(_height.Value)) : null;
     }
 }

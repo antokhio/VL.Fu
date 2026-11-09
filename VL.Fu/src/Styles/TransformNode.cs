@@ -24,7 +24,7 @@ namespace VL.Fu.Styles
                 RebuildStyle();
         }
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+        protected override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) =>
             _transform.HasValue ? new TransformStyle(inputs, _transform.Value) : null;
     }
 }

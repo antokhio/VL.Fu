@@ -136,7 +136,7 @@ namespace VL.Fu.Core.Layout
         /// <summary>
         /// Writes Yoga instructions into the stage, which is copied to this node once at the end of the pass.
         /// </summary>
-        protected override unsafe void BuildStyleCore(Style instruction)
+        protected override unsafe void BuildStyleCore(IStyle instruction)
         {
             if (instruction is YogaStyle yoga)
                 yoga.Build(YogaStyleStage.Node);

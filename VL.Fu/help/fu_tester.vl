@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document xmlns:p="property" xmlns:r="reflection" Id="CuKV0yWem5uLOvOJUcX6ET" LanguageVersion="2025.7.4" Version="0.128">
+  <NugetDependency Id="DBoHvtkZJdMQIqGECIHpBy" Location="VL.CoreLib" Version="2025.7.4" />
+  <Patch Id="LRomVrZgv2JPmS38Dgik4f">
+    <Canvas Id="OtjjInT4GM9MWKc9NG7iHK" DefaultCategory="Main" BordersChecked="false" CanvasType="FullCategory" />
+    <!--
+
+    ************************ Application ************************
+
+-->
+    <Node Name="Application" Bounds="100,100" Id="NmjuNqSFWcwOJB21suCieY">
+      <p:NodeReference>
+        <Choice Kind="ContainerDefinition" Name="Process" />
+        <CategoryReference Kind="Category" Name="Primitive" />
+      </p:NodeReference>
+      <Patch Id="Kfd084If4DlLEGmj0sDBVt">
+        <Canvas Id="TmtN1z9obICMN0wHARSRHa" CanvasType="Group">
+          <Node Bounds="147,100,56,19" Id="U1ep4Utr1UgMA5yEB9RERo">
+            <p:NodeReference LastCategoryFullName="Fu.Styles" LastDependency="VL.Fu.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <CategoryReference Kind="Category" Name="Styles" NeedsToBeDirectParent="true">
+                <p:OuterCategoryReference Kind="Category" Name="Fu" NeedsToBeDirectParent="true" />
+              </CategoryReference>
+              <Choice Kind="ProcessAppFlag" Name="SetWidth" />
+            </p:NodeReference>
+            <Pin Id="QbOXSVinEcqMSdnrthObVX" Name="Node Context" Kind="InputPin" IsHidden="true" />
+            <Pin Id="NmMvRc2vv3PNBEQIdxgEWe" Name="Input" Kind="InputPin" />
+            <Pin Id="MNl8txtX6hrPOujLlOvUms" Name="Width" Kind="InputPin" />
+            <Pin Id="UXGwbnE3heQNKfyIqYzoLE" Name="Output" Kind="OutputPin" />
+          </Node>
+          <Node Bounds="207,233,137,124" Id="JG3E4MtGgPJM65sAcf9ynE">
+            <p:NodeReference LastCategoryFullName="Fu" LastDependency="VL.Fu.vl">
+              <Choice Kind="StatefulRegion" Name="Region (Stateful)" Fixed="true" />
+              <Choice Kind="ProcessAppFlag" Name="FuNode" />
+            </p:NodeReference>
+            <Pin Id="NXe6MQTaRnwOr7bGUOaFBF" Name="Node Context" Kind="InputPin" IsHidden="true" />
+            <Pin Id="RfMBkbZ5ds9LUUBCNJbKqG" Name="Children" Kind="InputPin" />
+            <Pin Id="LrdUZ9vkY3iPCUwzPHIfAZ" Name="Style" Kind="InputPin" />
+            <Pin Id="R3mIYScynLTLy2ry1mN9Vd" Name="Transformation" Kind="InputPin" />
+            <Pin Id="Fc4vFeOTtuqLoW2UsSaxKh" Name="Update" Kind="ApplyPin" />
+            <Pin Id="Vt6eCaNAFVJPY5Ei6Fpfba" Name="Output" Kind="StateOutputPin" />
+            <Patch Id="RWPzdqWIGz3Mj7wMv1JSDb" ManuallySortedPins="true">
+              <Patch Id="MakVKN2kACoQWBNDEDeA7C" Name="Create" ManuallySortedPins="true" />
+              <Patch Id="C19MRXbIPqOLWn0igqwuQu" Name="Update" ManuallySortedPins="true">
+                <Pin Id="NmF1FY35QGuNo7OHOp47d1" Name="Node" Kind="InputPin" />
+                <Pin Id="KuMXIkdyhzvORru2vjruLq" Name="Layer" Kind="OutputPin" />
+              </Patch>
+              <Patch Id="SZm8U3wtiIdOoujAtuX8yY" Name="Dispose" ManuallySortedPins="true" />
+              <ControlPoint Id="VkXdeeGByUPPnwD455lngH" Bounds="221,241" />
+              <ControlPoint Id="REcNZ8s7jfYQJjN6fBKWAT" Bounds="275,350" />
+              <Node Bounds="219,260,57,26" Id="AmJAYDuwLyEMf15VemZhbU">
+                <p:NodeReference LastCategoryFullName="Fu.Core.Layout.ILayoutable" LastDependency="VL.Fu.vl">
+                  <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                  <FullNameCategoryReference ID="Fu.Core.Layout.ILayoutable" />
+                  <Choice Kind="OperationCallFlag" Name="Layout" />
+                </p:NodeReference>
+                <Pin Id="BaiRSidROQkO3iu1xQL16c" Name="Input" Kind="StateInputPin" />
+                <Pin Id="N6uMbVVdm2SNqwFQLfxPX8" Name="Output" Kind="StateOutputPin" />
+                <Pin Id="QU2hE8zYkFQMjhJin6Dd9V" Name="Layout" Kind="OutputPin" />
+              </Node>
+              <Node Bounds="271,301,61,19" Id="HBlmitIrvjGN0Pt7uJelG0">
+                <p:NodeReference LastCategoryFullName="Graphics.Skia.Layers" LastDependency="VL.Skia.vl">
+                  <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+                  <FullNameCategoryReference ID="Graphics.Skia.Layers" />
+                  <Choice Kind="ProcessAppFlag" Name="Rectangle (Bounds)" />
+                </p:NodeReference>
+                <Pin Id="DXATyknCbYrPhziC6XLODN" Name="Node Context" Kind="InputPin" IsHidden="true" />
+                <Pin Id="Ug7p0627oUJLIQNkftzPuQ" Name="Bounds" Kind="InputPin" />
+                <Pin Id="V71SIJNdbEfOAoweNORJ7D" Name="Paint" Kind="InputPin" />
+                <Pin Id="ML90of3IhOSMRRXsQjKSzg" Name="Enabled" Kind="InputPin" />
+                <Pin Id="SsxyTj3pAoVQc806epYhOG" Name="State Output" Kind="OutputPin" IsHidden="true" />
+                <Pin Id="OXh15VmkYCSOKPgIrMDJPC" Name="Output" Kind="OutputPin" />
+              </Node>
+            </Patch>
+            <Pin Id="FAosX9qPmSGO5ZDMmM0XCl" Name="Config" Kind="InputPin" IsHidden="true" />
+          </Node>
+          <Node Bounds="250,180,48,19" Id="SU6nPsYcQ8jOvJv8nLZwdj">
+            <p:NodeReference LastCategoryFullName="Fu.Styles" LastDependency="VL.Fu.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <CategoryReference Kind="Category" Name="Styles" NeedsToBeDirectParent="true">
+                <p:OuterCategoryReference Kind="Category" Name="Fu" NeedsToBeDirectParent="true" />
+              </CategoryReference>
+              <Choice Kind="ProcessAppFlag" Name="SetSize" />
+            </p:NodeReference>
+            <Pin Id="GZNxxoIWdd6N7G9qSJWfOU" Name="Node Context" Kind="InputPin" IsHidden="true" />
+            <Pin Id="M4X1q6Q3JpwOuQCZaRNesk" Name="Input" Kind="InputPin" />
+            <Pin Id="PT3jAFoGSYBNvaoOc5oamH" Name="Size" Kind="InputPin" />
+            <Pin Id="DngD396lHIjNKckF6pr8l6" Name="Output" Kind="OutputPin" />
+          </Node>
+          <Node Bounds="207,430,145,19" Id="PNpj1Fi8V0CNBxbut6Gcy5">
+            <p:NodeReference LastCategoryFullName="Graphics.Skia" LastDependency="VL.Skia.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="ProcessAppFlag" Name="Renderer" />
+            </p:NodeReference>
+            <Pin Id="EiSiYOOz1DvMr3dQTOQGMJ" Name="Node Context" Kind="InputPin" IsHidden="true" />
+            <Pin Id="KWYNr9SVLYyLfl5aDqqRf2" Name="Bounds" Kind="InputPin" DefaultValue="980, 500, 616, 439" IsHidden="true" />
+            <Pin Id="T8whUMouEp4OcTIdHnf7Ws" Name="Save Bounds" Kind="InputPin" IsHidden="true" />
+            <Pin Id="TQkDBHDz95GMoCAK7JKohK" Name="Bound to Document" Kind="InputPin" IsHidden="true" />
+            <Pin Id="BfBGhtHWiJzLUiGMYuNIEo" Name="Dialog If Document Changed" Kind="InputPin" IsHidden="true" />
+            <Pin Id="DHYPOW3343jNMq6uoS2MKt" Name="Always On Top" Kind="InputPin" IsHidden="true" />
+            <Pin Id="BeeK1AHFG4bP14zZw80xnn" Name="Extend Into Title Bar" Kind="InputPin" IsHidden="true" />
+            <Pin Id="SFeVl76P6HsQLpFcMrhpje" Name="Input" Kind="InputPin" />
+            <Pin Id="K5QwRttdaaELITGWPZHsez" Name="Title" Kind="InputPin" />
+            <Pin Id="MEkF2RYyuLPNmdZaYRsnBE" Name="Title Bar Interaction Width" Kind="InputPin" IsHidden="true" />
+            <Pin Id="HWrnkMcQLUIM1OHMT8uiAE" Name="Color" Kind="InputPin" />
+            <Pin Id="UGJMe2pt8ONMmJHgoQdt2y" Name="Clear" Kind="InputPin" />
+            <Pin Id="T2yi4STAKyTNRDcZbMzuKp" Name="Space" Kind="InputPin" />
+            <Pin Id="QnPLQeOaLiSMG46B9hJeBR" Name="Show Cursor" Kind="InputPin" />
+            <Pin Id="Q6EuIN5Tfe2NfMLJwbsbTm" Name="VSync" Kind="InputPin" />
+            <Pin Id="IBY7IVzXgrBQJSZZ5M0Zfh" Name="Commands" Kind="InputPin" IsHidden="true" />
+            <Pin Id="D0E1OLrwi1UPhDr3hoxf8H" Name="Enable Keyboard Shortcuts" Kind="InputPin" IsHidden="true" />
+            <Pin Id="Q73yNJliWStLgHtAwI8BTR" Name="Enabled" Kind="InputPin" />
+            <Pin Id="KjB2SPNwsfsO33LX2CSdyg" Name="Form Bounds Notifications" Kind="OutputPin" IsHidden="true" />
+            <Pin Id="KTx0O2VG3jRLBlBdBCTBcT" Name="Form" Kind="OutputPin" />
+            <Pin Id="ARCHM8NDrtAOvht1hOwkgO" Name="ClientBounds" Kind="OutputPin" />
+            <Pin Id="LX9bRHvzgz6Ny7TByYwYGz" Name="Render Time" Kind="OutputPin" />
+          </Node>
+          <Pad Id="KyKQ5CVwfMWLV9Q2UOJ0JM" Comment="Size" Bounds="300,150,35,28" ShowValueBox="true" isIOBox="true" Value="0.76, 0.9">
+            <p:TypeAnnotation LastCategoryFullName="2D" LastDependency="VL.CoreLib.vl">
+              <Choice Kind="TypeFlag" Name="Vector2" />
+            </p:TypeAnnotation>
+          </Pad>
+        </Canvas>
+        <Patch Id="H1ozNsXQoGEOgBzZ2qaLZt" Name="Create" />
+        <Patch Id="Mt8aVXoKBn8L2mbadpIQ8c" Name="Update" />
+        <ProcessDefinition Id="PatyLgphwmSNq7FusoqUMc">
+          <Fragment Id="Hca24ERLv29NHIp3wdC2DI" Patch="H1ozNsXQoGEOgBzZ2qaLZt" Enabled="true" />
+          <Fragment Id="OtXp5mEn3J6N1uFXVehtHG" Patch="Mt8aVXoKBn8L2mbadpIQ8c" Enabled="true" />
+        </ProcessDefinition>
+        <Link Id="DUi8Ju9cmZwM3TmZlV843q" Ids="NmF1FY35QGuNo7OHOp47d1,VkXdeeGByUPPnwD455lngH" IsHidden="true" />
+        <Link Id="LmSf814BGcON324RVNDxnI" Ids="REcNZ8s7jfYQJjN6fBKWAT,KuMXIkdyhzvORru2vjruLq" IsHidden="true" />
+        <Link Id="Rt2PFbHB8fSLo460VZ0ZrA" Ids="DngD396lHIjNKckF6pr8l6,LrdUZ9vkY3iPCUwzPHIfAZ" />
+        <Link Id="AZy93wJe7jBOzUynegubDx" Ids="Vt6eCaNAFVJPY5Ei6Fpfba,SFeVl76P6HsQLpFcMrhpje" />
+        <Link Id="Lf6J2ApJ9AGLiMrg9tYDHO" Ids="VkXdeeGByUPPnwD455lngH,BaiRSidROQkO3iu1xQL16c" />
+        <Link Id="K426mXR6cIJPk4QmHXiEq9" Ids="KyKQ5CVwfMWLV9Q2UOJ0JM,PT3jAFoGSYBNvaoOc5oamH" />
+        <Link Id="OeAfCQOxpVzPQ9jnWAKfeS" Ids="QU2hE8zYkFQMjhJin6Dd9V,Ug7p0627oUJLIQNkftzPuQ" />
+        <Link Id="GqdVjpkTXVHLyOw0bPCogr" Ids="OXh15VmkYCSOKPgIrMDJPC,REcNZ8s7jfYQJjN6fBKWAT" />
+      </Patch>
+    </Node>
+  </Patch>
+  <NugetDependency Id="CL9hvwy4euNMfjPLIPi6Br" Location="VL.Fu" Version="0.0.0" />
+  <NugetDependency Id="IDn60VciisDL0ajUPp4aZ3" Location="VL.Skia" Version="2025.7.4" />
+</Document>

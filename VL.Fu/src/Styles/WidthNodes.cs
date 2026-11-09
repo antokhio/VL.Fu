@@ -24,7 +24,7 @@ namespace VL.Fu.Styles
                 RebuildStyle();
         }
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+        protected override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) =>
             _width.HasValue ? new WidthStyle(inputs, YGValue.Point(_width.Value)) : null;
     }
 
@@ -47,7 +47,7 @@ namespace VL.Fu.Styles
                 RebuildStyle();
         }
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+        protected override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) =>
             _percent.HasValue ? new WidthStyle(inputs, YGValue.Percent(_percent.Value)) : null;
     }
 
@@ -69,7 +69,7 @@ namespace VL.Fu.Styles
                 RebuildStyle();
         }
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+        protected override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) =>
             _ratio.HasValue ? new WidthStyle(inputs, YogaValues.Ratio(_ratio.Value)) : null;
     }
 
@@ -82,7 +82,7 @@ namespace VL.Fu.Styles
         public SetWidthAutoNode([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) => RebuildStyle();
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+        protected override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) =>
             new WidthStyle(inputs, YGValue.Auto);
     }
 }

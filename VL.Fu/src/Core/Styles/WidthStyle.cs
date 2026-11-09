@@ -7,7 +7,7 @@ namespace VL.Fu.Core.Styles
     /// Sets the Yoga width. Points, ratio (stored as Yoga percent) and auto write the same slot,
     /// so the later instruction wins, also over the width of a <see cref="SizeStyle"/>.
     /// </summary>
-    public sealed record WidthStyle(IReadOnlyList<Style> Inputs, YGValue Width) : YogaStyle(Inputs)
+    public sealed record WidthStyle(IReadOnlyList<IStyle> Inputs, YGValue Width) : YogaStyle(Inputs)
     {
         public override unsafe void Build(YGNode* node) => YogaDimension.SetWidth(node, Width);
     }

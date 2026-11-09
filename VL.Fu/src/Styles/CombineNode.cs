@@ -15,6 +15,6 @@ namespace VL.Fu.Styles
         public CombineNode([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) => RebuildStyle();
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) => null;
+        protected override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) => null;
     }
 }

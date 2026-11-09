@@ -24,7 +24,7 @@ namespace VL.Fu.Styles
                 RebuildStyle();
         }
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+        protected override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) =>
             _height.HasValue ? new HeightStyle(inputs, YGValue.Point(_height.Value)) : null;
     }
 
@@ -49,7 +49,7 @@ namespace VL.Fu.Styles
                 RebuildStyle();
         }
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+        protected override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) =>
             _ratio.HasValue ? new HeightStyle(inputs, YogaValues.Ratio(_ratio.Value)) : null;
     }
 
@@ -62,7 +62,7 @@ namespace VL.Fu.Styles
         public SetHeightAutoNode([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) => RebuildStyle();
 
-        protected override Style? BuildStyle(IReadOnlyList<Style> inputs) =>
+        protected override IStyle? BuildStyle(IReadOnlyList<IStyle> inputs) =>
             new HeightStyle(inputs, YGValue.Auto);
     }
 }

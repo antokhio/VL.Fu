@@ -12,14 +12,14 @@ namespace VL.Fu.Core.Styling
         /// <summary>
         /// The style tree this node was styled with last, or null when it has its default style.
         /// </summary>
-        Style? Style { get; }
+        IStyle? Style { get; }
 
         /// <summary>
         /// Restyles the node from its defaults when <paramref name="style"/> is another reference than <see cref="Style"/>.
         /// Pass null to return every styled value to its default.
         /// Safe to call every frame: an unchanged reference costs one comparison.
         /// </summary>
-        void SetStyle(Style? style);
+        void SetStyle(IStyle? style);
     }
 
     /// <summary>
@@ -37,15 +37,15 @@ namespace VL.Fu.Core.Styling
     public abstract class Stylable<TSelf> : Traversable<TSelf>, IStylable
         where TSelf : class, ITraversable<TSelf>, IStylable
     {
-        private Style? _style;
+        private IStyle? _style;
 
         protected Stylable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) { }
 
-        public Style? Style => _style;
+        public IStyle? Style => _style;
 
         [Fragment(Order = PinOrder.Style)]
-        public void SetStyle(Style? style)
+        public void SetStyle(IStyle? style)
         {
             if (ReferenceEquals(_style, style))
                 return;
@@ -74,10 +74,10 @@ namespace VL.Fu.Core.Styling
         /// Runs one instruction, without its inputs. Layers override this to process the instructions they own in bulk,
         /// like <see cref="YogaStyle"/> on layoutable nodes, and pass the rest to the base implementation.
         /// </summary>
-        protected virtual void BuildStyleCore(Style instruction) => instruction.Build(this);
+        protected virtual void BuildStyleCore(IStyle instruction) => instruction.Build(this);
 
         // Inputs left to right, then the instruction itself, so later instructions win.
-        private void Build(Style style)
+        private void Build(IStyle style)
         {
             var inputs = style.Inputs;
             for (var i = 0; i < inputs.Count; i++)

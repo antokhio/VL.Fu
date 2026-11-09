@@ -4,8 +4,31 @@ using VL.Lib.Collections;
 namespace VL.Fu.Core.Styling
 {
     /// <summary>
+    /// A styling instruction as seen by VL: the type of every style pin, from the style nodes' input pin group and output
+    /// to <see cref="IStylable.SetStyle"/>.
+    /// </summary>
+    /// <remarks>
+    /// Pins are typed with this interface rather than with the <see cref="Style"/> record,
+    /// since vvvv fails to compile a pin group of a record type.
+    /// <see cref="Style"/> is the implementation to derive from; it adds value equality and the typed bases.
+    /// </remarks>
+    public interface IStyle
+    {
+        /// <summary>
+        /// The styles that run before this one, in order. Null items are skipped.
+        /// </summary>
+        IReadOnlyList<IStyle> Inputs { get; }
+
+        /// <summary>
+        /// Writes this instruction, without its inputs, into the staged style of <paramref name="node"/>.
+        /// Throw when the node can't take the instruction; the pass reports it and goes on with the next one.
+        /// </summary>
+        void Build(NodeBase node);
+    }
+
+    /// <summary>
     /// An immutable styling instruction: writes values into the style of a node, after its <see cref="Inputs"/> did.
-    /// It is the single style type passed between style nodes and to <see cref="IStylable.SetStyle"/>.
+    /// The base of every style; passed around as <see cref="IStyle"/>.
     /// </summary>
     /// <remarks>
     /// Styles form a tree: every style runs its inputs depth first, left to right, then itself, so later instructions win.
@@ -16,14 +39,14 @@ namespace VL.Fu.Core.Styling
     /// The styles that run before this one. Null items are skipped.
     /// A list that is not a <see cref="Spread{T}"/> is copied, so the style stays immutable.
     /// </param>
-    public abstract record Style(IReadOnlyList<Style> Inputs)
+    public abstract record Style(IReadOnlyList<IStyle> Inputs) : IStyle
     {
-        private readonly Spread<Style> _inputs = Inputs?.ToSpread() ?? Spread<Style>.Empty;
+        private readonly Spread<IStyle> _inputs = Inputs?.ToSpread() ?? Spread<IStyle>.Empty;
 
         /// <summary>
         /// The styles that run before this one, in order.
         /// </summary>
-        public IReadOnlyList<Style> Inputs => _inputs;
+        public IReadOnlyList<IStyle> Inputs => _inputs;
 
         /// <summary>
         /// Writes this instruction, without its inputs, into the staged style of <paramref name="node"/>.
@@ -76,7 +99,7 @@ namespace VL.Fu.Core.Styling
     /// <typeparamref name="TNode"/> may be an interface, like <see cref="IFuNode"/> for every node of a Fu tree.
     /// Set on a node of another type, it is reported on that node and skipped.
     /// </summary>
-    public abstract record Style<TNode>(IReadOnlyList<Style> Inputs) : Style(Inputs)
+    public abstract record Style<TNode>(IReadOnlyList<IStyle> Inputs) : Style(Inputs)
         where TNode : class
     {
         /// <summary>
@@ -95,7 +118,7 @@ namespace VL.Fu.Core.Styling
     /// <summary>
     /// Joins its inputs without an instruction of its own. Built by style nodes with several inputs and nothing set.
     /// </summary>
-    internal sealed record CombinedStyle(IReadOnlyList<Style> Inputs) : Style(Inputs)
+    internal sealed record CombinedStyle(IReadOnlyList<IStyle> Inputs) : Style(Inputs)
     {
         public override void Build(NodeBase node) { }
     }
