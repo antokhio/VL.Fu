@@ -1,12 +1,13 @@
-﻿using VL.Fu.Core.Base;
-using VL.Fu.Core.Tree;
-using VL.Core;
+﻿using VL.Core;
 using VL.Core.Import;
+using VL.Fu.Core.Base;
+using VL.Fu.Core.Constants;
+using VL.Fu.Core.Tree;
 using VL.Model;
 
 namespace VL.Fu.Core.Styling
 {
-    public interface IStylable
+    public interface IStylable : ITraversable
     {
         /// <summary>
         /// The style tree this node was styled with last, or null when it has its default style.
@@ -22,8 +23,9 @@ namespace VL.Fu.Core.Styling
     }
 
     /// <summary>
-    /// First layer of the element chain. <typeparamref name="TSelf"/> is the concrete node type of the tree,
+    /// First layer of the element chain. <typeparamref name="TSelf"/> is the node type of the tree,
     /// fixed once at the end of the chain, so every layer sees its parent and children fully typed.
+    /// The Fu chain fixes it to <see cref="IFuNode"/>.
     /// </summary>
     /// <remarks>
     /// A styling pass resets the staged values of every layer to their defaults (<see cref="BeginStyle"/>),
@@ -31,8 +33,9 @@ namespace VL.Fu.Core.Styling
     /// and commits what differs (<see cref="EndStyle"/>). So a removed or emptied setter falls back
     /// to the setter before it, or to the default.
     /// </remarks>
+    [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public abstract class Stylable<TSelf> : Traversable<TSelf>, IStylable
-        where TSelf : Stylable<TSelf>
+        where TSelf : class, ITraversable<TSelf>, IStylable
     {
         private Style? _style;
 
@@ -41,6 +44,7 @@ namespace VL.Fu.Core.Styling
 
         public Style? Style => _style;
 
+        [Fragment(Order = PinOrder.Style)]
         public void SetStyle(Style? style)
         {
             if (ReferenceEquals(_style, style))

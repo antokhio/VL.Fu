@@ -1,8 +1,8 @@
-# `Fu.Core` Inheritance Chain & Architectural Summary
+# `VL.Fu.Core` Inheritance Chain & Architectural Summary
 
 ## 1. Current Inheritance Chain
 
-`Fu.Core` uses a **Curiously Recurring Template Pattern (CRTP)** (`TSelf`) layered inheritance hierarchy rooted in `NodeBase` and `Traversable<TSelf>`, and closed at `Renderable` (`Renderable : Interactable<Renderable>`). This gives every layer strongly-typed `Parent` and `IReadOnlyList<Renderable> Children` without casting (stored internally as `Spread<Renderable>`), while still exposing non-generic interfaces (`ITraversable`, `IStylable`, `ILayoutable`, `IBehavior`, `IRenderable`) for untyped inspection and VL patching.
+`VL.Fu.Core` uses a **Curiously Recurring Template Pattern (CRTP)** (`TSelf`) layered inheritance hierarchy rooted in `NodeBase` and `Traversable<TSelf>`, and closed at `Renderable` (`Renderable : Interactable<Renderable>`). This gives every layer strongly-typed `Parent` and `IReadOnlyList<Renderable> Children` without casting (stored internally as `Spread<Renderable>`), while still exposing non-generic interfaces (`ITraversable`, `IStylable`, `ILayoutable`, `IBehavior`, `IRenderable`) for untyped inspection and VL patching.
 
 ### Mermaid Class Diagram
 
@@ -172,47 +172,65 @@ classDiagram
 
     class IRenderable {
         <<interface>>
+        +Layer : ILayer?
+        +SetLayer(ILayer) void
     }
     ILayer <|-- IRenderable
 
     class Renderable {
         <<abstract>>
         +Bounds : RectangleF?
+        +Layer : ILayer?
+        +SetLayer(ILayer) void
         +Render(CallerInfo) void
     }
     IRenderable <|.. Renderable
     Interactable~TSelf~ <|-- Renderable : TSelf = Renderable
+
+    %% Region & Concrete Node Layer
+    class RegionProvider {
+        <<abstract, ProcessNode>>
+        +SetPatchInlayFactory(Func~IRegionInlay~) void
+        +Update() void
+    }
+    class FuNode {
+        <<ProcessNode>>
+    }
+    Renderable <|-- RegionProvider
+    RegionProvider <|-- FuNode
 ```
 
 ### Linear Chain Summary
 
 ```text
-NodeBase (INodeBase : IDisposable)                           [Fu.Core.Base]
-  └── Traversable<TSelf> (ITraversable<TSelf> : ITraversable) [Fu.Core.Tree]
-        └── Stylable<TSelf> (IStylable)                       [Fu.Core.Styling]
-              └── Layoutable<TSelf> (ILayoutable)             [Fu.Core.Layout]
-                    └── Interactable<TSelf> (VL.Skia.IBehavior) [Fu.Core.Interaction]
-                          └── Renderable (IRenderable : ILayer) [Fu.Core.Rendering] (closes TSelf = Renderable)
-                                └── FuNode                      [VL.Fu] (concrete ProcessNode)
+NodeBase (INodeBase : IDisposable)                           [VL.Fu.Core.Base]
+  └── Traversable<TSelf> (ITraversable<TSelf> : ITraversable) [VL.Fu.Core.Tree]
+        └── Stylable<TSelf> (IStylable)                       [VL.Fu.Core.Styling]
+              └── Layoutable<TSelf> (ILayoutable)             [VL.Fu.Core.Layout]
+                    └── Interactable<TSelf> (VL.Skia.IBehavior) [VL.Fu.Core.Interaction]
+                          └── Renderable (IRenderable : ILayer) [VL.Fu.Core.Rendering] (closes TSelf = Renderable)
+                                └── RegionProvider (IRegionProvider) [VL.Fu.Core.Region]
+                                      └── FuNode                     [VL.Fu] (concrete ProcessNode)
 ```
 
 **Supporting / Standalone Types:**
-* `NodeBaseExtensions` (`Fu.Core.Base`) — `LogInfo()`, `LogWarning()`, `LogError()`
-* `TraversableExtensions` (`Fu.Core.Tree`) — `Root()`, `Ancestors()`, `Descendants()`, `IsAncestorOf()`
-concrete style records in `Fu.Core.Styles` (`WidthStyle`, `HeightStyle`, `SizeStyle`, `GapStyle`, `TransformStyle`, plus `YogaValues.Ratio`, where `1` is the whole parent); style process nodes in `VL.Fu.Styles` (`SetWidthNode`, `SetWidthRatioNode`, `SetWidthAutoNode`, `SetHeightNode`, `SetHeightRatioNode`, `SetHeightAutoNode`, `SetSizeNode`, `SetSizeRatioNode`, `SetSizeAutoNode`, the obsolete `SetWidthPercentNode`, `SetGapNode`,
-* `YogaConfig`, `YogaConfigCache`, `YogaStyleStage` (`Fu.Core.Layout`). See [proposal-layoutable.md](../proposals/proposal-layoutable.md)
-* `MatrixExtensions` (`Fu.Core.Extensions`) — `ToSKMatrix()`, `ToMatrix()` conversions between Stride `Matrix` and Skia `SKMatrix`
-* `Gesture` (`abstract record` in `Fu.Core.Interaction`)
+* `Initializer` (`VL.Fu.Core`) — `AssemblyInitializer<Initializer>`
+* `NodeBaseExtensions` (`VL.Fu.Core.Base`) — `LogInfo()`, `LogWarning()`, `LogError()`
+* `TraversableExtensions` (`VL.Fu.Core.Tree`) — `Root()`, `Ancestors()`, `Descendants()`, `IsAncestorOf()`
+* Concrete style records in `VL.Fu.Core.Styles` (`WidthStyle`, `HeightStyle`, `SizeStyle`, `GapStyle`, `TransformStyle`, plus `YogaValues.Ratio`, where `1` is the whole parent, and internal `YogaDimension`); style process nodes in `VL.Fu.Styles` (`CombineNode`, `SetWidthNode`, `SetWidthRatioNode`, `SetWidthAutoNode`, the obsolete `SetWidthPercentNode`, `SetHeightNode`, `SetHeightRatioNode`, `SetHeightAutoNode`, `SetSizeNode`, `SetSizeRatioNode`, `SetSizeAutoNode`, `GapStyleNode`, `SetGapNode`, `SetRowGapNode`, `SetColumnGapNode`, `SetTransformNode`). See [proposal-style-instructions.md](../proposals/proposal-style-instructions.md)
+* `YogaConfig`, `YogaConfigCache`, `YogaStyleStage` (`VL.Fu.Core.Layout`). See [proposal-layoutable.md](../proposals/proposal-layoutable.md)
+* `MatrixExtensions` (`VL.Fu.Core.Extensions`) — `ToSKMatrix()`, `ToMatrix()` conversions between Stride `Matrix` and Skia `SKMatrix`
+* `Gesture` (`abstract record` in `VL.Fu.Core.Interaction`)
 
 ---
 
 ## 2. What Is Already Solved by the Current Layers
 
-### A. `NodeBase` (`Fu.Core.Base`)
+### A. `NodeBase` (`VL.Fu.Core.Base`)
 * **VL Node Diagnostics & Lifecycle:** Accepts hidden `NodeContext`, exposes `ILogger`, and manages visual node warnings directly in the vvvv patch (`AddPersistentWarning`, `Log`, `ClearWarning`, plus `NodeBaseExtensions`) with automatic deduplication and async expiration timers (`DefaultWarningLifetime = 10s`).
 * **Resource Management:** Implements `IDisposable` with virtual `Dispose(bool disposing)` so derived layers (like Yoga native handles in `Layoutable` or Skia resources in `Renderable`) have a standard cleanup hook.
 
-### B. `Traversable<TSelf>` (`Fu.Core.Tree`)
+### B. `Traversable<TSelf>` (`VL.Fu.Core.Tree`)
 * **Dual Generic + Non-Generic Contract:**
   * `ITraversable<TSelf>` (also implementing `IEnumerable<TSelf>`) exposes `TSelf? Parent` and `IReadOnlyList<TSelf> Children` on the public facade while storing `Spread<TSelf>` internally (preserving passed-in VL `Spread<T>` instances without copying).
   * `ITraversable` exposes read-only untyped `ITraversable? Parent` and `IReadOnlyList<ITraversable> Children`.
@@ -224,16 +242,16 @@ concrete style records in `Fu.Core.Styles` (`WidthStyle`, `HeightStyle`, `SizeSt
 * **Allocation-Friendly Traversal:**
   * `TraversableExtensions` provides `Root()`, `Ancestors()`, `IsAncestorOf()`, and an iterative stack-based pre-order `Descendants()`.
 
-### C. `Stylable<TSelf>`, `Style`, and `StyleNode` (`Fu.Core.Styling`)
+### C. `Stylable<TSelf>`, `Style`, and `StyleNode` (`VL.Fu.Core.Styling`)
 * **Immutable Style Tree (`Style`):**
   * `Style` records form a DAG of instructions (`IReadOnlyList<Style> Inputs`), evaluated depth-first left-to-right so later instructions override earlier ones, with structural value equality across `Inputs`.
   * `Style<TNode>` targets properties on a specific node class; `YogaStyle` targets native `YGNode*` styles.
 * **Staged Styling Pass (`Stylable<TSelf>`):**
   * `SetStyle(Style?)` short-circuits on reference equality. When changed, it runs `BeginStyle()` (reset staged values to defaults), walks the `Style` tree via `BuildStyleCore(Style)` (catching and logging incompatible style exceptions as node warnings), and commits diffs in `EndStyle()`.
 * **Patch Caching (`StyleNode`):**
-  * Base `[ProcessNode]` for all style setter nodes; caches `Output` and rebuilds only when inputs or pin values change, validating finite floats (`ValidateFinite`) and eliding no-op setters.
+  * Base `[ProcessNode]` for all style setter nodes; caches `Output` and rebuilds only when inputs or pin values change, validating finite floats/vectors (`ValidateFinite`) and eliding no-op setters.
 
-### D. `Layoutable<TSelf>` and `YogaConfig` (`Fu.Core.Layout`)
+### D. `Layoutable<TSelf>` and `YogaConfig` (`VL.Fu.Core.Layout`)
 * **Native Yoga Node Lifecycle:**
   * Owns a native `YGNode*` (`Handle`), mirrors `Children` into Yoga inside `OnChildrenChanged`, and detaches + disposes the native handle and config reference in `Dispose(bool)`.
 * **Scratch Style Staging (`YogaStyleStage`):**
@@ -244,9 +262,12 @@ concrete style records in `Fu.Core.Styles` (`WidthStyle`, `HeightStyle`, `SizeSt
   * `CalculateLayout` runs on root nodes (`Parent is null`; logs a warning if called on a child) and walks the tree top-down (`ApplyLayout` / `ReadLayout`), updating parent-relative `Layout` (`RectangleF`), setting `HasLayout = true`, and invoking `OnLayoutChanged(oldLayout, newLayout)`.
   * Maintains visual `Transformation` (`Stride.Core.Mathematics.Matrix`, settable directly via `SetTransformation` or staged via `StageTransformation` / `TransformStyle`) and precomputes `LocalTransformation` (`SKMatrix`: `Translate(Layout.X, Layout.Y) · Transformation`), firing `OnLocalTransformationChanged()`.
 
-### E. `Renderable.Bounds` (`Fu.Core.Rendering`)
-* **Parent-Space Bounding Box:**
+### E. `Renderable` (`VL.Fu.Core.Rendering`) & `RegionProvider` (`VL.Fu.Core.Region`)
+* **Parent-Space Bounding Box & Layer Holder:**
   * `Renderable.Bounds` (`RectangleF?`) stays `null` until the node has been laid out (`HasLayout`), and is automatically updated in `OnLocalTransformationChanged()` by mapping `(0, 0, Layout.Width, Layout.Height)` through `LocalTransformation`.
+  * `Renderable.Layer` / `SetLayer(ILayer)` stores the visual Skia layer produced for the node.
+* **VL Region Integration (`RegionProvider` & `FuNode`):**
+  * `RegionProvider` derives from `Renderable` and implements `IRegion<IRegionProvider.IRegionInlay>`, forwarding the inlay's `ILayer` output to `SetLayer(layer)` on `Update()`. `FuNode` (`VL.Fu`) is the concrete `[ProcessNode(Name = "FuNode", HasStateOutput = true)]` region node.
 
 ---
 

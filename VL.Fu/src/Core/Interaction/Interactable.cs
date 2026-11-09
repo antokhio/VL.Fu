@@ -1,16 +1,18 @@
-﻿using VL.Fu.Core.Layout;
-using VL.Core;
+﻿using VL.Core;
 using VL.Core.Import;
+using VL.Fu.Core.Layout;
+using VL.Fu.Core.Tree;
 using VL.Lib.IO.Notifications;
 using VL.Model;
 using VL.Skia;
 
 namespace VL.Fu.Core.Interaction
 {
-    public interface IInteractable : IBehavior, ILayoutable { }
+    public interface IInteractable : ILayoutable, IBehavior { }
 
+    [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public abstract class Interactable<TSelf> : Layoutable<TSelf>, IInteractable
-        where TSelf : Interactable<TSelf>
+        where TSelf : class, ITraversable<TSelf>, IInteractable
     {
         protected Interactable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
             : base(nodeContext) { }

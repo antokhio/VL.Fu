@@ -1,4 +1,4 @@
-# Proposal: Layout Roots & `Layoutable<TSelf>` (`Fu.Core`, `YogaSharp`, `VL.Core.Skia`)
+# Proposal: Layout Roots & `Layoutable<TSelf>` (`VL.Fu.Core`, `YogaSharp`, `VL.Core.Skia`)
 
 > Code samples are guidance for the shape of the implementation, not code to copy.
 
@@ -19,7 +19,7 @@
 
 ### 1.2 Yoga configuration (`YogaConfig`, inherited)
 
-Implemented in [YogaConfig.cs](../../Fu.Core/Layout/YogaConfig.cs) and [Layoutable.cs](../../Fu.Core/Layout/Layoutable.cs).
+Implemented in [YogaConfig.cs](../../VL.Fu/src/Core/Layout/YogaConfig.cs) and [Layoutable.cs](../../VL.Fu/src/Core/Layout/Layoutable.cs).
 
 * `YogaConfig` is an immutable record with `YogaConfig.Default`:
 
@@ -59,7 +59,7 @@ Implemented in [YogaConfig.cs](../../Fu.Core/Layout/YogaConfig.cs) and [Layoutab
 
 ## 2. `ILayoutable` & Scrolling
 
-`ILayoutable` as in [Layoutable.cs](../../Fu.Core/Layout/Layoutable.cs):
+`ILayoutable` as in [Layoutable.cs](../../VL.Fu/src/Core/Layout/Layoutable.cs):
 
 ```csharp
 public interface ILayoutable
@@ -134,7 +134,7 @@ ScrollViewport (Overflow = Hidden, fixed Width/Height)
           m.TransX, m.TransY, 0, m.Persp2);
   ```
 
-  Implemented as `internal static class MatrixExtensions` in `Fu.Core\Extensions` (tested). Stride's `a * b` equals Skia's `a.PostConcat(b)`.
+  Implemented as `internal static class MatrixExtensions` in `VL.Fu\src\Core\Extensions` (tested). Stride's `a * b` equals Skia's `a.PostConcat(b)`.
   Rectangles reuse `VL.Skia.Conversions` (`ToSKRect_` / `ToRectangleF_`) instead of new helpers.
 
 ---

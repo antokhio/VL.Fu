@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using VL.Fu.Core.Base;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using VL.Core;
 using VL.Core.Import;
+using VL.Fu.Core.Base;
 using VL.Lib.Collections;
 using VL.Model;
 
@@ -21,9 +20,9 @@ namespace VL.Fu.Core.Tree
 
     /// <summary>
     /// Strongly typed tree node: parent and children are <typeparamref name="T"/>.
-    /// Enumerating the node yields its direct children.
+    /// Deliberately not enumerable, so VL doesn't offer every sequence operation on a node; enumerate <see cref="Children"/> instead.
     /// </summary>
-    public interface ITraversable<T> : ITraversable, IEnumerable<T>
+    public interface ITraversable<T> : ITraversable
         where T : class, ITraversable<T>
     {
         new T? Parent { get; }
@@ -43,11 +42,16 @@ namespace VL.Fu.Core.Tree
     }
 
     /// <summary>
-    /// Base tree node using the self-referencing generic pattern:
-    /// <c>class Foo : Traversable&lt;Foo&gt;</c>.
+    /// Base tree node using the self-referencing generic pattern: <c>class Foo : Traversable&lt;Foo&gt;</c>,
+    /// or <c>class Foo : Traversable&lt;IFoo&gt;, IFoo</c> to type the tree by an interface the node implements.
     /// </summary>
+    /// <remarks>
+    /// With an interface, only nodes deriving from this class can join the tree (see <see cref="AcceptsChild"/>):
+    /// the tree keeps parent links consistent through the internals of every node, which a foreign implementation lacks.
+    /// </remarks>
+    [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public abstract class Traversable<TSelf> : NodeBase, ITraversable<TSelf>
-        where TSelf : Traversable<TSelf>
+        where TSelf : class, ITraversable<TSelf>
     {
         private TSelf? _parent;
         private Spread<TSelf> _children = Spread<TSelf>.Empty;
@@ -61,7 +65,7 @@ namespace VL.Fu.Core.Tree
                 );
         }
 
-        private TSelf Self => (TSelf)this;
+        private TSelf Self => (TSelf)(object)this;
 
         public TSelf? Parent => _parent;
 
@@ -78,7 +82,15 @@ namespace VL.Fu.Core.Tree
 
             if (parent is null)
             {
-                _parent!.SetChildrenCore(Without(_parent._children, Self));
+                var oldParent = AsNode(_parent!);
+                oldParent.SetChildrenCore(Without(oldParent._children, Self));
+            }
+            else if (parent is not Traversable<TSelf> parentNode)
+            {
+                Log(
+                    LogLevel.Warning,
+                    $"Can't move '{this}' under '{parent}': it doesn't derive from {nameof(Traversable<TSelf>)}<{typeof(TSelf).Name}>."
+                );
             }
             else if (ReferenceEquals(parent, this) || Self.IsAncestorOf(parent))
             {
@@ -89,18 +101,22 @@ namespace VL.Fu.Core.Tree
             }
             else
             {
-                var builder = parent._children.ToBuilder();
+                var builder = parentNode._children.ToBuilder();
                 builder.Add(Self);
-                parent.SetChildrenCore(builder.ToSpread());
+                parentNode.SetChildrenCore(builder.ToSpread());
             }
         }
 
         /// <summary>
         /// Accepts any list. A <see cref="Spread{T}"/> (what VL passes in) is stored as is;
         /// any other list is copied once, so later changes to it don't affect the tree.
+        /// An unchanged list is recognized before copying, so passing the same nodes every frame costs no allocation.
         /// </summary>
         public void SetChildren(IReadOnlyList<TSelf>? children)
         {
+            if (SameNodes(_children, children ?? Spread<TSelf>.Empty))
+                return;
+
             SetChildrenCore(ToSpread(children));
         }
 
@@ -121,25 +137,33 @@ namespace VL.Fu.Core.Tree
             foreach (var child in previous)
             {
                 if (!nextSet.Contains(child))
-                    child.ChangeParent(null);
+                    AsNode(child).ChangeParent(null);
             }
 
             _children = next;
 
             foreach (var child in next)
             {
-                var oldParent = child._parent;
+                var node = AsNode(child);
+                var oldParent = node._parent;
                 if (ReferenceEquals(oldParent, this))
                     continue;
 
                 if (oldParent is not null)
-                    oldParent.DetachChild(child);
+                    AsNode(oldParent).DetachChild(child);
 
-                child.ChangeParent(Self);
+                node.ChangeParent(Self);
             }
 
             OnChildrenChanged(previous, next);
         }
+
+        /// <summary>
+        /// Tells whether <paramref name="child"/> can join this node's children; rejected ones are ignored with a warning.
+        /// The base accepts nodes deriving from <see cref="Traversable{TSelf}"/>, so the tree can reach their internals.
+        /// Override to require more of a derived layer, and always include the base result.
+        /// </summary>
+        protected virtual bool AcceptsChild(TSelf child) => child is Traversable<TSelf>;
 
         /// <summary>
         /// Invoked on the node whose <see cref="Parent"/> just changed.
@@ -173,11 +197,6 @@ namespace VL.Fu.Core.Tree
             base.Dispose(disposing);
         }
 
-        public IEnumerator<TSelf> GetEnumerator() =>
-            ((IEnumerable<TSelf>)_children).GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
         private static Spread<TSelf> ToSpread(IReadOnlyList<TSelf>? children) =>
             children switch
             {
@@ -186,7 +205,10 @@ namespace VL.Fu.Core.Tree
                 _ => children.ToSpread(),
             };
 
-        private static bool SameNodes(Spread<TSelf> a, Spread<TSelf> b)
+        // Safe for every node in the tree, since AcceptsChild only lets nodes deriving from this class in.
+        private static Traversable<TSelf> AsNode(TSelf node) => (Traversable<TSelf>)(object)node;
+
+        private static bool SameNodes(IReadOnlyList<TSelf> a, IReadOnlyList<TSelf> b)
         {
             if (ReferenceEquals(a, b))
                 return true;
@@ -229,7 +251,8 @@ namespace VL.Fu.Core.Tree
         }
 
         /// <summary>
-        /// Drops children that would corrupt the tree (null entries, duplicates, the node itself or its ancestors)
+        /// Drops children that would corrupt the tree (null entries, nodes <see cref="AcceptsChild"/> rejects, duplicates,
+        /// the node itself or its ancestors)
         /// and reports them through <see cref="NodeBase.Log"/>, so a bad connection in the patch
         /// degrades gracefully instead of throwing.
         /// </summary>
@@ -244,6 +267,8 @@ namespace VL.Fu.Core.Tree
                 var child = next[i];
                 var problem =
                     child is null ? "Ignored an empty child."
+                    : !AcceptsChild(child)
+                        ? $"Ignored '{child}': only Fu nodes can be children, not other implementations of {typeof(TSelf).Name}."
                     : !seen.Add(child) ? $"Ignored '{child}': it is already a child of this node."
                     : ReferenceEquals(child, this) || child.IsAncestorOf(Self)
                         ? $"Ignored '{child}': a node can't be a child of itself or of its own descendants."

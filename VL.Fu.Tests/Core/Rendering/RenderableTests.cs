@@ -10,7 +10,7 @@ namespace VL.Fu.Tests.Core.Rendering
     {
         private const float Tolerance = 1e-4f;
 
-        private sealed class Node : Renderable
+        private sealed class Node : Renderable<Node>
         {
             public Node(string name)
                 : base(null!)

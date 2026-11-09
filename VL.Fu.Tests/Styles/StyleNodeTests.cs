@@ -1,4 +1,4 @@
-using VL.Fu.Core.Rendering;
+using VL.Fu.Core.Region;
 using VL.Fu.Core.Styles;
 using VL.Fu.Core.Styling;
 using VL.Fu.Styles;
@@ -10,7 +10,7 @@ namespace VL.Fu.Tests.Styles
     [TestClass]
     public sealed unsafe class StyleNodeTests
     {
-        private sealed class Node : Renderable
+        private sealed class Node : RegionProvider
         {
             public Node()
                 : base(null!) { }

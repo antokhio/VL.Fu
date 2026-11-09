@@ -73,10 +73,11 @@ namespace VL.Fu.Core.Styling
 
     /// <summary>
     /// A style for values owned by <typeparamref name="TNode"/>, written through the staging API of that node type.
+    /// <typeparamref name="TNode"/> may be an interface, like <see cref="IFuNode"/> for every node of a Fu tree.
     /// Set on a node of another type, it is reported on that node and skipped.
     /// </summary>
     public abstract record Style<TNode>(IReadOnlyList<Style> Inputs) : Style(Inputs)
-        where TNode : NodeBase
+        where TNode : class
     {
         /// <summary>
         /// Writes this instruction into the staged values of <paramref name="node"/>.
@@ -87,7 +88,7 @@ namespace VL.Fu.Core.Styling
         public sealed override void Build(NodeBase node) =>
             Build(
                 node as TNode
-                    ?? throw new ArgumentException($"{GetType().Name} requires a {typeof(TNode).Name} node.")
+                    ?? throw new ArgumentException($"{GetType().Name} only styles {typeof(TNode).Name} nodes.")
             );
     }
 

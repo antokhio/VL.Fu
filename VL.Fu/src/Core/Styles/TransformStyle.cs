@@ -1,4 +1,4 @@
-using VL.Fu.Core.Rendering;
+using VL.Fu.Core.Layout;
 using VL.Fu.Core.Styling;
 using Stride.Core.Mathematics;
 
@@ -12,8 +12,9 @@ namespace VL.Fu.Core.Styles
     /// The pass commits only when the styled matrix changed, so a directly set transformation is kept until then,
     /// and removing the style commits identity. Mixing both on one node is defined but not intended.
     /// </remarks>
-    public sealed record TransformStyle(IReadOnlyList<Style> Inputs, Matrix Transform) : Style<Renderable>(Inputs)
+    public sealed record TransformStyle(IReadOnlyList<Style> Inputs, Matrix Transform) : Style<IFuNode>(Inputs)
     {
-        public override void Build(Renderable node) => node.StageTransformation(Transform);
+        // A node only styles itself, so an IFuNode here is a Fu node, which is layoutable.
+        public override void Build(IFuNode node) => ((Layoutable<IFuNode>)node).StageTransformation(Transform);
     }
 }

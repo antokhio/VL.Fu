@@ -1,6 +1,6 @@
 # Proposal: Codebase Layout & Assembly Structure (`Fu.Core` vs `VL.Fu`)
 
-Status: **draft / options comparison** (informed by [tebjan/vvvv-skills: vvvv-node-libraries](https://github.com/tebjan/vvvv-skills/blob/main/skills/vvvv-node-libraries/SKILL.md))
+Status: **implemented** (Option 2 — informed by [tebjan/vvvv-skills: vvvv-node-libraries](https://github.com/tebjan/vvvv-skills/blob/main/skills/vvvv-node-libraries/SKILL.md))
 
 ## 1. Context & Problem Statement
 
@@ -119,7 +119,7 @@ Refactor `Fu.Core` so it has zero dependency on `VL.Core` or `VL.Core.Skia`, tur
 
 ## 5. Proposed Layout & VL Import Design (Option 2)
 
-Status: **decided**, ready to implement.
+Status: **implemented**.
 
 ### 5.0 Decisions
 

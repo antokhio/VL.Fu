@@ -1,6 +1,6 @@
 # Proposal: Immutable Style Instructions
 
-Status: **agreed shape**, replaces [Style Shape](proposal-style-shape.md). Namespace `Fu.Core.Styling`. Remaining checks in § 10. Individual style nodes beyond the examples come after the base types are in place.
+Status: **implemented**, replaces [Style Shape](proposal-style-shape.md). Namespace `VL.Fu.Core.Styling`. Remaining checks in § 10. Individual style nodes beyond the examples come after the base types are in place.
 
 ## 1. Model
 
@@ -262,7 +262,7 @@ public sealed record GapStyle(IReadOnlyList<Style> Inputs, YGGutter Gutter, floa
 * Records are shallowly immutable; no mutable collections, node references or callbacks inside.
 * A `Style<TNode>` writes only through the staging APIs of its node type; that type owns the defaults (`BeginStyle`/`EndStyle`).
 * Paint styling later: the record holds immutable paint parameters; the node owns and disposes its `SKPaint`.
-* Logging helpers in `Fu.Core.Base`: `LogInfo`, `LogWarning`, `LogError` as extension methods on `NodeBase`, forwarding to `NodeBase.Log`.
+* Logging helpers in `VL.Fu.Core.Base`: `LogInfo`, `LogWarning`, `LogError` as extension methods on `NodeBase`, forwarding to `NodeBase.Log`.
 
 ## 9. Requirements
 
@@ -274,25 +274,25 @@ public sealed record GapStyle(IReadOnlyList<Style> Inputs, YGGutter Gutter, floa
 | Reach node values | Through `Style<TNode>` and the owning layer's staging API. |
 | Steady state | One reference check per node per frame; a pass dirties Yoga only if the copied style differs. |
 | Immutable, shareable outputs | Records; per-node work only in the pass. |
-| Extensions | New records and style nodes, no edits to `Fu.Core`. |
+| Extensions | New records and style nodes, no edits to `VL.Fu.Core`. |
 
 Later, if passes show up in measurements: since a `YogaStyle` chain's result is node-independent, a shared chain can be built once per `Style` instance and copied to each node.
 
 ## 10. Open and first tests
 
-* Namespace: done, `Fu.Core.Styling` (folder `Fu.Core\Styling`).
+* Namespace: done, `VL.Fu.Core.Styling` (folder `VL.Fu\src\Core\Styling`).
 * VL rebuilds a pin-group `Spread` only when one of its inputs changes (believed, to confirm in vvvv); the item comparison is a fallback either way.
 * Implemented. Layout of the code:
-  * Base in `Fu.Core\Styling` (`Fu.Core.Styling`): `Style`, `Style<TNode>`, `CombinedStyle`, `YogaStyle`, `Stylable`, `StyleNode`; plus `Fu.Core\Layout\YogaStyleStage.cs`.
-  * Records in `Fu.Core\Styles` (`Fu.Core.Styles`): `WidthStyle`, `HeightStyle`, `SizeStyle`, `GapStyle`, `TransformStyle`; helpers `YogaValues` (public) and `YogaDimension` (internal unit switch shared by the size records).
+  * Base in `VL.Fu\src\Core\Styling` (`VL.Fu.Core.Styling`): `Style`, `Style<TNode>`, `CombinedStyle`, `YogaStyle`, `Stylable`, `StyleNode`; plus `VL.Fu\src\Core\Layout\YogaStyleStage.cs`.
+  * Records in `VL.Fu\src\Core\Styles` (`VL.Fu.Core.Styles`): `WidthStyle`, `HeightStyle`, `SizeStyle`, `GapStyle`, `TransformStyle`; helpers `YogaValues` (public) and `YogaDimension` (internal unit switch shared by the size records).
   * Process nodes in `VL.Fu\src\Styles` (`VL.Fu.Styles`, imported to VL as `Fu.Styles`): `Combine`, `SetWidth`, `SetWidth (Ratio)`, `SetWidth (Auto)`, `SetHeight`, `SetHeight (Ratio)`, `SetHeight (Auto)`, `SetSize`, `SetSize (Ratio)`, `SetSize (Auto)`, `SetGap`, `SetRowGap`, `SetColumnGap`, `SetTransform`. `SetWidth (Percent)` is `[Obsolete]`.
 * Ratio instead of percent on the facade: `1` is the whole parent. Records stay Yoga-native and store a ratio as `YGUnit.Percent` via `YogaValues.Ratio(ratio)`, which multiplies by `YogaValues.PercentPerRatio` (100).
 * `SetSize` takes a `Vector2`; a non-finite component ignores the whole vector with a warning. `SizeStyle` checks both units before writing, so an unsupported unit leaves both axes untouched. `SetSize` and `SetWidth`/`SetHeight` write the same slots, so the later one wins per axis.
-  * Tests in `Fu.Core.Tests\Styling`, which references `VL.Fu` for the node tests.
+  * Tests in `VL.Fu.Tests\Core\Styling` (`StylableTests.cs`) and `VL.Fu.Tests\Styles` (`StyleNodeTests.cs`).
 * `Spread` only on the `SetInput` pin group. Records take `IReadOnlyList<Style>` and keep it as an immutable `Spread`: a `Spread` is kept as is, any other list is copied.
 * Confirmed by test: `YGNodeCopyStyle` leaves an equal style undirtied, and a fresh node's style equals the template.
 * Additions while implementing: `StyleNode.ValidateFinite` turns NaN or infinity into an empty value with a warning on the style node; a `null` `Inputs` becomes empty; `SetInput` compares items by reference.
-* The assembly has no `ImportAsIs` yet, so the style nodes are not visible in VL until it is added.
+* `[assembly: ImportAsIs(Category = "Fu", Namespace = "VL.Fu")]` in `VL.Fu\src\Properties\AssemblyInfo.cs` imports the nodes under `Fu` (and `Fu.Styles`).
 
 First tests, all in place:
 

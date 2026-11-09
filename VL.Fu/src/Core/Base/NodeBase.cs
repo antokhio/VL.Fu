@@ -13,6 +13,7 @@ namespace VL.Fu.Core.Base
         void Log(LogLevel level, string message, TimeSpan? lifetime = null);
     }
 
+    [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
     public abstract class NodeBase : INodeBase
     {
         protected static readonly TimeSpan DefaultWarningLifetime = TimeSpan.FromSeconds(10);
@@ -28,7 +29,7 @@ namespace VL.Fu.Core.Base
         protected NodeContext? NodeContext { get; private set; }
         protected ILogger? Logger => NodeContext?.GetLogger();
 
-        public NodeBase([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
+        protected NodeBase([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
         {
             NodeContext = nodeContext;
         }
@@ -74,7 +75,11 @@ namespace VL.Fu.Core.Base
 
             lock (_warningLock)
             {
-                if (_warning is not null && _warningSeverity == severity && _warningMessage == message)
+                if (
+                    _warning is not null
+                    && _warningSeverity == severity
+                    && _warningMessage == message
+                )
                 {
                     RestartExpiry(_warning, duration);
                     return false;

@@ -1,5 +1,5 @@
 ---
-applyTo: "Fu.Core/Styles/**/*.cs,Fu.Core/Styling/**/*.cs,VL.Fu/src/Styles/**/*.cs"
+applyTo: "VL.Fu/src/Core/Styles/**/*.cs,VL.Fu/src/Core/Styling/**/*.cs,VL.Fu/src/Styles/**/*.cs,VL.Fu.Tests/Core/Styling/**/*.cs,VL.Fu.Tests/Styles/**/*.cs"
 ---
 
 # Writing styles
@@ -8,10 +8,10 @@ A style has two parts:
 
 | Part | Location | Namespace | Role |
 |---|---|---|---|
-| Record | `Fu.Core\Styles\XStyle.cs` | `Fu.Core.Styles` | Immutable instruction; writes the value into the node. |
+| Record | `VL.Fu\src\Core\Styles\XStyle.cs` | `VL.Fu.Core.Styles` | Immutable instruction; writes the value into the node. |
 | Process node | `VL.Fu\src\Styles\XNodes.cs` | `VL.Fu.Styles` (VL: `Fu.Styles`) | Holds the pin values, outputs a cached record. |
 
-The base types (`Style`, `Style<TNode>`, `YogaStyle`, `StyleNode`) live in `Fu.Core\Styling` and should not change for a new style.
+The base types (`Style`, `Style<TNode>`, `YogaStyle`, `StyleNode`) live in `VL.Fu\src\Core\Styling` (`VL.Fu.Core.Styling`) and should not change for a new style.
 
 ## Pipeline in short
 
@@ -25,10 +25,10 @@ The base types (`Style`, `Style<TNode>`, `YogaStyle`, `StyleNode`) live in `Fu.C
 Pick the base:
 
 * `YogaStyle`: for anything that ends up in the Yoga style; override `unsafe void Build(YGNode* node)`.
-* `Style<TNode>`: for values owned by a Fu node type, written through that type's staging API; override `void Build(TNode node)`. Staging methods are `internal` (e.g. `StageTransformation`), so for now these styles must live in `Fu.Core`.
+* `Style<TNode>`: for values owned by a Fu node type, written through that type's staging API; override `void Build(TNode node)`. Staging methods on core layers are `internal` (e.g. `StageTransformation`).
 
 ```csharp
-namespace Fu.Core.Styles
+namespace VL.Fu.Core.Styles
 {
     /// <summary>
     /// Sets the Yoga height. Points, ratio (stored as Yoga percent) and auto write the same slot,
@@ -101,7 +101,7 @@ Rules:
 
 ## 3. Tests
 
-In `Fu.Core.Tests\Styling\StyleNodeTests.cs` (the project references `VL.Fu`):
+In `VL.Fu.Tests\Styles\StyleNodeTests.cs`:
 
 * add the node to `Output_FromConstruction_IsBuilt` (`null` for value nodes, the record for valueless ones);
 * the value lands in the right slot and leaves the others untouched;
@@ -109,7 +109,7 @@ In `Fu.Core.Tests\Styling\StyleNodeTests.cs` (the project references `VL.Fu`):
 * invalid input is ignored with an empty output; an empty value passes the inputs through;
 * one layout check for relative units.
 
-Verify with `run_build` and `run_tests` filtered to project `Fu.Core.Tests`.
+Verify with `run_build` and `run_tests` filtered to project `VL.Fu.Tests`.
 
 ## Docs
 

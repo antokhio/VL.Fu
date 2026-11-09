@@ -1,5 +1,5 @@
 using VL.Fu.Core.Layout;
-using VL.Fu.Core.Rendering;
+using VL.Fu.Core.Region;
 using VL.Fu.Core.Styles;
 using VL.Fu.Core.Styling;
 using Microsoft.Extensions.Logging;
@@ -12,7 +12,7 @@ namespace VL.Fu.Tests.Core.Styling
     [TestClass]
     public sealed unsafe class StylableTests
     {
-        private sealed class Node : Renderable
+        private sealed class Node : RegionProvider
         {
             public Node()
                 : base(null!) { }
@@ -41,7 +41,7 @@ namespace VL.Fu.Tests.Core.Styling
         }
 
         /// <summary>
-        /// A layoutable node that is not a <see cref="Renderable"/>, for instructions of the wrong node type.
+        /// A layoutable node that is not an <see cref="IFuNode"/>, for instructions of the wrong node type.
         /// </summary>
         private sealed class Plain : Layoutable<Plain>
         {
@@ -328,7 +328,7 @@ namespace VL.Fu.Tests.Core.Styling
 
             Assert.AreEqual(Matrix.Identity, node.Transformation);
             Assert.AreEqual(1, node.Warnings.Count);
-            StringAssert.Contains(node.Warnings[0], "requires a Renderable node");
+            StringAssert.Contains(node.Warnings[0], "only styles IFuNode nodes");
         }
 
         [TestMethod]

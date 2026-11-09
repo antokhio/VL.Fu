@@ -392,12 +392,13 @@ namespace VL.Fu.Tests.Core.Tree
         }
 
         [TestMethod]
-        public void Enumerating_YieldsDirectChildren()
+        public void Node_IsNotEnumerable()
         {
             Node a = new("a"), b = new("b"), c = new("c");
             a.SetChildren(S(b, c));
 
-            Assert.AreEqual("b,c", Names(a));
+            Assert.IsNotInstanceOfType<System.Collections.IEnumerable>(a);
+            Assert.AreEqual("b,c", Names(a.Children));
         }
 
         [TestMethod]

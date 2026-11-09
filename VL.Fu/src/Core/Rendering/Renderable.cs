@@ -1,24 +1,27 @@
-﻿using VL.Fu.Core.Interaction;
-using SkiaSharp;
+﻿using SkiaSharp;
 using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
+using VL.Fu.Core.Interaction;
+using VL.Fu.Core.Tree;
 using VL.Model;
 using VL.Skia;
 
 namespace VL.Fu.Core.Rendering
 {
-    public interface IRenderable : ILayer
+    public interface IRenderable : IInteractable, ILayer
     {
         ILayer? Layer { get; }
         void SetLayer(ILayer layer);
     }
 
     /// <summary>
-    /// Closes the element chain: every node in a Fu tree is a <see cref="Renderable"/>,
-    /// so <see cref="Tree.Traversable{TSelf}.Parent"/> and <see cref="Tree.Traversable{TSelf}.Children"/> are typed as such.
+    /// Last generic layer of the element chain: draws the node as a VL.Skia layer.
+    /// <see cref="Region.RegionProvider"/> closes the chain at <see cref="IFuNode"/>, the type every node of a Fu tree has.
     /// </summary>
-    public abstract class Renderable : Interactable<Renderable>, IRenderable
+    [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
+    public abstract class Renderable<TSelf> : Interactable<TSelf>, IRenderable
+        where TSelf : class, ITraversable<TSelf>, IRenderable
     {
         private RectangleF? _bounds;
 
@@ -43,7 +46,7 @@ namespace VL.Fu.Core.Rendering
 
         public void Render(CallerInfo caller)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         protected override void OnLocalTransformationChanged()

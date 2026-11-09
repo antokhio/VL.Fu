@@ -14,13 +14,40 @@
         <CategoryReference Kind="Category" Name="Primitive" />
       </p:NodeReference>
       <Patch Id="OBi4atIcbu2PatZP1pMEOD">
-        <Canvas Id="FZXlQc3doVGNcdlARc1ELe" CanvasType="Group" />
+        <Canvas Id="FZXlQc3doVGNcdlARc1ELe" CanvasType="Group">
+          <Node Bounds="394,483,84,95" Id="RUAol4d65ZSLufsIv36Apf">
+            <p:NodeReference LastCategoryFullName="Fu" LastDependency="VL.Fu.dll">
+              <Choice Kind="StatefulRegion" Name="Region (Stateful)" Fixed="true" />
+              <CategoryReference Kind="Category" Name="Fu" />
+              <Choice Kind="ProcessAppFlag" Name="FuNode" />
+            </p:NodeReference>
+            <Pin Id="JNlchGg3g1qLmITbzr5w8v" Name="Node Context" Kind="InputPin" IsHidden="true" />
+            <Pin Id="C4QJzVnGJubOqjRqaxLF6Z" Name="Style" Kind="InputPin" />
+            <Pin Id="NoSjG6847nnQEUhftMmdXx" Name="Transformation" Kind="InputPin" />
+            <Pin Id="UkkuIysIo3aQKeuJiYb9Ln" Name="Config" Kind="InputPin" IsHidden="true" />
+            <Pin Id="Qkp1u01KA4xLqu3zSihKYC" Name="Update" Kind="ApplyPin" />
+            <Pin Id="T3WrQ7oYxClLjY1raAsJ60" Name="Children" Kind="InputPin" />
+            <Pin Id="TadguPGgQdHPvcTtDX35PX" Name="Output" Kind="StateOutputPin" />
+            <Patch Id="Frh4aZfwMqhQVSTnxQ5ixN" ManuallySortedPins="true">
+              <Patch Id="ETVitGHRZa2Oy6EsGpXWyc" Name="Create" ManuallySortedPins="true" />
+              <Patch Id="BFOKuZPAB1aNF3ZlbPJ1GI" Name="Update" ManuallySortedPins="true">
+                <Pin Id="Ru0Bgm9V5B3O6bspD8vAxT" Name="Node" Kind="InputPin" />
+                <Pin Id="Ty8aKftYFe8LUoSkQOJaPF" Name="Layer" Kind="OutputPin" />
+              </Patch>
+              <Patch Id="Af6uv8T5nADMg3xA1H0xTl" Name="Dispose" ManuallySortedPins="true" />
+              <ControlPoint Id="FDIkR0JYPB9LfwPmdSC6Pt" Bounds="398,491" />
+              <ControlPoint Id="PIkicfihTX4MTTyDGPiGRs" Bounds="398,571" />
+            </Patch>
+          </Node>
+        </Canvas>
         <Patch Id="RybydS7GGfoMq5OlnI8kWV" Name="Create" />
         <Patch Id="TeiutGA9vcmLq73MecQhiY" Name="Update" />
         <ProcessDefinition Id="QsdllPOFpIdLz5NY6lr9mE">
           <Fragment Id="Fcf4ZXylZ8LPwB3SYdL6Qn" Patch="RybydS7GGfoMq5OlnI8kWV" Enabled="true" />
           <Fragment Id="QRTSBc2QAbkOiRwTzYfoaS" Patch="TeiutGA9vcmLq73MecQhiY" Enabled="true" />
         </ProcessDefinition>
+        <Link Id="DUP3qXF82HuNgaVHUFEjRV" Ids="Ru0Bgm9V5B3O6bspD8vAxT,FDIkR0JYPB9LfwPmdSC6Pt" IsHidden="true" />
+        <Link Id="JPUAvjiKXwVLF5uqZ6BbxZ" Ids="PIkicfihTX4MTTyDGPiGRs,Ty8aKftYFe8LUoSkQOJaPF" IsHidden="true" />
       </Patch>
     </Node>
   </Patch>

@@ -1,23 +1,30 @@
-﻿using VL.Fu.Core.Rendering;
-using VL.Core;
+﻿using VL.Core;
 using VL.Core.Import;
 using VL.Core.PublicAPI;
+using VL.Fu.Core.Rendering;
 using VL.Model;
 using VL.Skia;
 
 namespace VL.Fu.Core.Region
 {
-    public interface IRegionProvider : IRegion<IRegionProvider.IRegionInlay>
+    /// <summary>
+    /// A node whose content is patched inside it, as a VL region. Continues the interface chain after <see cref="IRenderable"/>,
+    /// since the inlay draws into the node's layer.
+    /// </summary>
+    public interface IRegionProvider : IRenderable, IRegion<IRegionProvider.IRegionInlay>
     {
         public interface IRegionInlay
         {
-            // TODO: properly define node
-            void Update(in Renderable node, out ILayer layer);
+            void Update(IFuNode node, out ILayer layer);
         }
     }
 
-    [ProcessNode]
-    public abstract class RegionProvider : Renderable, IRegionProvider
+    /// <summary>
+    /// Closes the element chain at <see cref="IFuNode"/>: every node in a Fu tree derives from <see cref="RegionProvider"/>,
+    /// and its parent and children are typed as <see cref="IFuNode"/>.
+    /// </summary>
+    [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
+    public abstract class RegionProvider : Renderable<IFuNode>, IFuNode
     {
         private IRegionProvider.IRegionInlay? _inlay;
         private readonly Dictionary<InputDescription, object?> _inputs = new();
@@ -71,6 +78,24 @@ namespace VL.Fu.Core.Region
             _outputs.TryGetValue(description, out outerValue);
         }
 
-        // todo Dispose
+        /// <summary>
+        /// Disposes the patch inlay, which this node created and therefore owns, before leaving the tree.
+        /// A patch compiles to <see cref="IDisposable"/> when it holds disposable state, like the child nodes patched inside.
+        /// Control point values are only dropped: they belong to the patch around the region.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                var inlay = _inlay;
+                _inlay = null;
+                (inlay as IDisposable)?.Dispose();
+
+                _inputs.Clear();
+                _outputs.Clear();
+            }
+
+            base.Dispose(disposing);
+        }
     }
 }
