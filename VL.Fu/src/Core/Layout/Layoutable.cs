@@ -90,6 +90,29 @@ namespace VL.Fu.Core.Layout
         /// </summary>
         protected unsafe bool IsDisplayed => _handle is not null && _handle->GetDisplay() != YGDisplay.None;
 
+        /// <summary>
+        /// The area this node's children are clipped to, in its own space: its padding box, inside the border.
+        /// Null when the node was not laid out yet or its overflow is visible, since then nothing is clipped.
+        /// </summary>
+        /// <remarks>
+        /// Read from the committed style and the last layout on every access, not cached, so changing only the overflow
+        /// takes effect without a new layout. A border wider than the box leaves an empty area.
+        /// </remarks>
+        protected unsafe RectangleF? ClipArea
+        {
+            get
+            {
+                if (!_hasLayout || _handle is null || _handle->GetOverflow() == YGOverflow.Visible)
+                    return null;
+
+                var left = _handle->GetComputedBorder(YGEdge.Left);
+                var top = _handle->GetComputedBorder(YGEdge.Top);
+                var right = Math.Max(left, _layout.Width - _handle->GetComputedBorder(YGEdge.Right));
+                var bottom = Math.Max(top, _layout.Height - _handle->GetComputedBorder(YGEdge.Bottom));
+                return new RectangleF(left, top, right - left, bottom - top);
+            }
+        }
+
         private Matrix _transformation = Matrix.Identity;
         public Matrix Transformation => _transformation;
 

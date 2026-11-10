@@ -6,7 +6,7 @@ Cut from [summary-render-composition.md](../summaries/summary-render-composition
 
 | # | Task | Depends on | Status |
 |---|---|---|---|
-| 01 | [Clip children by Overflow](task-render-01-clipping.md) | none | proposed |
+| 01 | [Clip children by Overflow](task-render-01-clipping.md) | none | done |
 | 02 | [Pin Skia 2.88 layer behaviour with tests](task-render-02-skia-spike.md) | none | proposed |
 | 03 | [Effect styles: opacity, image filter, color filter, blend mode](task-render-03-effect-styles.md) | 01, 02 | proposed |
 | 04 | [ChildrenLayer for Precompose and other layer wrappers](task-render-04-children-layer.md) | 01 | proposed |

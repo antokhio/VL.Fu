@@ -1,4 +1,4 @@
-﻿using SkiaSharp;
+using SkiaSharp;
 using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
@@ -83,6 +83,9 @@ namespace VL.Fu.Core.Rendering
         /// A root remembers the caller's viewport for its next layout pass (see <see cref="CalculateRootLayout"/>).
         /// A node that was not laid out yet draws nothing, since its place is unknown.
         /// A node with display none draws nothing either, and neither does its subtree, like in the layout.
+        /// A node whose overflow is hidden or scroll clips its children to its padding box but not its own layer,
+        /// so shadows or outlines it draws stay whole. The clip is antialiased only while the node is rotated or skewed
+        /// on the canvas, so axis-aligned clips stay pixel-crisp.
         /// </remarks>
         public void Render(CallerInfo caller)
         {
@@ -103,6 +106,21 @@ namespace VL.Fu.Core.Rendering
                 _layer?.Render(inner);
 
                 var children = Children;
+                if (children.Count == 0)
+                    return;
+
+                if (ClipArea is { } area)
+                {
+                    if (area.Width <= 0 || area.Height <= 0)
+                        return;
+
+                    canvas.ClipRect(
+                        SKRect.Create(area.X, area.Y, area.Width, area.Height),
+                        SKClipOperation.Intersect,
+                        antialias: !IsScaleTranslate(canvas.TotalMatrix)
+                    );
+                }
+
                 for (var i = 0; i < children.Count; i++)
                     children[i].Render(inner);
             }
@@ -162,6 +180,9 @@ namespace VL.Fu.Core.Rendering
             if (IsValidArea(area))
                 _viewportArea = area;
         }
+
+        private static bool IsScaleTranslate(SKMatrix m) =>
+            m.SkewX == 0 && m.SkewY == 0 && m.Persp0 == 0 && m.Persp1 == 0 && m.Persp2 == 1;
 
         private static bool IsValidArea(RectangleF area) =>
             float.IsFinite(area.X)

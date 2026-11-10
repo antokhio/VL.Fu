@@ -30,7 +30,8 @@ namespace VL.Fu.Styles
     }
 
     /// <summary>
-    /// Sets how the node treats children that don't fit. Rendering doesn't clip yet, so only the layout is affected for now.
+    /// Sets how the node treats children that don't fit: Hidden and Scroll clip them to the node's padding box,
+    /// and Scroll also lets them grow past the node along its main axis in the layout. The node's own layer is not clipped.
     /// Without a value the overflow is not set here, so an earlier setter or the default, visible, holds.
     /// </summary>
     [ProcessNode(Name = "SetOverflow")]

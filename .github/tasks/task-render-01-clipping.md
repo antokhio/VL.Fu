@@ -19,13 +19,15 @@ A node whose Overflow is Hidden or Scroll clips its children to its padding box.
 * `Bounds` stay the node's own box; overflow doesn't change them.
 * `SetOverflow` docs and the `OverflowStyle` remarks drop "rendering doesn't clip yet".
 
-## Decisions
+## Decisions (settled)
 
-1. **Antialias.**
-   * `false`: pixel-aligned and cheapest, but jagged under rotation.
-   * `true`: smooth under rotation and fractional DIP coordinates, with soft edge pixels on fractional rects.
-   * Recommended: `true`, since Fu nodes are often transformed.
-2. **Scroll.** It clips like Hidden; the scroll offset is a separate, later task. Confirm.
+1. **The node's own layer is not clipped**, only its children; `SetClipRect` (07) clips the layer too.
+2. **Antialias is hybrid:** off while the canvas matrix only scales and translates, so axis-aligned clips stay pixel-crisp; on when it rotates or skews.
+3. **Scroll clips like Hidden.** Yoga already gives Scroll its layout (children not shrunk to fit along the main axis); the content offset comes with task 08.
+
+## Control
+
+Everything goes through `SetOverflow`; there is no extra setter or pin. Visible draws everything, Hidden and Scroll cut the children at the padding box, so border setters move the clip edge and padding doesn't. Removing the setter brings back Visible on the next pass.
 
 ## Tests (`RenderableTests.cs`, pixel checks on a small `SKBitmap`)
 
