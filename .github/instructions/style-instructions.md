@@ -133,7 +133,7 @@ Several nodes writing the same record share state through an abstract base:
 * Edge styles have `SetX` with a value and a `YGEdge` pin (default `All`), like `SetGap`, plus `"SetX (Uniform)"`, `"SetX (Horizontal)"`, `"SetX (Vertical)"` and `"SetX (LRTB)"`, sharing an abstract `[ProcessNode]` `XStyleNode : EdgesStyleNode`.
 * Several input types for one value are variants named after the type, e.g. `"SetAspectRatio (Vector2)"` and `"SetAspectRatio (Int2)"`.
 * Position offsets follow the width/height/size shape instead of the edge shape: `SetPositionX` (left), `SetPositionY` (top) and `SetPosition` (`Vector2`), all writing one `PositionStyle(Inputs, float X, float Y)` where NaN marks an axis as not set.
-* One node per file is singular, `XNode.cs` (`TransformNode.cs`, `CombineNode.cs`); related nodes share one plural file, `XNodes.cs` (`WidthNodes.cs`, `GapNodes.cs`, `FlexNodes.cs`, `AlignNodes.cs`, `PositionNodes.cs`, `DisplayNodes.cs`). A shared base used by several files gets its own file (`EdgesStyleNode.cs`); a base used by one file stays in it (`PaddingStyleNode` in `PaddingNodes.cs`).
+* One node per file is singular, `XNode.cs` (`CombineNode.cs`); related nodes share one plural file, `XNodes.cs` (`WidthNodes.cs`, `GapNodes.cs`, `TransformNodes.cs`, `FlexNodes.cs`, `AlignNodes.cs`, `PositionNodes.cs`, `DisplayNodes.cs`). A shared base used by several files gets its own file (`EdgesStyleNode.cs`); a base used by one file stays in it (`PaddingStyleNode` in `PaddingNodes.cs`).
 * Pin names in warnings are the facade names (`"PositionX"`, `"AspectRatio"`), so the user can find the pin.
 
 ### Left out on purpose

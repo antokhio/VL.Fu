@@ -52,7 +52,7 @@ Implemented in [YogaConfig.cs](../../VL.Fu/src/Core/Layout/YogaConfig.cs) and [L
   2. **`Bounds` (`ILayer.Bounds` on `Renderable<TSelf>`):** the node's local rectangle in its **parent's space**, following the VL.Skia convention (`TransformUpstream` returns `M.MapRect(Input.Bounds)`, without the caller's matrix). It is computed from `Layout` and `Transformation`, so it is always current and needs no render pass.
 * One `Transformation` (`ILayoutable.Transformation`):
   * `Matrix` (Stride) is the VL-facing facade; Fu converts to and from `SKMatrix` with helpers (§ 3).
-  * Rotation and scale pivot around the node's centre, like CSS's default transform-origin; the centre follows the layout size. A settable transform-origin is a possible later addition.
+  * Rotation and scale pivot around `TransformOrigin`, the node's centre by default like CSS. It is relative to the box, (0, 0) the centre and (-1, -1) / (1, 1) the top-left / bottom-right corners, so it follows the layout size; set it with `SetTransformOrigin` or the `TransformOriginStyle`.
 * **Scrolling is composition:** a clipped outer container whose child is a content container moved by its `Transformation` (§ 2).
 
 ---

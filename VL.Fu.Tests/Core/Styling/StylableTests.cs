@@ -283,6 +283,40 @@ namespace VL.Fu.Tests.Core.Styling
         }
 
         [TestMethod]
+        public void SetStyle_TransformOrigin_CommitsOrigin()
+        {
+            using var node = new Node();
+
+            node.SetStyle(new TransformOriginStyle(S(), new Vector2(-1, 1)));
+
+            Assert.AreEqual(new Vector2(-1, 1), node.TransformOrigin);
+        }
+
+        [TestMethod]
+        public void SetStyle_RemovedTransformOrigin_RestoresCenter()
+        {
+            using var node = new Node();
+            node.SetStyle(new TransformOriginStyle(S(), new Vector2(-1, 1)));
+
+            node.SetStyle(new WidthStyle(S(), YGValue.Point(10)));
+
+            Assert.AreEqual(Vector2.Zero, node.TransformOrigin);
+        }
+
+        [TestMethod]
+        public void SetStyle_NonFiniteTransformOrigin_IsSkippedWithWarning()
+        {
+            using var node = new Node();
+
+            node.SetStyle(
+                new TransformOriginStyle(S(new TransformOriginStyle(S(), new Vector2(1, 1))), new Vector2(float.NaN, 0))
+            );
+
+            Assert.AreEqual(new Vector2(1, 1), node.TransformOrigin);
+            Assert.AreEqual(1, node.Warnings.Count);
+        }
+
+        [TestMethod]
         public void SetStyle_UnchangedStyledTransform_KeepsDirectTransformation()
         {
             using var node = new Node();

@@ -1,4 +1,5 @@
-﻿using VL.Fu.Core.Base;
+﻿using VL.Core.CompilerServices;
+using VL.Fu.Core.Base;
 using VL.Lib.Collections;
 
 namespace VL.Fu.Core.Styling
@@ -92,6 +93,9 @@ namespace VL.Fu.Core.Styling
                 hash.Add(input);
             return hash.ToHashCode();
         }
+
+        [CreateDefault]
+        public static Style CreateNull() => null;
     }
 
     /// <summary>
@@ -111,7 +115,9 @@ namespace VL.Fu.Core.Styling
         public sealed override void Build(NodeBase node) =>
             Build(
                 node as TNode
-                    ?? throw new ArgumentException($"{GetType().Name} only styles {typeof(TNode).Name} nodes.")
+                    ?? throw new ArgumentException(
+                        $"{GetType().Name} only styles {typeof(TNode).Name} nodes."
+                    )
             );
     }
 

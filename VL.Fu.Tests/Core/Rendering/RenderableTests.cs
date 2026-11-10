@@ -194,6 +194,62 @@ namespace VL.Fu.Tests.Core.Rendering
         }
 
         [TestMethod]
+        public void Bounds_RotationWithTopLeftOrigin_PivotsAroundTopLeft()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                root.CalculateLayout();
+
+                b.SetTransformOrigin(new Vector2(-1, -1));
+                b.SetTransformation(Matrix.RotationZ(MathUtil.PiOverTwo));
+
+                AssertRect(b.Bounds, -70, 10, 80, 80);
+            }
+        }
+
+        [TestMethod]
+        public void Bounds_ScalingWithBottomRightOrigin_GrowsTowardsTopLeft()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                root.CalculateLayout();
+                b.SetTransformation(Matrix.Scaling(2, 2, 1));
+
+                b.SetTransformOrigin(new Vector2(1, 1));
+
+                AssertRect(b.Bounds, -70, -70, 160, 160);
+            }
+        }
+
+        [TestMethod]
+        public void Bounds_Translation_IgnoresOrigin()
+        {
+            var (root, b, c) = CreateRow();
+            using (root) using (b) using (c)
+            {
+                root.CalculateLayout();
+                b.SetTransformOrigin(new Vector2(1, -1));
+
+                b.SetTransformation(Matrix.Translation(5, 7, 0));
+
+                AssertRect(b.Bounds, 15, 17, 80, 80);
+            }
+        }
+
+        [TestMethod]
+        public void SetTransformOrigin_NonFinite_IsIgnored()
+        {
+            using var a = new Node("a");
+            a.SetTransformOrigin(new Vector2(1, 1));
+
+            a.SetTransformOrigin(new Vector2(float.NaN, 0));
+
+            Assert.AreEqual(new Vector2(1, 1), a.TransformOrigin);
+        }
+
+        [TestMethod]
         public void Bounds_TransformationSetBeforeLayout_IsKeptAfterLayout()
         {
             var (root, b, c) = CreateRow();

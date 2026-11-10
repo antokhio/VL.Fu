@@ -500,6 +500,47 @@ namespace VL.Fu.Tests.Styles
         }
 
         [TestMethod]
+        public void SetTransformOrigin_WritesOrigin()
+        {
+            using var node = new Node();
+            var origin = new SetTransformOriginNode(null!);
+            origin.SetTransformOrigin(new Stride.Core.Mathematics.Vector2(-1, -1));
+
+            node.SetStyle(origin.Output);
+
+            Assert.AreEqual(new Stride.Core.Mathematics.Vector2(-1, -1), node.TransformOrigin);
+        }
+
+        [TestMethod]
+        public void SetTransformOrigin_NoValue_PassesInputThrough()
+        {
+            var first = new SetTransformNode(null!);
+            first.SetTransform(Stride.Core.Mathematics.Matrix.Translation(5, 0, 0));
+            var origin = new SetTransformOriginNode(null!);
+            origin.SetInput(S(first.Output));
+
+            origin.SetTransformOrigin();
+
+            Assert.AreSame(first.Output, origin.Output);
+        }
+
+        [TestMethod]
+        public void SetTransformOrigin_NonFinite_EarlierSetterHolds()
+        {
+            using var node = new Node();
+            var first = new SetTransformOriginNode(null!);
+            first.SetTransformOrigin(new Stride.Core.Mathematics.Vector2(1, 1));
+            var second = new SetTransformOriginNode(null!);
+            second.SetInput(S(first.Output));
+            second.SetTransformOrigin(new Stride.Core.Mathematics.Vector2(float.PositiveInfinity, 0));
+
+            node.SetStyle(second.Output);
+
+            Assert.AreSame(first.Output, second.Output);
+            Assert.AreEqual(new Stride.Core.Mathematics.Vector2(1, 1), node.TransformOrigin);
+        }
+
+        [TestMethod]
         public void SetFlexDirection_WritesSlot()
         {
             using var node = new Node();

@@ -21,12 +21,22 @@ namespace VL.Fu.Core.Layout
         RectangleF Layout { get; }
 
         /// <summary>
-        /// Moves, rotates or scales this node around its center without affecting the layout,
+        /// Moves, rotates or scales this node around <see cref="TransformOrigin"/>, its center by default, without affecting the layout,
         /// so siblings keep their places. Only X, Y and perspective are used; Z is ignored.
-        /// The center follows the layout, so a node that changes size keeps turning around its middle.
+        /// The origin follows the layout, so a node that changes size keeps turning around the same relative point.
         /// </summary>
         Matrix Transformation { get; }
         void SetTransformation(Matrix transformation);
+
+        /// <summary>
+        /// The point <see cref="Transformation"/> rotates and scales around, relative to the node's box:
+        /// (0, 0) is its center, (-1, -1) its top-left and (1, 1) its bottom-right corner.
+        /// </summary>
+        /// <remarks>
+        /// Values beyond -1 and 1 put the origin outside the box. A value that isn't finite is ignored with a warning.
+        /// </remarks>
+        Vector2 TransformOrigin { get; }
+        void SetTransformOrigin(Vector2 origin);
 
         /// <summary>
         /// This node's own Yoga config, or null when it inherits the one of its parent
@@ -93,6 +103,27 @@ namespace VL.Fu.Core.Layout
         private Matrix _styledTransformation = Matrix.Identity;
         private Matrix _committedTransformation = Matrix.Identity;
 
+        private Vector2 _transformOrigin;
+        public Vector2 TransformOrigin => _transformOrigin;
+
+        public void SetTransformOrigin(Vector2 origin)
+        {
+            if (!float.IsFinite(origin.X) || !float.IsFinite(origin.Y))
+            {
+                Log(LogLevel.Warning, $"TransformOrigin must be finite, got {origin}. It is ignored.");
+                return;
+            }
+
+            if (origin == _transformOrigin)
+                return;
+
+            _transformOrigin = origin;
+            UpdateLocalTransformation();
+        }
+
+        private Vector2 _styledTransformOrigin;
+        private Vector2 _committedTransformOrigin;
+
         private SKMatrix _localTransformation = SKMatrix.Identity;
 
         // The root's place in its caller's space, set by each layout pass on the root; zero for every child.
@@ -100,7 +131,7 @@ namespace VL.Fu.Core.Layout
 
         /// <summary>
         /// Maps this node's own space, with (0, 0) at its top-left corner, into its parent's space:
-        /// first <see cref="Transformation"/> around the center of the node's box, then the move to the <see cref="Layout"/> position.
+        /// first <see cref="Transformation"/> around <see cref="TransformOrigin"/> in the node's box, then the move to the <see cref="Layout"/> position.
         /// A root also moves to the top-left of the area it was laid out into, so it maps into its caller's space.
         /// Kept up to date whenever any of them changes, so reading it is free.
         /// </summary>
@@ -136,13 +167,21 @@ namespace VL.Fu.Core.Layout
             _styledTransformation = transformation;
 
         /// <summary>
-        /// Starts the Yoga stage from the default style and the styled transformation from identity.
+        /// Sets the origin the running styling pass commits to <see cref="TransformOrigin"/>.
+        /// Each pass starts at the center, and like the transformation the commit writes only when the styled value changed.
+        /// </summary>
+        internal void StageTransformOrigin(Vector2 origin) =>
+            _styledTransformOrigin = origin;
+
+        /// <summary>
+        /// Starts the Yoga stage from the default style, the styled transformation from identity and its origin from the center.
         /// </summary>
         protected override void BeginStyle()
         {
             base.BeginStyle();
             YogaStyleStage.Reset();
             _styledTransformation = Matrix.Identity;
+            _styledTransformOrigin = Vector2.Zero;
         }
 
         /// <summary>
@@ -158,12 +197,18 @@ namespace VL.Fu.Core.Layout
 
         /// <summary>
         /// Copies the staged Yoga style, which Yoga does and marks the node dirty for only if it differs,
-        /// and commits the styled transformation if it changed since the last pass.
+        /// and commits the styled transformation and its origin if they changed since the last pass.
         /// </summary>
         protected override unsafe void EndStyle()
         {
             if (_handle is not null)
                 _handle->CopyStyle(YogaStyleStage.Node);
+
+            if (_styledTransformOrigin != _committedTransformOrigin)
+            {
+                _committedTransformOrigin = _styledTransformOrigin;
+                SetTransformOrigin(_committedTransformOrigin);
+            }
 
             if (_styledTransformation != _committedTransformation)
             {
@@ -353,8 +398,8 @@ namespace VL.Fu.Core.Layout
 
         private void UpdateLocalTransformation()
         {
-            var pivotX = _layout.Width / 2;
-            var pivotY = _layout.Height / 2;
+            var pivotX = (_transformOrigin.X + 1) / 2 * _layout.Width;
+            var pivotY = (_transformOrigin.Y + 1) / 2 * _layout.Height;
 
             _localTransformation = SKMatrix
                 .CreateTranslation(_origin.X + _layout.X + pivotX, _origin.Y + _layout.Y + pivotY)
