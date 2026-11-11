@@ -1,3 +1,4 @@
+using VL.Fu.Core.Tree;
 using VL.Lib.IO.Notifications;
 
 namespace VL.Fu.Core.Interaction
@@ -29,6 +30,38 @@ namespace VL.Fu.Core.Interaction
                 toDispatch,
                 pass.Caller,
                 new Delivery(DeliveryClass.FanOut, RouteKind.Subtree, pass.Node)
+            );
+        }
+
+        /// <summary>
+        /// Queues <paramref name="toDispatch"/> for the subtree of <paramref name="node"/>, which is the node receiving
+        /// <paramref name="notification"/> or one of its ancestors. Otherwise it works like <see cref="Dispatch"/>.
+        /// </summary>
+        /// <remarks>
+        /// An item uses it to send into the subtree of the scope it belongs to, such as its selection provider's.
+        /// A node that isn't on the way up from the receiving node is reported, and nothing is sent.
+        /// </remarks>
+        internal static void DispatchInto(this INotification notification, IInteractive node, INotification toDispatch)
+        {
+            if (!TryGetActingPass(notification, toDispatch, nameof(DispatchInto), out var pass))
+                return;
+
+            for (ITraversable? current = pass.Node; current is not null; current = current.Parent)
+            {
+                if (ReferenceEquals(current, node))
+                {
+                    pass.Dispatcher.Enqueue(
+                        toDispatch,
+                        pass.Caller,
+                        new Delivery(DeliveryClass.FanOut, RouteKind.Subtree, node)
+                    );
+                    return;
+                }
+            }
+
+            InteractionLog.Warning(
+                pass.Node,
+                $"{nameof(DispatchInto)} can only send into the receiving node or one of its ancestors. It does nothing."
             );
         }
 

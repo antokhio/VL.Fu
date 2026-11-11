@@ -53,13 +53,16 @@ namespace VL.Fu.Tests.Behaviors
 
         public bool Notify(INotification notification) => Root.Notify(notification, CallerInfo.Default);
 
-        public bool Down(float x, float y, MouseButtons button = MouseButtons.Left) =>
-            Notify(new MouseDownNotification(new Vector2(x, y), Area, button, Keys.None, null!));
+        public bool Down(float x, float y, MouseButtons button = MouseButtons.Left, Keys modifiers = Keys.None) =>
+            Notify(new MouseDownNotification(new Vector2(x, y), Area, button, modifiers, null!));
 
-        public bool Up(float x, float y, MouseButtons button = MouseButtons.Left) =>
-            Notify(new MouseUpNotification(new Vector2(x, y), Area, button, Keys.None, null!));
+        public bool Up(float x, float y, MouseButtons button = MouseButtons.Left, Keys modifiers = Keys.None) =>
+            Notify(new MouseUpNotification(new Vector2(x, y), Area, button, modifiers, null!));
 
-        public bool Move(float x, float y) => Notify(new MouseMoveNotification(new Vector2(x, y), Area, Keys.None, null!));
+        public bool Move(float x, float y, Keys modifiers = Keys.None) =>
+            Notify(new MouseMoveNotification(new Vector2(x, y), Area, modifiers, null!));
+
+        public bool Escape() => Notify(new KeyDownNotification(Keys.Escape, Keys.None, null!));
 
         public bool TouchDown(int id, float x, float y) => Touch(TouchNotificationKind.TouchDown, id, x, y);
 
