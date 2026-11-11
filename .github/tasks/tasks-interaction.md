@@ -12,7 +12,7 @@ The design and the phase plan are in [summary-interaction-v2.md](../summaries/su
 | N6 | Headless behaviors: `Hoverable`, `Clickable`, `Draggable`, `Pinchable` | [task-interaction-06-behaviors.md](task-interaction-06-behaviors.md) | N4, N5 | done |
 | — | Milestone: headless widgets patched | | N6 | |
 | N7 | Selection: `Selectable`, `SelectionProvider`, `SelectionNotification`, bounds query | [task-interaction-07-selection.md](task-interaction-07-selection.md) | N6 | done |
-| N8 | `Movable`, `Transformable`, `GroupTransaction`, `GroupManipulationNotification` | | N7 | |
+| N8 | `Movable`, `Transformable`, `GroupTransaction`, `GroupManipulationNotification` | [task-interaction-08-move-transform.md](task-interaction-08-move-transform.md) | N7 | |
 | N9 | `CanvasProvider` | | N6 | |
 | N9b | Scroll: `Scrollable` behavior writing `IChannel<Vector2>`, wired to render 08's `SetScrollOffset` style; clamped by `ContentArea` | | N9, render 08 | |
 | N10 | Docs | | N9 | |
