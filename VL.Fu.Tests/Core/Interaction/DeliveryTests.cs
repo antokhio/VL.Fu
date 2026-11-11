@@ -120,6 +120,19 @@ namespace VL.Fu.Tests.Core.Interaction
         private static MouseDownNotification Down(float x, float y) =>
             new(new Vector2(x, y), new Vector2(100, 100), MouseButtons.Left, Keys.None, null!);
 
+        /// <summary>
+        /// Lifts the mouse, so the next press takes a fresh hit path instead of the one the mouse is pressed on,
+        /// and clears the log of what the Up reached.
+        /// </summary>
+        private static void Release(Scene scene)
+        {
+            scene.Root.Notify(
+                new MouseUpNotification(new Vector2(0, 0), new Vector2(100, 100), MouseButtons.Left, Keys.None, null!),
+                CallerInfo.Default
+            );
+            scene.Log.Clear();
+        }
+
         private static KeyDownNotification Key() => new(Keys.A, Keys.None, null!);
 
         private static MouseLostNotification MouseLost() => new(new Vector2(45, 45), new Vector2(100, 100), Keys.None, null!);
@@ -170,9 +183,11 @@ namespace VL.Fu.Tests.Core.Interaction
             using var scene = CreateScene();
 
             scene.Root.Notify(Down(100, 80), CallerInfo.Default);
+            Release(scene);
             scene.Root.Notify(Down(80, 100), CallerInfo.Default);
             Assert.AreEqual(0, scene.Log.Count);
 
+            Release(scene);
             scene.Root.Notify(Down(99.5f, 80), CallerInfo.Default);
             CollectionAssert.AreEqual(All("root"), scene.Log);
         }
@@ -258,7 +273,7 @@ namespace VL.Fu.Tests.Core.Interaction
             scene.Root.Notify(Down(35, 35), CallerInfo.Default);
             CollectionAssert.AreEqual(All("back", "root"), scene.Log);
 
-            scene.Log.Clear();
+            Release(scene);
             scene.Root.Notify(Down(45, 45), CallerInfo.Default);
             CollectionAssert.AreEqual(All("front", "root"), scene.Log);
             Assert.AreEqual(new Vector2(10, 10), WorldPosition(scene.Recorders["front.layer"].Received));
@@ -273,7 +288,7 @@ namespace VL.Fu.Tests.Core.Interaction
             scene.Root.Notify(Down(25, 50), CallerInfo.Default);
             CollectionAssert.AreEqual(All("front", "root"), scene.Log);
 
-            scene.Log.Clear();
+            Release(scene);
             scene.Root.Notify(Down(32, 32), CallerInfo.Default);
             CollectionAssert.AreEqual(All("back", "root"), scene.Log);
         }

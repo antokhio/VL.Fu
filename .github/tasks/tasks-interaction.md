@@ -7,7 +7,7 @@ The design and the phase plan are in [summary-interaction-v2.md](../summaries/su
 | N1 | Plumbing: `Interactive`, `OrderedChildren`, `PointerEvents` style, the `Behaviors` pin group | [task-interaction-01-plumbing.md](task-interaction-01-plumbing.md) | none | done |
 | N2 | Delivery: `Forward`, `FuNotificationSender`, delivery classes, classification, broadcast/hit/target routes, hit test | [task-interaction-02-delivery.md](task-interaction-02-delivery.md) | N1 | done |
 | N3 | Orchestration: `NotificationDispatcher`, `InteractionPass`, outbox, snapshot routes, `Dispatch`/`Query`, `HoverTracker`, touch promotion | [task-interaction-03-orchestration.md](task-interaction-03-orchestration.md) | N2 | done |
-| N4 | Claims: `PointerClaims`, requests and resolution, `PointerCaptureNotification`, `PointerCancelNotification`, lifetime rules, the `SetBehaviors` diff | [task-interaction-04-claims.md](task-interaction-04-claims.md) | N3 | |
+[task-interaction-04-claims.md](task-interaction-04-claims.md) | N3 | done |
 | N5 | Recognizers, `PointerInput.TryRead` | | N1 | |
 | N6 | Headless behaviors: `Hoverable`, `Clickable`, `Draggable`, `Pinchable` | | N4, N5 | |
 | — | Milestone: headless widgets patched | | N6 | |

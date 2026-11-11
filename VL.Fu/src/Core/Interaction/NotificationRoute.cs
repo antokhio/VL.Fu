@@ -14,18 +14,28 @@ namespace VL.Fu.Core.Interaction
         private readonly IReadOnlyList<IInteractive> _path;
         private readonly bool _bubbles;
         private readonly bool _descends;
+        private readonly bool _isSnapshot;
+        private readonly int _from;
 
-        private NotificationRoute(IReadOnlyList<IInteractive> path, bool bubbles, bool descends)
+        private NotificationRoute(IReadOnlyList<IInteractive> path, bool bubbles, bool descends, bool isSnapshot = false, int from = 0)
         {
             _path = path;
             _bubbles = bubbles;
             _descends = descends;
+            _isSnapshot = isSnapshot;
+            _from = from;
         }
 
         /// <summary>
         /// The nodes from the root down to the last one the route names. Empty for a route that wasn't built.
         /// </summary>
         public IReadOnlyList<IInteractive> Path => _path ?? Array.Empty<IInteractive>();
+
+        /// <summary>
+        /// Whether the nodes are checked against the tree as it is while the notification travels: each one still under the root,
+        /// and each the child of the one before. A snapshot route skips the checks, so nodes that left still receive it.
+        /// </summary>
+        public bool ChecksTree => !_isSnapshot;
 
         /// <summary>
         /// The whole tree below the root, which is the only node on <paramref name="path"/>, front to back, like a VL group.
@@ -55,6 +65,13 @@ namespace VL.Fu.Core.Interaction
             new(path, bubbles: false, descends: true);
 
         /// <summary>
+        /// A path copied when the notification was queued, walked as it was recorded. The nodes from depth <paramref name="from"/>
+        /// down receive the notification, deepest first; the ones above only forward.
+        /// </summary>
+        public static NotificationRoute Snapshot(IReadOnlyList<IInteractive> path, int from) =>
+            new(path, bubbles: true, descends: false, isSnapshot: true, from: from);
+
+        /// <summary>
         /// Fills <paramref name="path"/> with the nodes from <paramref name="root"/> down to <paramref name="node"/>.
         /// Returns false, leaving <paramref name="path"/> empty, when <paramref name="node"/> isn't in the tree of <paramref name="root"/>.
         /// </summary>
@@ -78,8 +95,9 @@ namespace VL.Fu.Core.Interaction
         /// <summary>
         /// Whether the node at <paramref name="depth"/> hands the notification to its own layer and behaviors:
         /// the last node of the path and everything below it always do, the nodes above it only when the route bubbles.
+        /// A snapshot route starts receiving at its first receiving depth.
         /// </summary>
-        public bool Receives(int depth) => depth >= Path.Count - 1 || _bubbles;
+        public bool Receives(int depth) => depth >= _from && (depth >= Path.Count - 1 || _bubbles);
 
         /// <summary>
         /// Whether the node at <paramref name="depth"/> forwards to all of its children rather than to the next path node.

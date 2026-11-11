@@ -14,7 +14,7 @@ namespace VL.Fu.Core.Interaction
 
         /// <summary>
         /// The pointer id of <paramref name="notification"/>: −1 for the mouse, the touch id for a touch,
-        /// the sequence id for a gesture. False for notifications without a pointer.
+        /// the sequence id for a gesture, and the pointer Fu's own pointer notifications name. False for notifications without a pointer.
         /// </summary>
         public static bool TryGet(INotification notification, out int pointerId)
         {
@@ -28,6 +28,18 @@ namespace VL.Fu.Core.Interaction
                     return true;
                 case GestureNotification gesture:
                     pointerId = gesture.SequenceId;
+                    return true;
+                case PointerCaptureNotification capture:
+                    pointerId = capture.PointerId;
+                    return true;
+                case PointerCancelNotification cancel:
+                    pointerId = cancel.PointerId;
+                    return true;
+                case PointerEnterNotification enter:
+                    pointerId = enter.PointerId;
+                    return true;
+                case PointerLeaveNotification leave:
+                    pointerId = leave.PointerId;
                     return true;
                 default:
                     pointerId = default;

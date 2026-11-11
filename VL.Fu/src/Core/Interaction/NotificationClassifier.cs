@@ -7,17 +7,20 @@ namespace VL.Fu.Core.Interaction
     /// Only notifications without a pointer meaning are broadcast.
     /// </summary>
     /// <remarks>
-    /// Press tracking, the click's Up path and gesture sequences come with the claims (N4); until then every positional
-    /// notification takes a fresh hit path. Fu's own notifications are planned by whoever queues them.
+    /// Mouse, touch and gesture input takes a pointer route: the claims choose, per notification, between the claim node,
+    /// the path the pointer was pressed on and a fresh hit path. Other positional notifications always take a fresh hit path.
+    /// Fu's own notifications are planned by whoever queues them.
     /// </remarks>
     internal static class NotificationClassifier
     {
         public static Delivery Classify(INotification notification) =>
             notification switch
             {
-                // Device loss has a position, so it is matched before the positional row.
+                // Device loss has a position, so it is matched before the pointer rows.
                 MouseLostNotification or LostFocusNotification or KeyboardLostNotification =>
                     new Delivery(DeliveryClass.Control, RouteKind.Broadcast),
+                MouseNotification or TouchNotification or GestureNotification =>
+                    new Delivery(DeliveryClass.Input, RouteKind.Pointer),
                 INotificationWithPosition => new Delivery(DeliveryClass.Input, RouteKind.Hit),
                 _ => new Delivery(DeliveryClass.Input, RouteKind.Broadcast),
             };

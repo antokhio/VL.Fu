@@ -6,13 +6,14 @@ namespace VL.Fu.Core.Interaction
 {
     /// <summary>
     /// Runs the notifications of one Fu root as passes, one at a time (v2 §2.2, §4.1). A pass classifies the notification,
-    /// builds its route, lets the root forward it, then does the bookkeeping: touch tracking and the hover diff.
-    /// Everything a pass produces is queued and runs after it as a pass of its own, so nothing is delivered
-    /// in the middle of another delivery. Queries are the one exception (§4.3).
+    /// builds its route, lets the root forward it, then does the bookkeeping: pressed pointers and their claims,
+    /// touch tracking and the hover diff. Everything a pass produces is queued and runs after it as a pass of its own,
+    /// so nothing is delivered in the middle of another delivery. Queries are the one exception (§4.3).
     /// </summary>
     /// <remarks>
     /// Created lazily by the root's first notification. It never calls behaviors itself: the nodes forward,
-    /// and behaviors are reached as VL behaviors.
+    /// and behaviors are reached as VL behaviors. Before every notification from outside, and when the root renders,
+    /// it sweeps the pressed pointers and the hover path, so nodes that left the tree get their cancels and leaves.
     /// </remarks>
     internal sealed class NotificationDispatcher
     {
@@ -27,11 +28,14 @@ namespace VL.Fu.Core.Interaction
         private readonly Stack<InteractionPass> _pool = new();
         private readonly HoverTracker _hover = new();
         private readonly TouchPromotionGuard _touch = new();
-        private readonly List<IInteractive> _left = new();
-        private readonly List<IInteractive> _entered = new();
+        private readonly PointerClaims _claims = new();
+        private readonly List<PendingNotification> _pending = new();
+        private readonly List<IInteractive> _previousHover = new();
+        private readonly List<IInteractive> _hoverBuffer = new();
 
         private TimeProvider _clock = TimeProvider.System;
         private long _origin = TimeProvider.System.GetTimestamp();
+        private CallerInfo _lastCaller = CallerInfo.Default;
         private bool _running;
 
         public NotificationDispatcher(INotificationRoot root)
@@ -45,6 +49,11 @@ namespace VL.Fu.Core.Interaction
         /// The nodes the mouse or the primary touch is over, from the root down.
         /// </summary>
         public IReadOnlyList<IInteractive> HoverPath => _hover.Path;
+
+        /// <summary>
+        /// The pressed pointers of this root and their claims.
+        /// </summary>
+        public PointerClaims Claims => _claims;
 
         /// <summary>
         /// Milliseconds on the dispatcher's clock since it was created or the clock was set.
@@ -72,6 +81,7 @@ namespace VL.Fu.Core.Interaction
         /// </summary>
         /// <remarks>
         /// Called while a pass is running, as when a behavior notifies the root, it queues the notification and returns false.
+        /// Otherwise it sweeps first, so the cancels and leaves of nodes that left the tree run before the notification.
         /// If a receiver throws, the pass ends, the outbox is dropped, and the exception goes on to the renderer.
         /// </remarks>
         public bool Run(INotification notification, CallerInfo caller, Delivery delivery)
@@ -85,9 +95,35 @@ namespace VL.Fu.Core.Interaction
             _running = true;
             try
             {
+                _lastCaller = caller;
+                SweepIntoOutbox();
+                Drain();
+
                 var handled = RunPass(notification, caller, delivery);
                 Drain();
                 return handled;
+            }
+            finally
+            {
+                _running = false;
+                _outbox.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Delivers the cancels and leaves that nodes which left the tree, or behaviors removed from their nodes, are owed
+        /// (v2 §5.4 rows 5 and 6, §3.5). Called by the root when it renders; does nothing while a pass is running.
+        /// </summary>
+        public void Sweep()
+        {
+            if (_running)
+                return;
+
+            _running = true;
+            try
+            {
+                SweepIntoOutbox();
+                Drain();
             }
             finally
             {
@@ -112,7 +148,7 @@ namespace VL.Fu.Core.Interaction
             try
             {
                 pass.Begin(this, query, outer.Caller, DeliveryClass.FanOut, isQuery: true, outer.TimeMs);
-                if (TryBuildRoute(pass, new Delivery(DeliveryClass.FanOut, RouteKind.Subtree, outer.Node)))
+                if (TryBuildRoute(pass, new Delivery(DeliveryClass.FanOut, RouteKind.Subtree, outer.Node), out _))
                     _root.Forward(pass);
             }
             finally
@@ -127,21 +163,36 @@ namespace VL.Fu.Core.Interaction
             if (_touch.Suppresses(notification, now))
                 return false;
 
+            // A device loss, or a touch going down with the id of one whose Up was lost, ends the presses it makes obsolete first.
+            _claims.Prelude(notification, _pending);
+            if (_pending.Count > 0)
+            {
+                var prelude = _pending.ToArray();
+                _pending.Clear();
+                foreach (var item in prelude)
+                    RunPass(item.Notification, caller, item.Delivery);
+            }
+
             var pass = Rent();
             try
             {
                 pass.Begin(this, notification, caller, delivery.Class, isQuery: false, now);
-                var reached = TryBuildRoute(pass, delivery);
+                var reached = TryBuildRoute(pass, delivery, out var choice);
                 var handled = reached && _root.Forward(pass);
 
                 _touch.Track(notification, now);
-                UpdateHover(pass, delivery, reached);
+
+                _claims.AfterPass(pass, choice, reached, handled, _pending);
+                EnqueuePending(caller);
+
+                UpdateHover(pass, delivery, choice, reached);
 
                 // A touch that reached the tree counts as processed, so Windows doesn't promote it to mouse input (v1 TP).
                 return handled || (reached && notification is TouchNotification);
             }
             finally
             {
+                _pending.Clear();
                 Return(pass);
             }
         }
@@ -168,26 +219,87 @@ namespace VL.Fu.Core.Interaction
             }
         }
 
+        private void EnqueuePending(CallerInfo caller)
+        {
+            foreach (var item in _pending)
+                Enqueue(item.Notification, caller, item.Delivery);
+
+            _pending.Clear();
+        }
+
+        /// <summary>
+        /// Queues the cancels and leaves owed to nodes that left the tree, with the caller of the last notification from outside.
+        /// </summary>
+        private void SweepIntoOutbox()
+        {
+            _claims.Sweep(_root, _pending);
+            SweepHover();
+            EnqueuePending(_lastCaller);
+        }
+
+        /// <summary>
+        /// Cuts the hover path where it stops being reachable. The nodes cut off get their leave, deepest first,
+        /// along the path as it was, so a node that left the tree gets it too.
+        /// </summary>
+        private void SweepHover()
+        {
+            var path = _hover.Path;
+            if (path.Count == 0)
+                return;
+
+            var valid = PointerClaims.ValidPrefix(_root, path);
+            for (var i = path.Count - 1; i >= valid; i--)
+            {
+                _pending.Add(
+                    new PendingNotification(
+                        new PointerLeaveNotification(_hover.PointerId, Keys.None, null!),
+                        Delivery.Along(path, i + 1, i)
+                    )
+                );
+            }
+
+            _hover.Truncate(valid);
+        }
+
         /// <summary>
         /// Builds the route of <paramref name="delivery"/> into the pass's path list, as the tree is now (rule 4).
-        /// False when it reaches nothing: no node is hit, or the node it names isn't in this root's tree anymore.
+        /// False when it reaches nothing: no node is hit, the node it names isn't in this root's tree anymore,
+        /// or the path a pointer was pressed on is empty.
         /// </summary>
-        private bool TryBuildRoute(InteractionPass pass, Delivery delivery)
+        /// <param name="choice">For pointer routes, which route was chosen; <see cref="PointerRouteChoice.Hit"/> otherwise.</param>
+        private bool TryBuildRoute(InteractionPass pass, Delivery delivery, out PointerRouteChoice choice)
         {
             var path = pass.PathBuffer;
             path.Clear();
+            choice = PointerRouteChoice.Hit;
 
             switch (delivery.Route)
             {
-                case RouteKind.Hit:
-                    if (
-                        pass.Notification is not INotificationWithPosition positioned
-                        || !_root.TryBuildHitPath(positioned.Position, pass.Caller.Transformation, path)
-                    )
-                        return false;
+                case RouteKind.Pointer:
+                    choice = _claims.Choose(pass.Notification, out var claimNode, out var recorded);
+                    switch (choice)
+                    {
+                        case PointerRouteChoice.Claim:
+                            if (!NotificationRoute.TryFillPath(_root, claimNode!, path))
+                                return false;
 
-                    pass.SetRoute(NotificationRoute.Hit(path));
-                    return true;
+                            pass.SetRoute(NotificationRoute.Target(path));
+                            return true;
+
+                        case PointerRouteChoice.Recorded:
+                            path.AddRange(recorded!);
+                            if (path.Count == 0)
+                                return false;
+
+                            pass.SetRoute(NotificationRoute.Hit(path));
+                            return true;
+
+                        default:
+                            return TryBuildHitRoute(pass, path);
+                    }
+
+                case RouteKind.Hit:
+                    return TryBuildHitRoute(pass, path);
 
                 case RouteKind.Target:
                     if (delivery.Node is null || !NotificationRoute.TryFillPath(_root, delivery.Node, path))
@@ -203,6 +315,14 @@ namespace VL.Fu.Core.Interaction
                     pass.SetRoute(NotificationRoute.Subtree(path));
                     return true;
 
+                case RouteKind.Snapshot:
+                    if (delivery.Path is not { Count: > 0 } snapshot)
+                        return false;
+
+                    path.AddRange(snapshot);
+                    pass.SetRoute(NotificationRoute.Snapshot(path, delivery.From), delivery.Direct);
+                    return true;
+
                 default:
                     path.Add(_root);
                     pass.SetRoute(NotificationRoute.Broadcast(path));
@@ -210,14 +330,26 @@ namespace VL.Fu.Core.Interaction
             }
         }
 
+        private bool TryBuildHitRoute(InteractionPass pass, List<IInteractive> path)
+        {
+            if (
+                pass.Notification is not INotificationWithPosition positioned
+                || !_root.TryBuildHitPath(positioned.Position, pass.Caller.Transformation, path)
+            )
+                return false;
+
+            pass.SetRoute(NotificationRoute.Hit(path));
+            return true;
+        }
+
         /// <summary>
         /// Moves the hover path after a pointer pass and queues the leaves and enters it causes (v2 §3.5).
-        /// The mouse hovers its hit path; the primary touch hovers its hit path until it lifts; a lost mouse hovers nothing.
+        /// A claimed pointer hovers its claim node (G3); otherwise the mouse and the primary touch hover their hit path,
+        /// which is tested again when the input followed a recorded path. A lifted touch and a lost mouse hover nothing.
         /// </summary>
-        private void UpdateHover(InteractionPass pass, Delivery delivery, bool reached)
+        private void UpdateHover(InteractionPass pass, Delivery delivery, PointerRouteChoice choice, bool reached)
         {
             var notification = pass.Notification;
-            var hit = reached && delivery.Route == RouteKind.Hit;
             IReadOnlyList<IInteractive> next;
             int pointerId;
 
@@ -228,41 +360,71 @@ namespace VL.Fu.Core.Interaction
                     pointerId = PointerIds.Mouse;
                     break;
                 case MouseNotification when delivery.Class == DeliveryClass.Input:
-                    next = hit ? pass.Route.Path : Array.Empty<IInteractive>();
                     pointerId = PointerIds.Mouse;
+                    next = HoverTarget(pass, delivery, pointerId, choice, reached);
                     break;
                 case TouchNotification { Primary: true } touch when delivery.Class == DeliveryClass.Input:
-                    next = hit && touch.Kind != TouchNotificationKind.TouchUp ? pass.Route.Path : Array.Empty<IInteractive>();
                     pointerId = touch.Id;
+                    next =
+                        touch.Kind == TouchNotificationKind.TouchUp
+                            ? Array.Empty<IInteractive>()
+                            : HoverTarget(pass, delivery, pointerId, choice, reached);
                     break;
                 default:
                     return;
             }
 
-            _hover.Update(next, _left, _entered);
-            if (_left.Count == 0 && _entered.Count == 0)
-                return;
-
+            var common = _hover.Update(next, pointerId, _previousHover);
             var modifiers = notification is NotificationBase withKeys ? withKeys.ModifierKeys : Keys.None;
             var sender = notification.Sender;
 
-            foreach (var node in _left)
+            for (var i = _previousHover.Count - 1; i >= common; i--)
             {
                 Enqueue(
                     new PointerLeaveNotification(pointerId, modifiers, sender),
                     pass.Caller,
-                    new Delivery(DeliveryClass.Control, RouteKind.Target, node)
+                    Delivery.Along(_previousHover, i + 1, i)
                 );
             }
 
-            foreach (var node in _entered)
+            var path = _hover.Path;
+            for (var i = common; i < path.Count; i++)
             {
                 Enqueue(
                     new PointerEnterNotification(pointerId, modifiers, sender),
                     pass.Caller,
-                    new Delivery(DeliveryClass.Control, RouteKind.Target, node)
+                    new Delivery(DeliveryClass.Control, RouteKind.Target, path[i])
                 );
             }
+
+            _previousHover.Clear();
+            _hoverBuffer.Clear();
+        }
+
+        private IReadOnlyList<IInteractive> HoverTarget(
+            InteractionPass pass,
+            Delivery delivery,
+            int pointerId,
+            PointerRouteChoice choice,
+            bool reached
+        )
+        {
+            if (_claims.ClaimOf(pointerId) is { } claim)
+            {
+                return NotificationRoute.TryFillPath(_root, claim.Node, _hoverBuffer)
+                    ? _hoverBuffer
+                    : Array.Empty<IInteractive>();
+            }
+
+            var freshHit = delivery.Route == RouteKind.Hit || (delivery.Route == RouteKind.Pointer && choice == PointerRouteChoice.Hit);
+            if (freshHit)
+                return reached ? pass.Route.Path : Array.Empty<IInteractive>();
+
+            _hoverBuffer.Clear();
+            return pass.Notification is INotificationWithPosition positioned
+                && _root.TryBuildHitPath(positioned.Position, pass.Caller.Transformation, _hoverBuffer)
+                ? _hoverBuffer
+                : Array.Empty<IInteractive>();
         }
 
         private InteractionPass Rent() => _pool.Count > 0 ? _pool.Pop() : new InteractionPass();

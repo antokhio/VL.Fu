@@ -19,6 +19,7 @@ namespace VL.Fu.Core.Interaction
         private static InteractionPass? t_current;
 
         private readonly List<IInteractive> _path = new();
+        private readonly List<ClaimRequest> _requests = new();
 
         private InteractionPass? _outer;
         private NotificationDispatcher? _dispatcher;
@@ -26,6 +27,7 @@ namespace VL.Fu.Core.Interaction
         private CallerInfo _caller = CallerInfo.Default;
         private DeliveryClass _class;
         private NotificationRoute _route;
+        private IBehavior? _direct;
         private bool _isQuery;
         private long _timeMs;
         private IInteractive? _node;
@@ -52,6 +54,17 @@ namespace VL.Fu.Core.Interaction
         public DeliveryClass Class => _class;
 
         public NotificationRoute Route => _route;
+
+        /// <summary>
+        /// A behavior that was removed from the last node of the route. It alone receives the notification there.
+        /// </summary>
+        public IBehavior? Direct => _direct;
+
+        /// <summary>
+        /// The claim requests made during this pass, in the order they were made: innermost node first (v2 §5.2).
+        /// The dispatcher resolves them after the pass.
+        /// </summary>
+        public IReadOnlyList<ClaimRequest> Requests => _requests;
 
         /// <summary>
         /// Whether this pass answers a query: its receivers may only add to the query's accumulator (v2 §4.3).
@@ -93,7 +106,13 @@ namespace VL.Fu.Core.Interaction
             t_current = this;
         }
 
-        public void SetRoute(NotificationRoute route) => _route = route;
+        public void SetRoute(NotificationRoute route, IBehavior? direct = null)
+        {
+            _route = route;
+            _direct = direct;
+        }
+
+        public void AddRequest(ClaimRequest request) => _requests.Add(request);
 
         public void End()
         {
@@ -105,10 +124,12 @@ namespace VL.Fu.Core.Interaction
             _caller = CallerInfo.Default;
             _class = default;
             _route = default;
+            _direct = null;
             _isQuery = false;
             _timeMs = 0;
             _node = null;
             _path.Clear();
+            _requests.Clear();
         }
 
         /// <summary>

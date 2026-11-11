@@ -187,6 +187,22 @@ So a press that drags off a node leaves it until a claim takes the pointer, and 
 
 `DispatcherTests` and `DeliveryTests` keep their expectations. Their probes ignore capture and cancel, the way they ignore enter and leave.
 
+## As built
+
+Where the implementation differs from the design above:
+
+* `RequestPointerCapture` takes the pointers as `IReadOnlyList<int>`, not `Spread<int>`. A Spread still binds, since it implements the interface.
+* Removals found by the `SetBehaviors` diff are recorded and handled at the next sweep, not inside `SetBehaviors`.
+* `PressedPointer` and path snapshots are not pooled yet.
+* The sweep cuts a recorded path to its valid prefix instead of dropping the press. A claim whose node left gets one cancel along the whole old path, then the path is cut.
+* Pinch: lifting one finger removes that pointer from the claim. The claim ends when no pointer is left.
+* A request is valid when the node is on the pointer's recorded path, or on the pass's hit path for the press itself.
+* `ReleasePointerCapture` sends no notifications. The pointer falls back to its recorded path.
+* Cancels and leaves sent by the sweep carry a null sender and `Keys.None`.
+* Gesture paths are cut silently: gestures can't be claimed, so nobody waits for a cancel.
+* `Renderable` got a `protected virtual OnRenderingAsRoot()` hook; `Interactive` uses it to sweep once per frame.
+* `DeliveryTests`: three tests pressed several times without an Up. With N4 the later presses follow the recorded path, so they now release between presses.
+
 ## Deferred
 
 * `PointerInput.TryRead`, recognizers: N5.

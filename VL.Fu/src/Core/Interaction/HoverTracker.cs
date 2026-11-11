@@ -10,6 +10,7 @@ namespace VL.Fu.Core.Interaction
     internal sealed class HoverTracker
     {
         private readonly List<IInteractive> _path = new();
+        private int _pointerId = PointerIds.Mouse;
 
         /// <summary>
         /// The nodes the pointer is over, from the root down.
@@ -17,27 +18,39 @@ namespace VL.Fu.Core.Interaction
         public IReadOnlyList<IInteractive> Path => _path;
 
         /// <summary>
-        /// Replaces the hover path with <paramref name="next"/> and fills <paramref name="left"/> with the nodes that aren't on it
-        /// anymore, deepest first, and <paramref name="entered"/> with the new ones, outermost first. Both are cleared first.
+        /// The pointer that moved the hover path last: −1 for the mouse, otherwise the primary touch.
         /// </summary>
-        public void Update(IReadOnlyList<IInteractive> next, List<IInteractive> left, List<IInteractive> entered)
+        public int PointerId => _pointerId;
+
+        /// <summary>
+        /// Replaces the hover path with <paramref name="next"/>, copying the old one into <paramref name="previous"/>.
+        /// Returns how many nodes both share from the root down: the old nodes after them were left, deepest first,
+        /// and the new ones after them were entered, outermost first.
+        /// </summary>
+        public int Update(IReadOnlyList<IInteractive> next, int pointerId, List<IInteractive> previous)
         {
-            left.Clear();
-            entered.Clear();
+            previous.Clear();
+            previous.AddRange(_path);
 
             var common = 0;
             while (common < _path.Count && common < next.Count && ReferenceEquals(_path[common], next[common]))
                 common++;
 
-            for (var i = _path.Count - 1; i >= common; i--)
-                left.Add(_path[i]);
-
-            for (var i = common; i < next.Count; i++)
-                entered.Add(next[i]);
-
             _path.Clear();
             for (var i = 0; i < next.Count; i++)
                 _path.Add(next[i]);
+
+            _pointerId = pointerId;
+            return common;
+        }
+
+        /// <summary>
+        /// Keeps only the first <paramref name="count"/> nodes, after the others left the tree.
+        /// </summary>
+        public void Truncate(int count)
+        {
+            if (count < _path.Count)
+                _path.RemoveRange(count, _path.Count - count);
         }
     }
 }

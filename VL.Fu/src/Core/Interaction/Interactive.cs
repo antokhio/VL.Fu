@@ -88,7 +88,9 @@ namespace VL.Fu.Core.Interaction
             if (SameBehaviors(_behaviors, behaviors))
                 return;
 
+            var previous = _behaviors;
             _behaviors = SanitizeBehaviors(behaviors);
+            NoteRemovedBehaviors(previous, _behaviors);
         }
 
         /// <summary>
@@ -123,6 +125,8 @@ namespace VL.Fu.Core.Interaction
 
         bool INotificationRoot.TryBuildHitPath(Vector2 position, SKMatrix parentToWindow, List<IInteractive> path) =>
             TryBuildHitPath(position, parentToWindow, path);
+
+        bool IInteractionNode.IsHitTestable => HasLayout && IsDisplayed && _pointerEvents != PointerEvents.None;
 
         /// <summary>
         /// Finds the front-most node under <paramref name="position"/> in this node's subtree and fills <paramref name="path"/>
@@ -222,6 +226,16 @@ namespace VL.Fu.Core.Interaction
         }
 
         /// <summary>
+        /// Sends the cancels and leaves owed to nodes that left the tree, were hidden or stopped taking pointer events
+        /// since the last notification, so a claim doesn't outlive its node until the pointer moves again.
+        /// </summary>
+        protected override void OnRenderingAsRoot()
+        {
+            base.OnRenderingAsRoot();
+            _dispatcher?.Sweep();
+        }
+
+        /// <summary>
         /// The body every node runs for a notification, mirroring <see cref="Renderable{TSelf}.Render"/>: route children
         /// front to back, then <see cref="Renderable{TSelf}.Layer"/>, then every behavior, all in this node's own space.
         /// </summary>
@@ -233,11 +247,14 @@ namespace VL.Fu.Core.Interaction
         /// Children get the notification as it came in. The layer and behaviors get it with a <see cref="FuNotificationSender"/>,
         /// so its positions are in this node's space; while they run, this node is the pass's acting node.
         /// The tree may change during a pass: a node that left the pass's root when it is reached is skipped with its subtree,
-        /// and one that left while its children ran doesn't run its own receivers.
+        /// and one that left while its children ran doesn't run its own receivers. A snapshot route doesn't check the tree,
+        /// since it reaches nodes that already left it, and a route aimed at one behavior gives the last node's
+        /// notification to that behavior alone.
         /// </remarks>
         private bool Forward(INotification notification, CallerInfo caller, InteractionPass pass, int depth)
         {
-            if (!IsAttachedTo(pass.Root))
+            var checksTree = pass.Route.ChecksTree;
+            if (checksTree && !IsAttachedTo(pass.Root))
                 return false;
 
             var isInput = pass.Class == DeliveryClass.Input;
@@ -249,12 +266,13 @@ namespace VL.Fu.Core.Interaction
             if (ForwardToChildren(notification, inner, pass, depth) && isInput)
                 return true;
 
-            if (!pass.Route.Receives(depth) || !IsAttachedTo(pass.Root))
+            if (!pass.Route.Receives(depth) || (checksTree && !IsAttachedTo(pass.Root)))
                 return false;
 
-            var layer = Layer;
+            var direct = depth == pass.Route.Path.Count - 1 ? pass.Direct : null;
+            var layer = direct is null ? Layer : null;
             var behaviors = _behaviors;
-            if (layer is null && behaviors.Count == 0)
+            if (direct is null && layer is null && behaviors.Count == 0)
                 return false;
 
             var wrapped = notification.WithSender(
@@ -271,6 +289,12 @@ namespace VL.Fu.Core.Interaction
             var previous = pass.Enter(this);
             try
             {
+                if (direct is not null)
+                {
+                    direct.Notify(wrapped, inner);
+                    return false;
+                }
+
                 if (layer is not null && layer.Notify(wrapped, inner) && isInput)
                     return true;
 
@@ -297,7 +321,7 @@ namespace VL.Fu.Core.Interaction
             if (route.Next(depth) is { } next)
             {
                 return next is Interactive<TSelf> child
-                    && ReferenceEquals(child.Parent, this)
+                    && (!route.ChecksTree || ReferenceEquals(child.Parent, this))
                     && child.Forward(notification, inner, pass, depth + 1);
             }
 
@@ -352,6 +376,33 @@ namespace VL.Fu.Core.Interaction
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Tells the root's claims which behaviors left this node while pointers are pressed, so the next sweep takes them out
+        /// of their claims and sends each a cancel of its own (v2 §5.4 row 6). Nothing is noted while no pointer is pressed.
+        /// </summary>
+        private void NoteRemovedBehaviors(IReadOnlyList<IBehavior> previous, IReadOnlyList<IBehavior> current)
+        {
+            if (previous.Count == 0)
+                return;
+
+            if (
+                (object)((TSelf)(object)this).Root() is not Interactive<TSelf> root
+                || root._dispatcher is not { Claims.HasPressed: true } dispatcher
+            )
+                return;
+
+            for (var i = 0; i < previous.Count; i++)
+            {
+                var behavior = previous[i];
+                var kept = false;
+                for (var j = 0; j < current.Count && !kept; j++)
+                    kept = ReferenceEquals(current[j], behavior);
+
+                if (!kept)
+                    dispatcher.Claims.NoteRemoved(this, behavior);
+            }
         }
 
         /// <summary>

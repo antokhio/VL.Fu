@@ -105,7 +105,10 @@ namespace VL.Fu.Core.Rendering
         public void Render(CallerInfo caller)
         {
             if (Parent is null)
+            {
                 CaptureViewportArea(caller);
+                OnRenderingAsRoot();
+            }
 
             if (!HasLayout || !IsDisplayed)
                 return;
@@ -144,6 +147,12 @@ namespace VL.Fu.Core.Rendering
                 canvas.RestoreToCount(save);
             }
         }
+
+        /// <summary>
+        /// Called when a root starts rendering, before anything is drawn. Interaction uses it to catch up with nodes
+        /// that left the tree or stopped taking pointer events since the last notification.
+        /// </summary>
+        protected virtual void OnRenderingAsRoot() { }
 
         /// <summary>
         /// Lays the tree out into the bounds set with <see cref="SetBounds"/>, otherwise into the viewport
