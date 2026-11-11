@@ -2,7 +2,7 @@
 
 ## 1. Current Inheritance Chain
 
-`VL.Fu.Core` uses a **Curiously Recurring Template Pattern (CRTP)** (`TSelf`) layered inheritance hierarchy rooted in `NodeBase` and `Traversable<TSelf>`, continued through `Stylable<TSelf>`, `Layoutable<TSelf>`, `Interactable<TSelf>`, and `Renderable<TSelf>`, and closed at `RegionProvider` (`RegionProvider : Renderable<IFuNode>, IFuNode`). This gives every layer strongly-typed `Parent` and `IReadOnlyList<IFuNode> Children` without casting (stored internally as `Spread<IFuNode>`), while also exposing a parallel chain of non-generic interfaces (`ITraversable` → `IStylable` → `ILayoutable` → `IInteractable` → `IRenderable` → `IRegionProvider` → `IFuNode`) for untyped inspection and VL patching.
+`VL.Fu.Core` uses a **Curiously Recurring Template Pattern (CRTP)** (`TSelf`) layered inheritance hierarchy rooted in `NodeBase` and `Traversable<TSelf>`, continued through `Stylable<TSelf>`, `Layoutable<TSelf>`, `Interactive<TSelf>`, and `Renderable<TSelf>`, and closed at `RegionProvider` (`RegionProvider : Renderable<IFuNode>, IFuNode`). This gives every layer strongly-typed `Parent` and `IReadOnlyList<IFuNode> Children` without casting (stored internally as `Spread<IFuNode>`), while also exposing a parallel chain of non-generic interfaces (`ITraversable` → `IStylable` → `ILayoutable` → `IInteractive` → `IRenderable` → `IRegionProvider` → `IFuNode`) for untyped inspection and VL patching.
 
 ### Mermaid Class Diagram
 
@@ -165,18 +165,18 @@ classDiagram
         <<interface, VL.Skia>>
         +Notify(INotification, CallerInfo) bool
     }
-    class IInteractable {
+    class IInteractive {
         <<interface>>
     }
-    ILayoutable <|-- IInteractable
-    IBehavior <|-- IInteractable
+    ILayoutable <|-- IInteractive
+    IBehavior <|-- IInteractive
 
-    class Interactable~TSelf~ {
+    class Interactive~TSelf~ {
         <<abstract, ProcessNode(Explicit)>>
         +Notify(INotification, CallerInfo) bool
     }
-    IInteractable <|.. Interactable~TSelf~
-    Layoutable~TSelf~ <|-- Interactable~TSelf~
+    IInteractive <|.. Interactive~TSelf~
+    Layoutable~TSelf~ <|-- Interactive~TSelf~
 
     class Gesture {
         <<abstract record>>
@@ -199,7 +199,7 @@ classDiagram
         +Layer : ILayer?
         +SetLayer(ILayer) void
     }
-    IInteractable <|-- IRenderable
+    IInteractive <|-- IRenderable
     ILayer <|-- IRenderable
 
     class Renderable~TSelf~ {
@@ -212,7 +212,7 @@ classDiagram
         #CalculateRootLayout() void
     }
     IRenderable <|.. Renderable~TSelf~
-    Interactable~TSelf~ <|-- Renderable~TSelf~
+    Interactive~TSelf~ <|-- Renderable~TSelf~
 
     %% Region & Concrete Node Layer (Closes TSelf = IFuNode)
     class IRegionProvider {
@@ -254,8 +254,8 @@ NodeBase (INodeBase : IDisposable)                                        [VL.Fu
   └── Traversable<TSelf> (ITraversable<TSelf> : ITraversable)              [VL.Fu.Core.Tree]
         └── Stylable<TSelf> (IStylable : ITraversable)                     [VL.Fu.Core.Styling]
               └── Layoutable<TSelf> (ILayoutable : IStylable)              [VL.Fu.Core.Layout]
-                    └── Interactable<TSelf> (IInteractable : ILayoutable, IBehavior) [VL.Fu.Core.Interaction]
-                          └── Renderable<TSelf> (IRenderable : IInteractable, ILayer) [VL.Fu.Core.Rendering]
+                    └── Interactive<TSelf> (IInteractive : ILayoutable, IBehavior) [VL.Fu.Core.Interaction]
+                          └── Renderable<TSelf> (IRenderable : IInteractive, ILayer) [VL.Fu.Core.Rendering]
                                 └── RegionProvider (IFuNode : IRegionProvider, ITraversable<IFuNode>) [VL.Fu.Core.Region] (closes TSelf = IFuNode)
                                       └── FuNode                           [VL.Fu] (concrete ProcessNode with PinGroup Children)
                                             └── FuNodeSpectral             [VL.Fu] (concrete ProcessNode with Spread<IFuNode> Children)
@@ -282,7 +282,7 @@ NodeBase (INodeBase : IDisposable)                                        [VL.Fu
 ### B. `Traversable<TSelf>` (`VL.Fu.Core.Tree`)
 * **Dual Generic + Non-Generic Contract (Interface-Capable CRTP):**
   * `ITraversable<TSelf>` exposes `TSelf? Parent` and `IReadOnlyList<TSelf> Children` on the public facade while storing `Spread<TSelf>` internally (preserving passed-in VL `Spread<T>` instances without copying). Deliberately does not implement `IEnumerable<TSelf>` so VL does not offer sequence operations on a node directly.
-  * `ITraversable` (`[Name("Traversable (Ungeneric)")]`) exposes read-only untyped `ITraversable? Parent` and `IReadOnlyList<ITraversable> Children`, and forms the base of the non-generic interface chain (`IStylable`, `ILayoutable`, `IInteractable`, `IRenderable`, `IRegionProvider`, `IFuNode`).
+  * `ITraversable` (`[Name("Traversable (Ungeneric)")]`) exposes read-only untyped `ITraversable? Parent` and `IReadOnlyList<ITraversable> Children`, and forms the base of the non-generic interface chain (`IStylable`, `ILayoutable`, `IInteractive`, `IRenderable`, `IRegionProvider`, `IFuNode`).
   * `TSelf` can be an interface (such as `IFuNode`): `AcceptsChild(TSelf)` guards that only nodes actually deriving from `Traversable<TSelf>` (and `Layoutable<TSelf>`) can join the tree, rejecting foreign implementations with a warning.
 * **Self-Healing Tree Integrity:**
   * `SetChildren` and `SetParent` keep bidirectional parent/child pointers strictly synchronized.
@@ -328,12 +328,12 @@ NodeBase (INodeBase : IDisposable)                                        [VL.Fu
 
 ## 3. Remaining Semantic & Architectural Questions (Next Layers)
 
-With `NodeBase`, `Traversable<TSelf>`, `Stylable<TSelf>`, `Layoutable<TSelf>`, `Renderable<TSelf>`, `RegionProvider`, and `FuNode` in place, the remaining work and open questions center on `Interactable<TSelf>`, overflow clipping in `Renderable<TSelf>.Render`, and advanced styling/layout features:
+With `NodeBase`, `Traversable<TSelf>`, `Stylable<TSelf>`, `Layoutable<TSelf>`, `Renderable<TSelf>`, `RegionProvider`, and `FuNode` in place, the remaining work and open questions center on `Interactive<TSelf>`, overflow clipping in `Renderable<TSelf>.Render`, and advanced styling/layout features:
 
 ### A. Styling Extensions (`Stylable<TSelf>`)
 * **State-Driven Styling (Pseudo-states):**
-  * Visual and layout styles often depend on interaction state (`Hovered`, `Pressed`, `Focused`, `Disabled`) which lives lower in `Interactable<TSelf>`.
-  * Either `Stylable<TSelf>` exposes a style rule that gets evaluated with the current interaction state during the update/render pass, or `Interactable<TSelf>` notifies `Stylable<TSelf>` when pseudo-states change.
+  * Visual and layout styles often depend on interaction state (`Hovered`, `Pressed`, `Focused`, `Disabled`) which lives lower in `Interactive<TSelf>`.
+  * Either `Stylable<TSelf>` exposes a style rule that gets evaluated with the current interaction state during the update/render pass, or `Interactive<TSelf>` notifies `Stylable<TSelf>` when pseudo-states change.
 
 ### B. Yoga Layout Extensions (`Layoutable<TSelf>`)
 * **Custom Measure (`MeasureFunc`):**
@@ -341,8 +341,8 @@ With `NodeBase`, `Traversable<TSelf>`, `Stylable<TSelf>`, `Layoutable<TSelf>`, `
 * **Automatic Pixel Snapping:**
   * Optional automatic `PointScaleFactor` derived from the caller's space.
 
-### C. Interaction, Hit-Testing, and `Gesture` (`Interactable<TSelf>`)
-`Interactable<TSelf>.Notify(INotification, CallerInfo)` currently returns `false` (stub), and `Gesture` is an empty abstract record. Per [proposal-layoutable.md](../proposals/proposal-layoutable.md):
+### C. Interaction, Hit-Testing, and `Gesture` (`Interactive<TSelf>`)
+`Interactive<TSelf>.Notify(INotification, CallerInfo)` currently returns `false` (stub), and `Gesture` is an empty abstract record. Per [proposal-layoutable.md](../proposals/proposal-layoutable.md):
 * **Root Layout Trigger & Space Mapping:**
   * When `Parent is null`, `Notify` should push the local transformation and map notifications into local space.
 * **Routing Notifications Through `Children`:**
@@ -351,7 +351,7 @@ With `NodeBase`, `Traversable<TSelf>`, `Stylable<TSelf>`, `Layoutable<TSelf>`, `
   * Pointer notifications (`MouseNotification`, `TouchNotification`) need a local `HitTest` check against `(0, 0, Layout.Width, Layout.Height)` (and clipping bounds).
 * **Bridging `INotification` to `Gesture`:**
   * Active gestures (like dragging a slider or scrollbar) need **pointer capture** so the element continues receiving move/up notifications even when the cursor leaves its bounds.
-  * `Interactable<TSelf>` can translate raw `INotification` events into high-level `Gesture` records (`Hover`, `Click`, `Drag`, `Scroll`, `Focus`) or allow attaching composable gesture recognizers.
+  * `Interactive<TSelf>` can translate raw `INotification` events into high-level `Gesture` records (`Hover`, `Click`, `Drag`, `Scroll`, `Focus`) or allow attaching composable gesture recognizers.
 
 ### D. Overflow Clipping in Rendering (`Renderable<TSelf>`)
 `Renderable<TSelf>.Render(CallerInfo caller)` already handles viewport capture, `HasLayout` / `IsDisplayed` guards, `LocalTransformation` concatenation, `Layer` rendering, and child traversal. Remaining rendering work:

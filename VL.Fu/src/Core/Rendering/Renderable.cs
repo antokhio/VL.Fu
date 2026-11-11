@@ -3,7 +3,7 @@ using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
 using VL.Fu.Core.Base;
-using VL.Fu.Core.Interaction;
+using VL.Fu.Core.Layout;
 using VL.Fu.Core.Tree;
 using VL.Model;
 using VL.Skia;
@@ -11,28 +11,39 @@ using YogaSharp;
 
 namespace VL.Fu.Core.Rendering
 {
-    public interface IRenderable : IInteractable, ILayer
+    /// <summary>
+    /// The rendering layer of the element chain: a node draws its <see cref="Layer"/> and then its children, in its own space.
+    /// Notifications are added on top of it by <see cref="Interaction.IInteractive"/>, which makes the node a full VL.Skia layer.
+    /// </summary>
+    public interface IRenderable : ILayoutable, IRendering
     {
+        /// <summary>
+        /// What the node draws below its children, in its own space with (0, 0) at its top-left corner.
+        /// It also receives the notifications that reach the node.
+        /// </summary>
         ILayer? Layer { get; }
         void SetLayer(ILayer layer);
     }
 
     /// <summary>
-    /// Last generic layer of the element chain: draws the node as a VL.Skia layer.
-    /// <see cref="Region.RegionProvider"/> closes the chain at <see cref="IFuNode"/>, the type every node of a Fu tree has.
+    /// Draws the node and its subtree the way a VL.Skia group does, after the layout placed them.
     /// </summary>
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
-    public abstract class Renderable<TSelf> : Interactable<TSelf>, IRenderable
+    public abstract class Renderable<TSelf> : Layoutable<TSelf>, IRenderable
         where TSelf : class, ITraversable<TSelf>, IRenderable
     {
         private RectangleF? _explicitBounds;
         private RectangleF? _computedBounds;
         private RectangleF? _viewportArea;
+        private ILayer? _layer;
+
+        protected Renderable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
+            : base(nodeContext) { }
 
         /// <summary>
         /// The node's rectangle in its parent's space, or in the caller's space for a root, like every VL.Skia layer.
         /// Bounds set with <see cref="SetBounds"/> are returned as they are, like VL.Skia's SetRender and InViewport do.
-        /// Otherwise they are computed from the layout and follow <see cref="VL.Fu.Core.Layout.ILayoutable.Transformation"/>,
+        /// Otherwise they are computed from the layout and follow <see cref="ILayoutable.Transformation"/>,
         /// so a rotated node reports the box around it; null until the node was laid out, since its place is unknown before that.
         /// </summary>
         public RectangleF? Bounds => _explicitBounds ?? _computedBounds;
@@ -61,17 +72,21 @@ namespace VL.Fu.Core.Rendering
             _explicitBounds = bounds;
         }
 
-        private ILayer? _layer;
-
         public ILayer? Layer => _layer;
-
-        protected Renderable([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
-            : base(nodeContext) { }
 
         public void SetLayer(ILayer layer)
         {
             _layer = layer;
         }
+
+        /// <summary>
+        /// The children in draw order, back to front.
+        /// Rendering walks it forward and hit testing walks it backward, so the front-most child is asked first.
+        /// </summary>
+        /// <remarks>
+        /// Tree order for now; the z-index sort (task 05) changes only this accessor.
+        /// </remarks>
+        protected IReadOnlyList<TSelf> OrderedChildren => Children;
 
         /// <summary>
         /// Draws <see cref="Layer"/> and then the children on top, in order, all in this node's own space,
@@ -105,7 +120,7 @@ namespace VL.Fu.Core.Rendering
 
                 _layer?.Render(inner);
 
-                var children = Children;
+                var children = OrderedChildren;
                 if (children.Count == 0)
                     return;
 

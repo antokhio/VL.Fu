@@ -541,6 +541,40 @@ namespace VL.Fu.Tests.Styles
         }
 
         [TestMethod]
+        public void SetPointerEvents_WritesValue()
+        {
+            using var node = new Node();
+            var pointerEvents = new SetPointerEventsNode(null!);
+            pointerEvents.SetPointerEvents(PointerEvents.None);
+
+            node.SetStyle(pointerEvents.Output);
+
+            Assert.AreEqual(PointerEvents.None, node.PointerEvents);
+        }
+
+        [TestMethod]
+        public void SetPointerEvents_NoValue_PassesInputThrough()
+        {
+            var ten = Width(10).Output;
+            var pointerEvents = new SetPointerEventsNode(null!);
+            pointerEvents.SetInput(S(ten));
+
+            pointerEvents.SetPointerEvents();
+
+            Assert.AreSame(ten, pointerEvents.Output);
+        }
+
+        [TestMethod]
+        public void SetPointerEvents_UnknownValue_IsIgnored()
+        {
+            var pointerEvents = new SetPointerEventsNode(null!);
+
+            pointerEvents.SetPointerEvents((PointerEvents)99);
+
+            Assert.IsNull(pointerEvents.Output);
+        }
+
+        [TestMethod]
         public void SetFlexDirection_WritesSlot()
         {
             using var node = new Node();

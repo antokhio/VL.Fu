@@ -42,7 +42,7 @@
   * **Why this matters for `Renderable<TSelf>`:**
     * `VL.Fu` already mirrors `Transform [Graphics.Skia.Transform]`'s exact facade (`Stride.Core.Mathematics.Matrix` converted via `ToSKMatrix()`), `PreConcat` composition order, and `Bounds` mapping (`LocalTransformation.MapRect(...)`).
     * Notice how `TransformUpstream.Render` does **not** use `canvas.Save()` / `canvas.Restore()`—it mutates the current save frame's matrix via `us.Canvas.SetMatrix(us.Transformation)` and restores `caller.Canvas.SetMatrix(caller.Transformation)` in `finally`. Because `Renderable<TSelf>.Render` keeps `canvas.TotalMatrix == inner.Transformation`, any `Transform [Graphics.Skia.Transform]` node placed inside `_layer` (or around a Fu root, or inside a composer) works seamlessly without losing the Fu node's matrix or clip!
-    * And when we implement `Interactable<TSelf>.Notify`, `TransformUpstream.Notify` gives us the exact blueprint: push `LocalTransformation` onto `caller`, invert `us.Transformation` (or cache the inverse), and wrap `notification.WithSender(...)` using our own `IWorldSpace2d, IProjectionSpace` sender (since `IntermediateTransformNotificationSender` is `internal` to `VL.Core.Skia`).
+    * And when we implement `Interactive<TSelf>.Notify`, `TransformUpstream.Notify` gives us the exact blueprint: push `LocalTransformation` onto `caller`, invert `us.Transformation` (or cache the inverse), and wrap `notification.WithSender(...)` using our own `IWorldSpace2d, IProjectionSpace` sender (since `IntermediateTransformNotificationSender` is `internal` to `VL.Core.Skia`).
 * **How `RegionProvider` Hosts the Patch Inlay ([RegionProvider.cs](../../VL.Fu/src/Core/Region/RegionProvider.cs)):**
   * `RegionProvider` implements `IRegion<IRegionProvider.IRegionInlay>` where `IRegionInlay.Update(IFuNode node, out ILayer layer)` runs during the mainloop `Update()` fragment—**before** `Render(CallerInfo)` is called by the `SkiaRenderer`.
 
@@ -289,7 +289,7 @@ The `FuNode` region **already** passes `IFuNode node` into the user's stateful r
     * `Render` iterates forward (`0 .. Count - 1`: lowest `ZIndex` first, highest `ZIndex` painted last/on top).
     * `Notify` iterates in reverse (`Count - 1 .. 0`: highest `ZIndex` receives pointer events first).
 * **Yoga Interaction:**
-  * Yoga layout order (`_handle->SetChildren(handles)`) MUST stay in **logical `Children` tree order**, NOT `ZIndex` order! Otherwise changing `ZIndex` would reorder flex items in a row/column. Keeping `ZIndex` purely in `Renderable` / `Interactable` leaves flex layout order untouched.
+  * Yoga layout order (`_handle->SetChildren(handles)`) MUST stay in **logical `Children` tree order**, NOT `ZIndex` order! Otherwise changing `ZIndex` would reorder flex items in a row/column. Keeping `ZIndex` purely in `Renderable` / `Interactive` leaves flex layout order untouched.
 
 ### 4.2 Option Z3: Overlay / Portal (Root-Level Deferred Pass)
 * **Why Z1 alone isn't enough for Dropdowns / Tooltips:**
