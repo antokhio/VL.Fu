@@ -22,20 +22,24 @@ namespace VL.Fu.Core.Interaction
         private readonly SKMatrix? _windowToParent;
         private readonly float _scaling;
         private readonly INotification _original;
+        private readonly long _timeMs;
 
         /// <param name="node">The node that forwards the notification.</param>
         /// <param name="nodeToWindow">Maps the node's space into window pixels.</param>
         /// <param name="parentToWindow">Maps the parent's space, or the caller's for a root, into window pixels.</param>
         /// <param name="scaling">The caller's DIP scaling.</param>
         /// <param name="original">The notification the root received, whose projection positions are passed on.</param>
+        /// <param name="timeMs">Milliseconds on the root's clock when the delivery began.</param>
         internal FuNotificationSender(
             IInteractive node,
             SKMatrix nodeToWindow,
             SKMatrix parentToWindow,
             float scaling,
-            INotification original
+            INotification original,
+            long timeMs
         )
         {
+            _timeMs = timeMs;
             _node = node;
             _windowToNode = nodeToWindow.TryInvert(out var windowToNode) ? windowToNode : null;
             _windowToParent = parentToWindow.TryInvert(out var windowToParent) ? windowToParent : null;
@@ -64,6 +68,12 @@ namespace VL.Fu.Core.Interaction
         /// The DIP scaling of the renderer the notification came from.
         /// </summary>
         public float Scaling => _scaling;
+
+        /// <summary>
+        /// Milliseconds on the root's clock when the delivery of this notification began.
+        /// Every node of one delivery sees the same time, so durations and double-tap intervals are measured on one clock.
+        /// </summary>
+        public long TimeMs => _timeMs;
 
         internal SKMatrix? WindowToNodeMatrix => _windowToNode;
 

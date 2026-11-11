@@ -39,6 +39,10 @@ namespace VL.Fu.Tests.Core.Interaction
 
             public bool Notify(INotification notification, CallerInfo caller)
             {
+                // Hover notifications follow every pointer pass; these tests are about the delivery of the pass itself.
+                if (notification is PointerEnterNotification or PointerLeaveNotification)
+                    return false;
+
                 log.Add(name);
                 Received = notification;
                 return Result;
@@ -390,7 +394,11 @@ namespace VL.Fu.Tests.Core.Interaction
             scene.Front.SetChildren(Spread.Create(new[] { inner }));
             scene.Root.CalculateLayout();
 
-            scene.Root.Deliver(Key(), CallerInfo.Default, new Delivery(DeliveryClass.Control, NotificationRoute.Target(scene.Front)));
+            scene.Root.Dispatcher.Run(
+                Key(),
+                CallerInfo.Default,
+                new Delivery(DeliveryClass.Control, RouteKind.Target, scene.Front)
+            );
 
             CollectionAssert.AreEqual(All("front"), scene.Log);
         }
@@ -402,10 +410,10 @@ namespace VL.Fu.Tests.Core.Interaction
             scene.Back.Native->SetDisplay(YGDisplay.None);
             scene.Recorders["front.layer"].Result = true;
 
-            var processed = scene.Root.Deliver(
+            var processed = scene.Root.Dispatcher.Run(
                 Key(),
                 CallerInfo.Default,
-                new Delivery(DeliveryClass.FanOut, NotificationRoute.Broadcast(scene.Root))
+                new Delivery(DeliveryClass.FanOut, RouteKind.Broadcast)
             );
 
             Assert.IsFalse(processed);

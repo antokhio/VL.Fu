@@ -25,7 +25,8 @@ namespace VL.Fu.Core.Interaction
     }
 
     /// <summary>
-    /// The kind of route the classification chooses. The route itself is built from it at the root.
+    /// The kind of route a notification takes. The route itself is built when its pass starts,
+    /// so a queued notification sees the tree as it is then.
     /// </summary>
     internal enum RouteKind
     {
@@ -38,10 +39,20 @@ namespace VL.Fu.Core.Interaction
         /// The nodes under the notification's position, from the root down to the front-most one hit.
         /// </summary>
         Hit,
+
+        /// <summary>
+        /// One node. Its ancestors only forward, and its children don't get it.
+        /// </summary>
+        Target,
+
+        /// <summary>
+        /// A node and its whole subtree. Its ancestors only forward.
+        /// </summary>
+        Subtree,
     }
 
     /// <summary>
-    /// The delivery class and the route of one notification. N3 replaces it with the running pass.
+    /// The plan for delivering one notification: its class, the kind of route, and the node a target or subtree route names.
     /// </summary>
-    internal sealed record Delivery(DeliveryClass Class, NotificationRoute Route);
+    internal readonly record struct Delivery(DeliveryClass Class, RouteKind Route, IInteractive? Node = null);
 }

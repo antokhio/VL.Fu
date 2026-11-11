@@ -23,9 +23,10 @@ namespace VL.Fu.Core.Rendering
     /// <see cref="Region.RegionProvider"/> closes the chain at <see cref="IFuNode"/>, the type every node of a Fu tree has.
     /// </summary>
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
-    public abstract class Renderable<TSelf> : Interactive<TSelf>, IRenderable
+    public abstract class Renderable<TSelf> : Interactive<TSelf>, IRenderable, INotificationRoot
         where TSelf : class, ITraversable<TSelf>, IRenderable
     {
+        private NotificationDispatcher? _dispatcher;
         private RectangleF? _explicitBounds;
         private RectangleF? _computedBounds;
         private RectangleF? _viewportArea;
@@ -73,6 +74,12 @@ namespace VL.Fu.Core.Rendering
         {
             _layer = layer;
         }
+
+        /// <summary>
+        /// Runs the notifications this node receives as a root. Created by the first one, and dropped when the node
+        /// gets a parent or is disposed, which forgets hover and touch state without sending notifications.
+        /// </summary>
+        internal NotificationDispatcher Dispatcher => _dispatcher ??= new NotificationDispatcher(this);
 
         /// <summary>
         /// Draws <see cref="Layer"/> and then the children on top, in order, all in this node's own space,
@@ -136,40 +143,27 @@ namespace VL.Fu.Core.Rendering
         /// in VL's notification flow like any layer. Returns true when a receiver processed it.
         /// </summary>
         /// <remarks>
-        /// Only the root chooses where a notification goes, so a child passes it on to its root.
+        /// Only the root chooses where a notification goes, so a child passes it on to its root, whose
+        /// <see cref="NotificationDispatcher"/> runs it as a pass.
         /// A positional notification goes to the front-most node under its position and bubbles up to its ancestors;
         /// a point outside every node delivers nothing. Device loss reaches every node and is never reported as processed.
         /// Anything else is offered to the whole tree front to back, like a VL group.
+        /// A notification sent to the tree while it is delivering another one is queued and runs right after it,
+        /// so that call returns false.
         /// </remarks>
         public bool Notify(INotification notification, CallerInfo caller)
         {
             if (Parent is not null)
                 return ((TSelf)(object)this).Root().Notify(notification, caller);
 
-            var (deliveryClass, routeKind) = NotificationClassifier.Classify(notification);
-            NotificationRoute route;
-            if (routeKind == RouteKind.Hit && notification is INotificationWithPosition positioned)
-            {
-                var path = new List<IInteractive>();
-                if (!TryBuildHitPath(positioned.Position, caller.Transformation, path))
-                    return false;
-
-                route = NotificationRoute.Hit(path);
-            }
-            else
-            {
-                route = NotificationRoute.Broadcast(this);
-            }
-
-            return Deliver(notification, caller, new Delivery(deliveryClass, route));
+            return Dispatcher.Run(notification, caller);
         }
 
-        /// <summary>
-        /// Delivers <paramref name="notification"/> along the route of <paramref name="delivery"/>, which starts at this node,
-        /// and returns what the delivery class makes of the answers: true when input was processed, otherwise false.
-        /// </summary>
-        internal bool Deliver(INotification notification, CallerInfo caller, Delivery delivery) =>
-            Forward(notification, caller, delivery, depth: 0);
+        bool INotificationRoot.Forward(InteractionPass pass) =>
+            Forward(pass.Notification, pass.Caller, pass, depth: 0);
+
+        bool INotificationRoot.TryBuildHitPath(Vector2 position, SKMatrix parentToWindow, List<IInteractive> path) =>
+            TryBuildHitPath(position, parentToWindow, path);
 
         /// <summary>
         /// The body every node runs for a notification, mirroring <see cref="Render"/>: route children front to back,
@@ -181,21 +175,25 @@ namespace VL.Fu.Core.Rendering
         /// For input, a child or the layer returning true ends the node with true, and its behaviors don't see it;
         /// every behavior still runs when another one returned true. Control and fan-out visit everything and return false.
         /// Children get the notification as it came in. The layer and behaviors get it with a <see cref="FuNotificationSender"/>,
-        /// so its positions are in this node's space.
+        /// so its positions are in this node's space; while they run, this node is the pass's acting node.
+        /// The tree may change during a pass: a node that left the pass's root when it is reached is skipped with its subtree,
+        /// and one that left while its children ran doesn't run its own receivers.
         /// </remarks>
-        private bool Forward(INotification notification, CallerInfo caller, Delivery delivery, int depth)
+        private bool Forward(INotification notification, CallerInfo caller, InteractionPass pass, int depth)
         {
-            var isInput = delivery.Class == DeliveryClass.Input;
-            if (delivery.Class != DeliveryClass.Control && (!HasLayout || !IsDisplayed))
+            if (!IsAttachedTo(pass.Root))
+                return false;
+
+            var isInput = pass.Class == DeliveryClass.Input;
+            if (pass.Class != DeliveryClass.Control && (!HasLayout || !IsDisplayed))
                 return false;
 
             var inner = caller.WithTransformation(caller.Transformation.PreConcat(LocalTransformation));
-            var route = delivery.Route;
 
-            if (ForwardToChildren(notification, inner, delivery, depth) && isInput)
+            if (ForwardToChildren(notification, inner, pass, depth) && isInput)
                 return true;
 
-            if (!route.Receives(depth))
+            if (!pass.Route.Receives(depth) || !IsAttachedTo(pass.Root))
                 return false;
 
             var layer = _layer;
@@ -204,45 +202,61 @@ namespace VL.Fu.Core.Rendering
                 return false;
 
             var wrapped = notification.WithSender(
-                new FuNotificationSender(this, inner.Transformation, caller.Transformation, caller.Scaling, notification)
+                new FuNotificationSender(
+                    this,
+                    inner.Transformation,
+                    caller.Transformation,
+                    caller.Scaling,
+                    notification,
+                    pass.TimeMs
+                )
             );
 
-            if (layer is not null && layer.Notify(wrapped, inner) && isInput)
-                return true;
+            var previous = pass.Enter(this);
+            try
+            {
+                if (layer is not null && layer.Notify(wrapped, inner) && isInput)
+                    return true;
 
-            var processed = false;
-            for (var i = 0; i < behaviors.Count; i++)
-                processed |= behaviors[i].Notify(wrapped, inner);
+                var processed = false;
+                for (var i = 0; i < behaviors.Count; i++)
+                    processed |= behaviors[i].Notify(wrapped, inner);
 
-            return isInput && processed;
+                return isInput && processed;
+            }
+            finally
+            {
+                pass.Leave(previous);
+            }
         }
 
         /// <summary>
         /// Forwards to the next node of the path, or to every child, front to back, where the route descends.
-        /// Input stops at the first child that returns true, like a VL group. A path node that left this node is skipped.
+        /// Input stops at the first child that returns true, like a VL group.
+        /// A child that left this node since the route was built, or while its siblings ran, is skipped.
         /// </summary>
-        private bool ForwardToChildren(INotification notification, CallerInfo inner, Delivery delivery, int depth)
+        private bool ForwardToChildren(INotification notification, CallerInfo inner, InteractionPass pass, int depth)
         {
-            var route = delivery.Route;
+            var route = pass.Route;
             if (route.Next(depth) is { } next)
             {
                 return next is Renderable<TSelf> child
                     && ReferenceEquals(child.Parent, this)
-                    && child.Forward(notification, inner, delivery, depth + 1);
+                    && child.Forward(notification, inner, pass, depth + 1);
             }
 
             if (!route.Descends(depth))
                 return false;
 
-            var isInput = delivery.Class == DeliveryClass.Input;
+            var isInput = pass.Class == DeliveryClass.Input;
             var processed = false;
             var children = OrderedChildren;
             for (var i = children.Count - 1; i >= 0; i--)
             {
-                if ((object)children[i] is not Renderable<TSelf> child)
+                if ((object)children[i] is not Renderable<TSelf> child || !ReferenceEquals(child.Parent, this))
                     continue;
 
-                if (child.Forward(notification, inner, delivery, depth + 1))
+                if (child.Forward(notification, inner, pass, depth + 1))
                 {
                     processed = true;
                     if (isInput)
@@ -267,14 +281,29 @@ namespace VL.Fu.Core.Rendering
         }
 
         /// <summary>
-        /// An attached node forgets the viewport it was rendered in as a root, since its parent's layout places it now.
+        /// An attached node forgets the viewport it was rendered in as a root, since its parent's layout places it now,
+        /// and the dispatcher it ran notifications with, since its root runs them now.
         /// </summary>
         protected override void OnParentChanged(TSelf? oldParent, TSelf? newParent)
         {
             base.OnParentChanged(oldParent, newParent);
 
             if (newParent is not null)
+            {
                 _viewportArea = null;
+                _dispatcher = null;
+            }
+        }
+
+        /// <summary>
+        /// Drops the dispatcher, forgetting hover and touch state without sending notifications.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                _dispatcher = null;
+
+            base.Dispose(disposing);
         }
 
         protected override void OnLocalTransformationChanged()
@@ -302,6 +331,17 @@ namespace VL.Fu.Core.Rendering
             var area = inverse.MapRect(caller.ViewportBounds).ToRectangleF_();
             if (IsValidArea(area))
                 _viewportArea = area;
+        }
+
+        private bool IsAttachedTo(IInteractive root)
+        {
+            for (ITraversable? node = this; node is not null; node = node.Parent)
+            {
+                if (ReferenceEquals(node, root))
+                    return true;
+            }
+
+            return false;
         }
 
         private static bool IsScaleTranslate(SKMatrix m) =>
