@@ -20,7 +20,7 @@ namespace VL.Fu.Tests.Core.Interaction
     [TestClass]
     public sealed unsafe class DispatcherTests
     {
-        private sealed class Node : Renderable<Node>
+        private sealed class Node : Interactive<Node>
         {
             public Node()
                 : base(null!) { }

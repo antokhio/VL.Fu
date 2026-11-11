@@ -2,6 +2,7 @@
 using VL.Core;
 using VL.Core.Import;
 using VL.Core.PublicAPI;
+using VL.Fu.Core.Interaction;
 using VL.Fu.Core.Rendering;
 using VL.Model;
 using VL.Skia;
@@ -9,10 +10,10 @@ using VL.Skia;
 namespace VL.Fu.Core.Region
 {
     /// <summary>
-    /// A node whose content is patched inside it, as a VL region. Continues the interface chain after <see cref="IRenderable"/>,
-    /// since the inlay draws into the node's layer.
+    /// A node whose content is patched inside it, as a VL region. Continues the interface chain after <see cref="IInteractive"/>,
+    /// since the inlay draws into the node's layer, which also receives its notifications.
     /// </summary>
-    public interface IRegionProvider : IRenderable, IRegion<IRegionProvider.IRegionInlay>
+    public interface IRegionProvider : IInteractive, IRegion<IRegionProvider.IRegionInlay>
     {
         public interface IRegionInlay
         {
@@ -33,7 +34,7 @@ namespace VL.Fu.Core.Region
     /// and its parent and children are typed as <see cref="IFuNode"/>.
     /// </summary>
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
-    public abstract class RegionProvider : Renderable<IFuNode>, IFuNode
+    public abstract class RegionProvider : Interactive<IFuNode>, IFuNode
     {
         private IRegionProvider.IRegionInlay? _inlay;
         private readonly Dictionary<InputDescription, object?> _inputs = new();
