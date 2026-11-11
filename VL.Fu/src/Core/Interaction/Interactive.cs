@@ -1,11 +1,12 @@
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
+using Stride.Core.Mathematics;
 using VL.Core;
 using VL.Core.Import;
 using VL.Fu.Core.Layout;
 using VL.Fu.Core.Styles;
 using VL.Fu.Core.Tree;
 using VL.Lib.Collections;
-using VL.Lib.IO.Notifications;
 using VL.Model;
 using VL.Skia;
 
@@ -94,11 +95,46 @@ namespace VL.Fu.Core.Interaction
         protected IReadOnlyList<TSelf> OrderedChildren => Children;
 
         /// <summary>
-        /// Delivers <paramref name="notification"/> to this node and its subtree. Not implemented yet: nothing is delivered
-        /// and false is returned, so the notification counts as unprocessed.
+        /// Finds the front-most node under <paramref name="position"/> in this node's subtree and fills <paramref name="path"/>
+        /// with the nodes from this one down to it. Returns false, leaving <paramref name="path"/> as it was, when nothing is hit.
         /// </summary>
-        public bool Notify(INotification notification, CallerInfo caller)
+        /// <param name="position">The notification's position, in the pixel space of <paramref name="parentToWindow"/>.</param>
+        /// <param name="parentToWindow">Maps the parent's space, or the caller's for a root, into window pixels.</param>
+        /// <param name="path">Receives the hit path, root first.</param>
+        /// <remarks>
+        /// A node that wasn't laid out, has display none or <see cref="PointerEvents.None"/> is skipped with its subtree,
+        /// and so is a node scaled to zero. Children are asked front to back, only inside the clip area when the node clips,
+        /// and the first one hit ends the walk, so nothing falls through to the siblings behind it.
+        /// Otherwise the node itself is hit inside its box; the right and bottom edges belong to the neighbors.
+        /// An ancestor whose box doesn't contain the point is still on the path when a child overflowing it is hit.
+        /// </remarks>
+        internal bool TryBuildHitPath(Vector2 position, SKMatrix parentToWindow, List<IInteractive> path)
         {
+            if (!HasLayout || !IsDisplayed || _pointerEvents == PointerEvents.None)
+                return false;
+
+            var nodeToWindow = parentToWindow.PreConcat(LocalTransformation);
+            if (!nodeToWindow.TryInvert(out var windowToNode))
+                return false;
+
+            var local = windowToNode.MapPoint(position.X, position.Y);
+            path.Add(this);
+
+            var children = OrderedChildren;
+            if (children.Count > 0 && (ClipArea is not { } clip || Contains(clip, local)))
+            {
+                for (var i = children.Count - 1; i >= 0; i--)
+                {
+                    if ((object)children[i] is Interactive<TSelf> child && child.TryBuildHitPath(position, nodeToWindow, path))
+                        return true;
+                }
+            }
+
+            var layout = Layout;
+            if (Contains(new RectangleF(0, 0, layout.Width, layout.Height), local))
+                return true;
+
+            path.RemoveAt(path.Count - 1);
             return false;
         }
 
@@ -132,6 +168,9 @@ namespace VL.Fu.Core.Interaction
 
             base.EndStyle();
         }
+
+        private static bool Contains(RectangleF area, SKPoint point) =>
+            point.X >= area.X && point.X < area.X + area.Width && point.Y >= area.Y && point.Y < area.Y + area.Height;
 
         private static bool SameBehaviors(IReadOnlyList<IBehavior> current, IReadOnlyList<IBehavior> next)
         {

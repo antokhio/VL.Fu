@@ -3,7 +3,6 @@ using VL.Core.Import;
 using VL.Core.PublicAPI;
 using VL.Fu.Core.Constants;
 using VL.Fu.Core.Region;
-using VL.Fu.Core.Rendering;
 using VL.Fu.Core.Tree;
 using VL.Lib.Collections;
 using VL.Model;
@@ -42,10 +41,7 @@ namespace VL.Fu
         /// Empty pins and Fu nodes are ignored, and a behavior connected twice is attached once.
         /// </summary>
         [Fragment(Order = PinOrder.Behavior)]
-        public void SetBehaviors(
-            [Pin(PinGroupKind = PinGroupKind.Collection, PinGroupDefaultCount = 1)]
-                Spread<IBehavior> behaviors
-        )
+        public void SetBehaviors(Spread<IBehavior> behaviors)
         {
             base.SetBehaviors(behaviors);
         }

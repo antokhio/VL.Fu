@@ -4,8 +4,8 @@ The design and the phase plan are in [summary-interaction-v2.md](../summaries/su
 
 | # | Phase | Task file | Depends on | Status |
 |---|---|---|---|---|
-| [task-interaction-01-plumbing.md](task-interaction-01-plumbing.md) | none | done |
-| N2 | Delivery: `Forward`, `FuNotificationSender`, delivery classes, classification, broadcast/hit/target routes, hit test | | N1 | |
+| N1 | Plumbing: `Interactive`, `OrderedChildren`, `PointerEvents` style, the `Behaviors` pin group | [task-interaction-01-plumbing.md](task-interaction-01-plumbing.md) | none | done |
+| N2 | Delivery: `Forward`, `FuNotificationSender`, delivery classes, classification, broadcast/hit/target routes, hit test | [task-interaction-02-delivery.md](task-interaction-02-delivery.md) | N1 | done |
 | N3 | Orchestration: `NotificationDispatcher`, `InteractionPass`, outbox, snapshot routes, `Dispatch`/`Query`, `HoverTracker`, touch promotion | | N2 | |
 | N4 | Claims: `PointerClaims`, requests and resolution, `PointerCaptureNotification`, `PointerCancelNotification`, lifetime rules, the `SetBehaviors` diff | | N3 | |
 | N5 | Recognizers, `PointerInput.TryRead` | | N1 | |

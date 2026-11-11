@@ -58,7 +58,7 @@ What VL doesn't have, and v2 adds:
 
 | Concern | Owner | Kind |
 |---|---|---|
-| Forwarding: the transform push, sender wrap, child order, gates | `Interactive<TSelf>.Forward`, mirroring `Renderable.Render` | node base |
+| Forwarding: the transform push, sender wrap, child order, gates | `Renderable<TSelf>.Forward`, next to `Render`, since `Layer` lives there; the hit test is `Interactive<TSelf>.TryBuildHitPath` (N2) | node base |
 | Classification, route choice, running passes, the outbox | `NotificationDispatcher`, one per root, created lazily | internal class |
 | What a running pass knows: the notification, delivery class, route, the node stack, claim requests | `InteractionPass` | internal class, ambient while running |
 | Pressed pointers: recorded paths, claims and their members | `PointerClaims` | internal class, no callbacks into behaviors |
