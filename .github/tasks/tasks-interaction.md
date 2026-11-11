@@ -1,19 +1,17 @@
 # Interaction: tasks
 
-The design and the phase plan are in [summary-interaction.md](../summaries/summary-interaction.md). Each phase below becomes one `task-interaction-NN-*.md` file when it is cut. A phase is done when the solution builds and `VL.Fu.Tests` passes.
+The design and the phase plan are in [summary-interaction-v2.md](../summaries/summary-interaction-v2.md); v1 ([summary-interaction.md](../summaries/summary-interaction.md)) is superseded. Each phase below becomes one `task-interaction-NN-*.md` file when it is cut. A phase is done when the solution builds and `VL.Fu.Tests` passes.
 
 | # | Phase | Task file | Depends on | Status |
 |---|---|---|---|---|
-| I1 | Plumbing: rename to `Interactive`, `OrderedChildren`, `PointerEvents` style, drop `IBehavior`, delete `Gesture.cs` | | none | |
-| I2 | `PointerEvent` | | I1 | |
-| I3 | Hit walk | | I1 | |
-| I4 | `Behavior` base, `IGestureRecognizer<TState>` | | I1 | |
-| I5 | `PointerEventsProvider` | | I2, I3, I4 | |
-| I6 | Recognizers | | I4 | |
-| I7 | Headless behaviors | | I5, I6 | |
-| — | Milestone: headless widgets patched | | I7 | |
-| I8 | Selection | | I7 | |
-| I9 | `Movable`, `IGroupManipulable` | | I8 | |
-| I10 | `Transformable` | | I9 | |
-| I11 | `CanvasProvider` | | I7; I9 for the combined trace | |
-| I12 | Docs | | I11 | |
+| N1 | Plumbing: rename to `Interactive`, `OrderedChildren`, `PointerEvents` style, delete `Gesture.cs`, `SetBehaviors` pin group | [task-interaction-01-plumbing.md](task-interaction-01-plumbing.md) | none | cut |
+| N2 | Delivery: `Forward`, `FuNotificationSender`, delivery classes, classification, broadcast/hit/target routes, hit test | | N1 | |
+| N3 | Orchestration: `NotificationDispatcher`, `InteractionPass`, outbox, snapshot routes, `Dispatch`/`Query`, `HoverTracker`, touch promotion | | N2 | |
+| N4 | Claims: `PointerClaims`, requests and resolution, `PointerCaptureNotification`, `PointerCancelNotification`, lifetime rules, the `SetBehaviors` diff | | N3 | |
+| N5 | Recognizers, `PointerInput.TryRead` | | N1 | |
+| N6 | Headless behaviors: `Hoverable`, `Clickable`, `Draggable`, `Pinchable` | | N4, N5 | |
+| — | Milestone: headless widgets patched | | N6 | |
+| N7 | Selection: `Selectable`, `SelectionProvider`, `SelectionNotification`, bounds query | | N6 | |
+| N8 | `Movable`, `Transformable`, `GroupTransaction`, `GroupManipulationNotification` | | N7 | |
+| N9 | `CanvasProvider` | | N6 | |
+| N10 | Docs | | N9 | |

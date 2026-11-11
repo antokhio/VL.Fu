@@ -1,5 +1,7 @@
 # Interaction: summary and implementation plan
 
+> **Superseded** by [summary-interaction-v2.md](summary-interaction-v2.md). v2 keeps VL's notification flow instead of stopping it at the root. It refers back to this document for the parts it keeps: the channel table (§6.1), the math (§7), the selection and canvas semantics, and the code rules (§8). Everything else here is history.
+
 The final design for pointer interaction in Fu, and the order to build it in.
 
 **Where decisions come from:**
