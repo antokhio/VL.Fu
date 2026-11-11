@@ -549,6 +549,20 @@ namespace VL.Fu.Tests.Core.Interaction
         }
 
         [TestMethod]
+        public void ClaimedUp_SendsACancelAlongThePath_EvenWhenNobodyProcessedIt()
+        {
+            using var scene = CreateScene();
+            RequestOn<MouseDownNotification>(scene[scene.Child], GestureKind.Drag);
+            scene.Notify(Down(35, 35));
+            scene.Log.Clear();
+
+            scene.Notify(Up(35, 35));
+
+            CollectionAssert.AreEqual(Entries("PointerCancel", "child", "front", "root"), scene.ClaimLog);
+            Assert.IsNull(scene.Claims.ClaimOf(PointerIds.Mouse));
+        }
+
+        [TestMethod]
         public void Release_FallsBackToTheRecordedPath_WithoutNotifying()
         {
             using var scene = CreateScene();

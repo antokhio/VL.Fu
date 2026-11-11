@@ -99,6 +99,16 @@ namespace VL.Fu.Core.Interaction
         /// </summary>
         public bool IsMember(object owner) => _claim is not null && _claim.HasMember(owner);
 
+        /// <summary>
+        /// Whether a gesture of <paramref name="kind"/> that is still pending may keep its state: the pointer is held
+        /// by a running claim of a lower kind, which a stronger gesture can still take over.
+        /// </summary>
+        /// <remarks>
+        /// An ancestor's pinch waiting for its second finger survives a child's drag this way. A gesture that published
+        /// something resets regardless, and an ended claim spares nobody.
+        /// </remarks>
+        internal bool SparesPending(GestureKind kind) => _claim is { IsActive: true } claim && claim.Kind < kind;
+
         public override INotification WithSender(object sender) =>
             new PointerCancelNotification(_pointerId, _claim, ModifierKeys, sender);
 

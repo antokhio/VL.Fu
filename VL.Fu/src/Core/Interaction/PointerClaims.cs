@@ -384,6 +384,11 @@ namespace VL.Fu.Core.Interaction
         /// The pointer's last button or touch went up (§5.4 row 1). A processed Up sends a cancel along the path, carrying the claim
         /// so its members keep their facts, to reset ancestors whose Up never arrived. The pointer leaves its claim afterwards.
         /// </summary>
+        /// <remarks>
+        /// A claimed pointer's Up reaches the claim node only, so it sends the cancel even when nobody processed it:
+        /// ancestors that kept a pending gesture under the claim would never hear of the Up otherwise.
+        /// The claim has ended by the time the cancel is delivered, so nobody keeps a gesture pending under it.
+        /// </remarks>
         private void Release(
             PressedPointer pressed,
             bool handled,
@@ -392,7 +397,7 @@ namespace VL.Fu.Core.Interaction
             Keys modifiers
         )
         {
-            if (handled)
+            if (handled || pressed.Claim is not null)
                 AddCancel(output, pressed.Id, pressed.Claim, pressed.Path, pressed.Path.Count, 0, sender, modifiers);
 
             _pressed.Remove(pressed);

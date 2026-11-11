@@ -21,3 +21,4 @@
 - Prefer IReadOnlyList<T> on facade Spread<T> internally.
 - Properties on classes, or maybe used in context of ProcessNode, should have `public X => _x; public void SetX(...)` pattern for getters and setters, where setters and getters maybe called via mainloop every frame.
 - NaN handling: we keep NaN's internally but on facade we replace it with Optional<float>
+- A concrete `[ProcessNode(FragmentSelection = FragmentSelection.Explicit)]` class must mark its constructor with `[Fragment]`, otherwise VL doesn't expose it as a node. Abstract bases don't need it.
