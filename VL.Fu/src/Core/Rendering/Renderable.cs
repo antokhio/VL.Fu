@@ -11,7 +11,7 @@ using YogaSharp;
 
 namespace VL.Fu.Core.Rendering
 {
-    public interface IRenderable : IInteractable, ILayer
+    public interface IRenderable : IInteractive, ILayer
     {
         ILayer? Layer { get; }
         void SetLayer(ILayer layer);
@@ -22,7 +22,7 @@ namespace VL.Fu.Core.Rendering
     /// <see cref="Region.RegionProvider"/> closes the chain at <see cref="IFuNode"/>, the type every node of a Fu tree has.
     /// </summary>
     [ProcessNode(FragmentSelection = FragmentSelection.Explicit)]
-    public abstract class Renderable<TSelf> : Interactable<TSelf>, IRenderable
+    public abstract class Renderable<TSelf> : Interactive<TSelf>, IRenderable
         where TSelf : class, ITraversable<TSelf>, IRenderable
     {
         private RectangleF? _explicitBounds;
@@ -105,7 +105,7 @@ namespace VL.Fu.Core.Rendering
 
                 _layer?.Render(inner);
 
-                var children = Children;
+                var children = OrderedChildren;
                 if (children.Count == 0)
                     return;
 

@@ -7,6 +7,7 @@ using VL.Fu.Core.Rendering;
 using VL.Fu.Core.Tree;
 using VL.Lib.Collections;
 using VL.Model;
+using VL.Skia;
 
 namespace VL.Fu
 {
@@ -34,6 +35,19 @@ namespace VL.Fu
         )
         {
             base.SetChildren(children);
+        }
+
+        /// <summary>
+        /// Attaches behaviors to this node, in pin order. Fu's behaviors and behaviors patched in VL are treated alike.
+        /// Empty pins and Fu nodes are ignored, and a behavior connected twice is attached once.
+        /// </summary>
+        [Fragment(Order = PinOrder.Behavior)]
+        public void SetBehaviors(
+            [Pin(PinGroupKind = PinGroupKind.Collection, PinGroupDefaultCount = 1)]
+                Spread<IBehavior> behaviors
+        )
+        {
+            base.SetBehaviors(behaviors);
         }
 
         /// <summary>

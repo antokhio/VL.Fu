@@ -25,9 +25,9 @@ Prepare the node chain for notification-native interaction without changing what
 
 ### 2. A node is a layer, not a behavior
 
-* `IInteractive : ILayoutable`. It drops `IBehavior` (v2 §2: nodes forward like layers, and behaviors are attached to them).
+* `IInteractive : ILayoutable`. It drops the explicit `IBehavior` (v2 §2: nodes forward like layers, and behaviors are attached to them).
 * `Interactive<TSelf>` keeps `public bool Notify(INotification, CallerInfo)` returning false. `IRenderable : ILayer` binds to it. Its doc says delivery comes with N2.
-* Side effect, intended: a Fu node can no longer be passed where an `IBehavior` is expected, including the new `SetBehaviors`.
+* VL's `ILayer` extends `IBehavior`, so a node is still an `IBehavior` by type. `SetBehaviors` therefore rejects Fu nodes with a warning (§6).
 
 ### 3. Delete `Gesture.cs`
 
@@ -76,6 +76,7 @@ Mirrors children: `IReadOnlyList` on the facade, `Spread` only on the VL pin gro
   * When the sequence is reference-equal element by element to the current one, the call is a no-op.
   * Otherwise it is sanitized like children, and the sanitized list is stored:
     * an empty entry is ignored: "Ignored an empty behavior.";
+    * a Fu node is ignored: it is a layer, so it goes into the children;
     * a repeated instance keeps only its first occurrence: "Ignored '{b}': it is already attached to this node.";
     * one warning lists the distinct problems.
 * `FuNode`: `[Fragment(Order = PinOrder.Behavior)] public void SetBehaviors([Pin(PinGroupKind = PinGroupKind.Collection, PinGroupDefaultCount = 1)] Spread<IBehavior> behaviors)` calls the base. This is the same shape as `SetChildren`. `FuNodeSpectral` inherits it.
@@ -93,7 +94,7 @@ Mirrors children: `IReadOnlyList` on the facade, `Spread` only on the VL pin gro
 
 ## Decisions (settled)
 
-1. **`IInteractive` drops `IBehavior`.** Nodes are layers (v2 §2).
+1. **`IInteractive` drops the explicit `IBehavior`.** Nodes are layers (v2 §2). VL layers are behaviors by type, so `SetBehaviors` rejects Fu nodes.
 2. **`PointerEvents` has two values,** `Auto` and `None`, as in CSS for HTML. Fu has no SVG-style variants.
 3. **`OrderedChildren` is not virtual.** Task 05 changes its body, not its overrides.
 4. **Empty and repeated behaviors warn,** like children.
@@ -110,7 +111,7 @@ Mirrors children: `IReadOnlyList` on the facade, `Spread` only on the VL pin gro
   * A style pass commits `None`. Removing the style returns to `Auto`. A direct value survives passes that don't change the style.
   * `SetBehaviors` stores in pin order. Null means empty. Empty entries and repeated instances are dropped.
   * Setting an equal sequence twice keeps the same list instance.
-  * A node is not an `IBehavior` (type check).
+  * A Fu node passed as a behavior is ignored with a warning.
 * `StyleNodeTests.cs`: `SetPointerEventsNode` builds a style with a value and none without one; an undefined enum value is ignored with a warning.
 * `RenderableTests.cs`: the render order is unchanged. The existing tests cover it; no new test.
 * The whole suite still passes (246 tests at the last run).

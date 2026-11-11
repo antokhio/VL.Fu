@@ -4,7 +4,7 @@ The design and the phase plan are in [summary-interaction-v2.md](../summaries/su
 
 | # | Phase | Task file | Depends on | Status |
 |---|---|---|---|---|
-| N1 | Plumbing: rename to `Interactive`, `OrderedChildren`, `PointerEvents` style, delete `Gesture.cs`, `SetBehaviors` pin group | [task-interaction-01-plumbing.md](task-interaction-01-plumbing.md) | none | cut |
+| [task-interaction-01-plumbing.md](task-interaction-01-plumbing.md) | none | done |
 | N2 | Delivery: `Forward`, `FuNotificationSender`, delivery classes, classification, broadcast/hit/target routes, hit test | | N1 | |
 | N3 | Orchestration: `NotificationDispatcher`, `InteractionPass`, outbox, snapshot routes, `Dispatch`/`Query`, `HoverTracker`, touch promotion | | N2 | |
 | N4 | Claims: `PointerClaims`, requests and resolution, `PointerCaptureNotification`, `PointerCancelNotification`, lifetime rules, the `SetBehaviors` diff | | N3 | |

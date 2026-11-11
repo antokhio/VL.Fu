@@ -32,7 +32,7 @@ Render(caller)
   RestoreToCount(save)
 ```
 
-`Notify` mirrors it in reverse once interaction lands. `Interactable.Notify` is still a stub, so every hit-testing part is deferred.
+`Notify` mirrors it in reverse once interaction lands. `Interactive.Notify` is still a stub, so every hit-testing part is deferred.
 
 ## Not planned
 
