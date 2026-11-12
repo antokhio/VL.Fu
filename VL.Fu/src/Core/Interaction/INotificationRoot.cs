@@ -19,6 +19,12 @@ namespace VL.Fu.Core.Interaction
         /// leaving the transformation out. A behavior that changes the transformation about another point compensates with it.
         /// </summary>
         Vector2 TransformPivotInParent { get; }
+
+        /// <summary>
+        /// The area the node's children are clipped to, in its own space: its padding box.
+        /// Null when it wasn't laid out yet or its overflow is visible.
+        /// </summary>
+        RectangleF? ClipArea { get; }
     }
 
     /// <summary>

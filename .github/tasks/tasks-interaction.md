@@ -14,5 +14,5 @@ The design and the phase plan are in [summary-interaction-v2.md](../summaries/su
 | N7 | Selection: `Selectable`, `SelectionProvider`, `SelectionNotification`, bounds query | [task-interaction-07-selection.md](task-interaction-07-selection.md) | N6 | done |
 | N8 | `Movable`, `Transformable`, `GroupTransaction`, `GroupManipulationNotification` | [task-interaction-08-move-transform.md](task-interaction-08-move-transform.md) | N7 | done |
 | N9 | `CanvasProvider` | [task-interaction-09-canvas.md](task-interaction-09-canvas.md) | N6 | done |
-| N9b | Scroll: `Scrollable` behavior writing `IChannel<Vector2>`, wired to render 08's `SetScrollOffset` style; clamped by `ContentArea` | | N9, render 08 | |
+| N9b | `Scrollable`: wheel and drag scroll, writing `IChannel<Vector2>` applied to the content's transformation; range from the first child's layout | [task-interaction-09b-scroll.md](task-interaction-09b-scroll.md) | N9 | done |
 | N10 | Docs | | N9 | |

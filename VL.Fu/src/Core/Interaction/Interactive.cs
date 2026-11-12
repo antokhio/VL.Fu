@@ -130,6 +130,8 @@ namespace VL.Fu.Core.Interaction
 
         Vector2 IInteractionNode.TransformPivotInParent => TransformPivotInParent;
 
+        RectangleF? IInteractionNode.ClipArea => ClipArea;
+
         /// <summary>
         /// Finds the front-most node under <paramref name="position"/> in this node's subtree and fills <paramref name="path"/>
         /// with the nodes from this one down to it. Returns false, leaving <paramref name="path"/> as it was, when nothing is hit.
