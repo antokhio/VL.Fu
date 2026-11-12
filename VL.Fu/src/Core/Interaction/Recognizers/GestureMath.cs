@@ -1,6 +1,7 @@
 using System;
 using SkiaSharp;
 using Stride.Core.Mathematics;
+using VL.Fu.Core.Extensions;
 
 namespace VL.Fu.Core.Interaction.Recognizers
 {
@@ -25,6 +26,31 @@ namespace VL.Fu.Core.Interaction.Recognizers
         /// </summary>
         public static SKMatrix Conjugate(in SKMatrix delta, in SKMatrix map, in SKMatrix inverse) =>
             map.PreConcat(delta).PreConcat(inverse);
+
+        /// <summary>
+        /// <paramref name="matrix"/> changed by <paramref name="deltaInParent"/>, which works in the parent's space,
+        /// compensated for the pivot the transformation applies about (v1 §7.3): <c>P⁻¹ · D · P · M</c>.
+        /// Z stays as it was.
+        /// </summary>
+        /// <param name="matrix">A node's transformation, applied about its pivot.</param>
+        /// <param name="pivotInParent">Where that pivot is in the parent's space.</param>
+        /// <param name="deltaInParent">The change, in the parent's space.</param>
+        public static Matrix ComposeAboutPivot(in Matrix matrix, Vector2 pivotInParent, in SKMatrix deltaInParent)
+        {
+            var aboutPivot = SKMatrix
+                .CreateTranslation(-pivotInParent.X, -pivotInParent.Y)
+                .PreConcat(deltaInParent)
+                .PreConcat(SKMatrix.CreateTranslation(pivotInParent.X, pivotInParent.Y));
+
+            // Stride applies the left matrix first: the transformation, then the change.
+            return matrix * aboutPivot.ToMatrix();
+        }
+
+        /// <summary>
+        /// How much <paramref name="matrix"/> scales: the length of its X axis. For a view that only scales and translates
+        /// it is <c>M11</c>, and it stays right when the matrix also turns.
+        /// </summary>
+        public static float ScaleOf(in Matrix matrix) => new Vector2(matrix.M11, matrix.M12).Length();
 
         /// <summary>
         /// The distance between two window positions in DIP,

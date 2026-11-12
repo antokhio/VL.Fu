@@ -62,6 +62,14 @@ namespace VL.Fu.Tests.Behaviors
         public bool Move(float x, float y, Keys modifiers = Keys.None) =>
             Notify(new MouseMoveNotification(new Vector2(x, y), Area, modifiers, null!));
 
+        public bool Wheel(float x, float y, float notches) =>
+            Notify(new MouseWheelNotification(new Vector2(x, y), Area, (int)(notches * PointerInput.WheelUnitsPerNotch), Keys.None, null!));
+
+        public bool HorizontalWheel(float x, float y, float notches) =>
+            Notify(
+                new MouseHorizontalWheelNotification(new Vector2(x, y), Area, (int)(notches * PointerInput.WheelUnitsPerNotch), Keys.None, null!)
+            );
+
         public bool Escape() => Notify(new KeyDownNotification(Keys.Escape, Keys.None, null!));
 
         public bool TouchDown(int id, float x, float y) => Touch(TouchNotificationKind.TouchDown, id, x, y);

@@ -299,7 +299,7 @@ namespace VL.Fu.Behaviors
             }
 
             var offset = _allowTranslate ? drag.OffsetInParent : Vector2.Zero;
-            _transformation?.EnsureValue(Compose(in _matrixAtStart, _pivotAtStart, SKMatrix.CreateTranslation(offset.X, offset.Y)));
+            _transformation?.EnsureValue(GestureMath.ComposeAboutPivot(in _matrixAtStart, _pivotAtStart, SKMatrix.CreateTranslation(offset.X, offset.Y)));
         }
 
         /// <summary>
@@ -324,7 +324,7 @@ namespace VL.Fu.Behaviors
                 return;
             }
 
-            _transformation?.EnsureValue(Compose(in _matrixAtStart, _pivotAtStart, in delta));
+            _transformation?.EnsureValue(GestureMath.ComposeAboutPivot(in _matrixAtStart, _pivotAtStart, in delta));
         }
 
         private void OnGroup(GroupManipulationNotification group)
@@ -345,7 +345,7 @@ namespace VL.Fu.Behaviors
                     return;
                 case GroupPhase.Apply when ReferenceEquals(_member, group.Transaction):
                     if (group.TryGetDelta(this, out var delta))
-                        _transformation?.EnsureValue(Compose(in _matrixAtBegin, _pivotAtBegin, in delta));
+                        _transformation?.EnsureValue(GestureMath.ComposeAboutPivot(in _matrixAtBegin, _pivotAtBegin, in delta));
                     return;
                 case GroupPhase.End when ReferenceEquals(_member, group.Transaction):
                     _member = null;
@@ -509,22 +509,6 @@ namespace VL.Fu.Behaviors
         {
             _matrixAtStart = _transformation?.Value ?? Matrix.Identity;
             _pivotAtStart = PivotOf(node);
-        }
-
-        /// <summary>
-        /// <paramref name="matrix"/> changed by <paramref name="deltaInParent"/>, which works in the parent's space,
-        /// compensated for the pivot the transformation applies about (v1 §7.3): <c>P⁻¹ · D · P · M</c>.
-        /// Z stays as it was.
-        /// </summary>
-        private static Matrix Compose(in Matrix matrix, Vector2 pivotInParent, in SKMatrix deltaInParent)
-        {
-            var aboutPivot = SKMatrix
-                .CreateTranslation(-pivotInParent.X, -pivotInParent.Y)
-                .PreConcat(deltaInParent)
-                .PreConcat(SKMatrix.CreateTranslation(pivotInParent.X, pivotInParent.Y));
-
-            // Stride applies the left matrix first: the transformation, then the change.
-            return matrix * aboutPivot.ToMatrix();
         }
 
         private static Vector2 PivotOf(IInteractive node) =>
