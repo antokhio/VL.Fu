@@ -44,7 +44,11 @@ namespace VL.Fu.Behaviors
     /// A drag on the background that starts outside <see cref="SelectionBounds"/> draws a marquee. It asks for the pointer when
     /// it passes the threshold and, once granted, writes <see cref="MarqueeRect"/>. On release the items the marquee fully contains
     /// are selected, and <see cref="MarqueeRect"/> returns to no value. A cancelled marquee selects nothing.
-    /// A drag that starts inside <see cref="SelectionBounds"/> is reserved for moving the selection and does nothing yet.
+    /// </para>
+    /// <para>
+    /// A drag on the background that starts inside <see cref="SelectionBounds"/> moves the selected items together instead, with the same
+    /// buttons, in both modes and whether the marquee is on or not. The items follow through their <see cref="Movable"/> or
+    /// <see cref="Transformable"/>, see <see cref="GroupTransaction"/>. Dragging a selected item moves the group the same way.
     /// </para>
     /// <para>
     /// <see cref="SelectionBounds"/> is refreshed with every pointer input the provider receives and after every change it makes.
@@ -70,6 +74,12 @@ namespace VL.Fu.Behaviors
         private Vector2 _lastInWindow = Vector2.Zero;
         private INotification? _itemPress = null;
         private int _itemPressPointerId = 0;
+
+        private bool _groupDrag = false;
+        private Vector2 _pressInWindow = Vector2.Zero;
+        private GroupTransaction? _group = null;
+        private GroupTransaction? _drive = null;
+        private GroupTransaction? _owedGroupCancel = null;
 
         [Fragment]
         public SelectionProvider([Pin(Visibility = PinVisibility.Hidden)] NodeContext nodeContext)
@@ -167,8 +177,8 @@ namespace VL.Fu.Behaviors
         public bool Enabled => _enabled;
 
         /// <summary>
-        /// Disabling cancels a marquee at once and turns selection off for the items in this provider's scope.
-        /// They don't fall through to a provider further up.
+        /// Disabling cancels a marquee or a group move at once and turns selection off for the items in this provider's scope.
+        /// They don't fall through to a provider further up. A group move an item drives is cancelled with the next input of its pointer.
         /// </summary>
         [Fragment(Order = PinOrder.Enabled)]
         public void SetEnabled(bool enabled = true)
@@ -179,7 +189,8 @@ namespace VL.Fu.Behaviors
             if (!enabled)
             {
                 _click.Cancel();
-                CancelMarquee();
+                Reset(null, owesRelease: true);
+                _group?.MarkCancelled();
                 _itemPress = null;
             }
 
@@ -226,8 +237,13 @@ namespace VL.Fu.Behaviors
                 return true;
             }
 
-            if (isDown && !CanStartMarquee(in sample, bounds))
-                return false;
+            if (isDown && _drag.Current.Phase == DragPhase.Idle)
+            {
+                // Whether the drag moves the selection or draws a marquee is decided at the press.
+                _groupDrag = IsInside(in sample, bounds);
+                if (!_groupDrag && !CanStartMarquee(in sample))
+                    return false;
+            }
 
             var drag = _drag.Process(in sample);
             switch (drag.Phase)
@@ -235,14 +251,27 @@ namespace VL.Fu.Behaviors
                 case DragPhase.Pressed:
                     _windowToNodeAtPress = sample.WindowToNode!.Value;
                     _marqueeStart = GestureMath.Map(in _windowToNodeAtPress, sample.PositionInWindow);
+                    _pressInWindow = sample.PositionInWindow;
                     return false;
                 case DragPhase.Started:
                     // A drag is no click; ancestors still see this move and may ask for the pointer too.
                     _click.Cancel();
                     notification.RequestPointerCapture(this, GestureKind.Drag);
                     return false;
+                case DragPhase.Moved when _granted && _groupDrag:
+                    _drive?.Apply(notification, GroupDelta());
+                    return true;
                 case DragPhase.Moved when _granted:
                     _marqueeRect?.EnsureValue(new Optional<RectangleF>(CurrentMarquee()));
+                    return true;
+                case DragPhase.Ended when _granted && _groupDrag:
+                    _granted = false;
+                    if (_drive is { } transaction)
+                    {
+                        _drive = null;
+                        transaction.Apply(notification, GroupDelta());
+                        transaction.End(notification);
+                    }
                     return true;
                 case DragPhase.Ended when _granted:
                     var area = CurrentMarquee();
@@ -286,7 +315,41 @@ namespace VL.Fu.Behaviors
         }
 
         /// <summary>
-        /// An item of this provider was pressed in the running delivery. The same press reaches the provider after the item,
+        /// Starts a group manipulation for <paramref name="driver"/>, which holds <paramref name="pointerId"/>.
+        /// False while another one runs: one transaction at a time (D5).
+        /// </summary>
+        /// <remarks>
+        /// A transaction whose driver doesn't hold its pointer any more, because it was removed or its node left the tree,
+        /// would never end, so it doesn't count as running.
+        /// </remarks>
+        internal bool TryBeginGroup(object driver, int pointerId, IInteractive providerNode, out GroupTransaction transaction)
+        {
+            if (_group is { } running && IsRunning(running))
+            {
+                transaction = null!;
+                return false;
+            }
+
+            _group = transaction = new GroupTransaction(this, providerNode, driver, pointerId);
+            return true;
+        }
+
+        /// <summary>
+        /// <paramref name="transaction"/> sent its end or cancel, so the next one may begin.
+        /// </summary>
+        internal void EndGroup(GroupTransaction transaction)
+        {
+            if (ReferenceEquals(_group, transaction))
+                _group = null;
+        }
+
+        private static bool IsRunning(GroupTransaction transaction) =>
+            !transaction.IsClosed
+            && !transaction.IsCancelled
+            && InteractionPass.Current?.Dispatcher.Claims.ClaimOf(transaction.PointerId)?.HasMember(transaction.Driver) == true;
+
+        /// <summary>
+        /// An item of this provider was pressed in the running delivery.
         /// and must start neither a click nor a marquee on the background.
         /// </summary>
         internal void NoteItemPress(int pointerId)
@@ -323,13 +386,17 @@ namespace VL.Fu.Behaviors
                 && ReferenceEquals(itemPress, InteractionPass.Current?.Notification);
         }
 
-        private bool CanStartMarquee(in PointerSample sample, RectangleF? bounds)
-        {
-            if (!_marqueeEnabled || _mode != SelectionMode.Multi || sample.WindowToNode is null)
-                return false;
+        private bool CanStartMarquee(in PointerSample sample) =>
+            _marqueeEnabled && _mode == SelectionMode.Multi && sample.WindowToNode is not null;
 
-            return bounds is not { } b || !sample.TryGetPositionInNode(out var position) || !b.Contains(position);
-        }
+        private static bool IsInside(in PointerSample sample, RectangleF? bounds) =>
+            bounds is { } b && sample.TryGetPositionInNode(out var position) && b.Contains(position);
+
+        /// <summary>
+        /// How far the pointer moved since the press, as a translation in window pixels.
+        /// </summary>
+        private SKMatrix GroupDelta() =>
+            SKMatrix.CreateTranslation(_lastInWindow.X - _pressInWindow.X, _lastInWindow.Y - _pressInWindow.Y);
 
         /// <summary>
         /// Asks the items for their bounds and writes them to <see cref="SelectionBounds"/>. Returns them for the press to test.
@@ -371,6 +438,26 @@ namespace VL.Fu.Behaviors
                 return false;
             }
 
+            if (_groupDrag)
+            {
+                if (
+                    capture.Sender is not FuNotificationSender { Node: var node }
+                    || !TryBeginGroup(this, capture.PointerId, node, out var transaction)
+                )
+                {
+                    // The selection is moved already: this drag does nothing.
+                    capture.ReleasePointerCapture(this);
+                    _drag.Cancel();
+                    return false;
+                }
+
+                _granted = true;
+                _drive = transaction;
+                transaction.Begin(capture);
+                transaction.Apply(capture, GroupDelta());
+                return true;
+            }
+
             _granted = true;
             _marqueeRect?.EnsureValue(new Optional<RectangleF>(CurrentMarquee()));
             return true;
@@ -397,26 +484,42 @@ namespace VL.Fu.Behaviors
                 return;
 
             // The claim was taken away or ended, so there is nothing to let go.
-            Reset(owesRelease: false);
+            Reset(cancel, owesRelease: false);
         }
 
         /// <summary>
-        /// Cancels the marquee from a setter, which has no notification to let go of the pointer with.
-        /// The release is owed until the next notification of that pointer.
+        /// Cancels a marquee from a setter, which has no notification to let go of the pointer with.
+        /// The release is owed until the next notification of that pointer. A group move isn't affected.
         /// </summary>
-        private void CancelMarquee() => Reset(owesRelease: true);
+        private void CancelMarquee()
+        {
+            if (!_groupDrag)
+                Reset(null, owesRelease: true);
+        }
 
         /// <summary>
-        /// Returns the marquee to idle. A marquee that was drawn writes its idle fact: no value. Nothing is selected.
+        /// Returns the drag to idle. A marquee that was drawn writes its idle fact: no value, and nothing is selected.
+        /// A group move is cancelled with <paramref name="notification"/>, or without one with the owed release (D4).
         /// </summary>
-        private void Reset(bool owesRelease)
+        private void Reset(INotification? notification, bool owesRelease)
         {
             if (_granted)
             {
                 if (owesRelease)
                     _owedRelease = _drag.Current.PointerId;
 
-                _marqueeRect?.EnsureValue(default);
+                if (_drive is { } transaction)
+                {
+                    _drive = null;
+                    if (notification is not null)
+                        transaction.Cancel(notification);
+                    else
+                        _owedGroupCancel = transaction;
+                }
+                else if (!_groupDrag)
+                {
+                    _marqueeRect?.EnsureValue(default);
+                }
             }
 
             _granted = false;
@@ -429,6 +532,12 @@ namespace VL.Fu.Behaviors
                 return;
 
             _owedRelease = null;
+            if (_owedGroupCancel is { } transaction)
+            {
+                _owedGroupCancel = null;
+                transaction.Cancel(notification);
+            }
+
             notification.ReleasePointerCapture(this);
         }
     }

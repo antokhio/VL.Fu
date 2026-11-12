@@ -114,6 +114,22 @@ namespace VL.Fu.Behaviors
         private bool Selected => _isSelected?.Value ?? false;
 
         /// <summary>
+        /// Whether an enabled <see cref="Selectable"/> on <paramref name="node"/> reports it selected.
+        /// A disabled one stays out of its provider, so it doesn't count.
+        /// </summary>
+        internal static bool IsSelectedOn(IInteractive node)
+        {
+            var behaviors = node.Behaviors;
+            for (var i = 0; i < behaviors.Count; i++)
+            {
+                if (behaviors[i] is Selectable { _enabled: true, Selected: true })
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// An unselected item selects at once (S2), so a drag that follows moves it. A selected one waits for the click,
         /// so a drag that follows keeps the selection.
         /// </summary>

@@ -128,6 +128,8 @@ namespace VL.Fu.Core.Interaction
 
         bool IInteractionNode.IsHitTestable => HasLayout && IsDisplayed && _pointerEvents != PointerEvents.None;
 
+        Vector2 IInteractionNode.TransformPivotInParent => TransformPivotInParent;
+
         /// <summary>
         /// Finds the front-most node under <paramref name="position"/> in this node's subtree and fills <paramref name="path"/>
         /// with the nodes from this one down to it. Returns false, leaving <paramref name="path"/> as it was, when nothing is hit.

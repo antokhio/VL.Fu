@@ -20,7 +20,14 @@ namespace VL.Fu.Core.Interaction.Recognizers
         }
 
         /// <summary>
-        /// The distance between two window positions in DIP, for a scaling already checked by <see cref="PointerSample.DipScaling"/>.
+        /// <paramref name="delta"/> expressed in another space: <c>map · delta · inverse</c>, where <paramref name="map"/> maps
+        /// the space <paramref name="delta"/> works in into the other one and <paramref name="inverse"/> maps back.
+        /// </summary>
+        public static SKMatrix Conjugate(in SKMatrix delta, in SKMatrix map, in SKMatrix inverse) =>
+            map.PreConcat(delta).PreConcat(inverse);
+
+        /// <summary>
+        /// The distance between two window positions in DIP,
         /// </summary>
         public static float DistanceDip(Vector2 fromInWindow, Vector2 toInWindow, float scaling) =>
             (toInWindow - fromInWindow).Length() / scaling;

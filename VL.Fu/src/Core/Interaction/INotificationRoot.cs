@@ -13,6 +13,12 @@ namespace VL.Fu.Core.Interaction
         /// Its ancestors aren't looked at.
         /// </summary>
         bool IsHitTestable { get; }
+
+        /// <summary>
+        /// The point <see cref="Layout.ILayoutable.Transformation"/> turns and scales around, in the parent's space,
+        /// leaving the transformation out. A behavior that changes the transformation about another point compensates with it.
+        /// </summary>
+        Vector2 TransformPivotInParent { get; }
     }
 
     /// <summary>

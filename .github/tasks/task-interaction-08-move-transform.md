@@ -137,7 +137,14 @@ Pins: `SetTransformation(IChannel<Matrix>)`, `SetAllow(bool translate = true, bo
 
 ## As built
 
-_Filled in after implementation._
+- Drag drivers send the translation by the pointer's window offset directly. Only the pinch maps its parent-space delta into the window with `GestureMath.Conjugate`. Members map it back with `GroupManipulationNotification.TryGetDelta` (public: `TryGetDeltaInParent`, as a Stride matrix).
+- `IInteractionNode.TransformPivotInParent` (internal) gives `Transformable` the pivot in the parent's space, including a root's origin in its caller's space. `Layoutable.UpdateLocalTransformation` uses the same value.
+- `NotificationExtensions.DispatchInto` takes a `DeliveryClass`: `Begin` goes FanOut, so only shown items join; `Apply`, `End` and `Cancel` go Control, so hidden members still get them.
+- `GroupTransaction.TryStart` returns no transaction (move alone) for an unselected node, no provider or a disabled one, and fails when the provider runs one. A transaction counts as running while it is open, not cancelled, and its driver still holds the pointer's claim, so a stale one never blocks.
+- A blocked driver releases the pointer and cancels its recognizer, so the pointer goes back to the nodes it was pressed on.
+- `Selectable.IsSelectedOn` (internal) is the selection check of `Concerns`.
+- `Movable.WarnedTransformable` and `Transformable.WarnedMovable` (internal) let the tests see the M1 warning, which a node without a context doesn't keep.
+- The suite is 464 green: `MovableTests` 5, `TransformableTests` 12 runs, `GroupManipulationTests` 12.
 
 ## Deferred
 

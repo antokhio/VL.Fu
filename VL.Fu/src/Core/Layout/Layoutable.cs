@@ -419,15 +419,25 @@ namespace VL.Fu.Core.Layout
             UpdateLocalTransformation();
         }
 
+        /// <summary>
+        /// The point <see cref="Transformation"/> turns and scales around, in the parent's space (the caller's for a root),
+        /// without the transformation: <see cref="LocalTransformation"/> is a move to it, then <see cref="Transformation"/>,
+        /// then the move back by <see cref="TransformOrigin"/>'s point in the node's box.
+        /// </summary>
+        internal Vector2 TransformPivotInParent => _origin + new Vector2(_layout.X, _layout.Y) + PivotInNode();
+
+        private Vector2 PivotInNode() =>
+            new((_transformOrigin.X + 1) / 2 * _layout.Width, (_transformOrigin.Y + 1) / 2 * _layout.Height);
+
         private void UpdateLocalTransformation()
         {
-            var pivotX = (_transformOrigin.X + 1) / 2 * _layout.Width;
-            var pivotY = (_transformOrigin.Y + 1) / 2 * _layout.Height;
+            var pivot = PivotInNode();
+            var pivotInParent = TransformPivotInParent;
 
             _localTransformation = SKMatrix
-                .CreateTranslation(_origin.X + _layout.X + pivotX, _origin.Y + _layout.Y + pivotY)
+                .CreateTranslation(pivotInParent.X, pivotInParent.Y)
                 .PreConcat(_transformation.ToSKMatrix())
-                .PreConcat(SKMatrix.CreateTranslation(-pivotX, -pivotY));
+                .PreConcat(SKMatrix.CreateTranslation(-pivot.X, -pivot.Y));
 
             OnLocalTransformationChanged();
         }

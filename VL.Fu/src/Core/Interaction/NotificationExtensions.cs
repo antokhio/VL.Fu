@@ -40,8 +40,14 @@ namespace VL.Fu.Core.Interaction
         /// <remarks>
         /// An item uses it to send into the subtree of the scope it belongs to, such as its selection provider's.
         /// A node that isn't on the way up from the receiving node is reported, and nothing is sent.
+        /// With <see cref="DeliveryClass.Control"/> it also reaches the nodes there that aren't displayed.
         /// </remarks>
-        internal static void DispatchInto(this INotification notification, IInteractive node, INotification toDispatch)
+        internal static void DispatchInto(
+            this INotification notification,
+            IInteractive node,
+            INotification toDispatch,
+            DeliveryClass @class = DeliveryClass.FanOut
+        )
         {
             if (!TryGetActingPass(notification, toDispatch, nameof(DispatchInto), out var pass))
                 return;
@@ -53,7 +59,7 @@ namespace VL.Fu.Core.Interaction
                     pass.Dispatcher.Enqueue(
                         toDispatch,
                         pass.Caller,
-                        new Delivery(DeliveryClass.FanOut, RouteKind.Subtree, node)
+                        new Delivery(@class, RouteKind.Subtree, node)
                     );
                     return;
                 }
